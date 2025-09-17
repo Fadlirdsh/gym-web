@@ -1,37 +1,59 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\AuthController;
+use Illuminate\Http\Request;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
+// Halaman login (Blade)
+Route::get('/login', function () {
+    return view('auth/login');
+})->name('admin.login');
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+// Proses login → menghasilkan JWT
+Route::post('/api/login', function (Request $request) {
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string',
+    ]);
 
-Route::get('/', function () {
-    return view('users.home');
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return response()->json(['message' => 'Email atau password salah'], 422);
+    }
+
+    // Generate JWT token
+    $token = JWTAuth::fromUser($user);
+
+    return response()->json([
+        'message' => 'Login berhasil',
+        'token' => $token,
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email
+        ]
+    ]);
+})->name('admin.login.post');
+
+// Middleware JWT untuk route protected
+Route::middleware(['jwt.auth'])->group(function () {
+    Route::get('/api/home', function () {
+        return response()->json([
+            'message' => 'Selamat datang di home!',
+            'data' => 'Ini data rahasia hanya untuk user login'
+        ]);
+    });
 });
 
-// Semua fitur yang harus login
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::middleware(['auth.session'])->group(function () {
+    Route::get('/users/home', function () {
+        return view('users.home');
+    })->name('home');
+});
 
-// Route::middleware(['auth'])->group(function () {
-//     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-//     Route::get('/fitur1', [FiturController::class, 'fitur1'])->name('fitur1');
-//     Route::get('/fitur2', [FiturController::class, 'fitur2'])->name('fitur2');
-// });
 
-// Route::post('/logout', function () {
-//     Auth::logout();
-//     return redirect('/'); // arahkan ke halaman login atau home
-// })->name('logout');
+// Logout JWT di frontend → hapus token di localStorage
+// Tidak perlu route logout di backend jika pakai JWT stateless
