@@ -20,13 +20,9 @@
         </div>
 
         <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-            @if ($errors->any())
-                <div class="mb-4 text-red-400 text-sm">
-                    {{ $errors->first() }}
-                </div>
-            @endif
+            <div id="errorMessage" class="mb-4 text-red-400 text-sm"></div>
 
-            <form action="{{ route('login.post') }}" method="POST"
+            <form id="loginForm" action="{{ route('admin.login.post') }}"
                 class="space-y-6 p-6 border border-gray-700 rounded-lg bg-gray-800 shadow-lg">
                 @csrf
                 <div>
@@ -52,9 +48,52 @@
                     Sign in
                 </button>
             </form>
-
         </div>
     </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Simpan token di localStorage
+                    localStorage.setItem('jwt_token', data.token);
+                    alert('Login berhasil, token tersimpan.');
+                    // Redirect ke halaman frontend
+                    window.location.href = '/users/home';
+                } else {
+                    document.getElementById('errorMessage').innerText = data.message || 'Login gagal';
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('errorMessage').innerText = 'Terjadi kesalahan, coba lagi.';
+            }
+        });
+
+        const token = localStorage.getItem('jwt_token');
+
+        fetch('/api/home', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => console.log(data))
+            .catch(err => console.error(err));
+    </script>
+
 
 </body>
 
