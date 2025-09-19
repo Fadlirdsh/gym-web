@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\Api\UserController; // Tambahkan ini untuk manage user
 
 /*
 |--------------------------------------------------------------------------
@@ -81,4 +82,23 @@ Route::middleware(['auth.session'])->group(function () {
             'kelas' => 'kelas'
         ]);
     });
+
+    // =========================================================
+    // Tambahan: Manage User / Member
+    // =========================================================
+
+    // Halaman daftar member
+    Route::get('/users/manage', [UserController::class, 'manage'])->name('users.manage');
+
+    // Tambah member baru
+    Route::post('/users/manage', [UserController::class, 'storeWeb'])->name('users.store');
+
+    // Edit member
+    Route::get('/users/manage/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+
+    // Update member
+    Route::put('/users/manage/{id}', [UserController::class, 'updateWeb'])->name('users.update');
+
+    // Hapus member
+    Route::delete('/users/manage/{id}', [UserController::class, 'destroyWeb'])->name('users.destroy');
 });
