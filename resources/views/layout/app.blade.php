@@ -30,7 +30,7 @@
                                     class="rounded-md bg-gray-950/50 px-3 py-2 text-sm font-medium text-white">
                                     Home
                                 </a>
-                                <a href="{{ url('/users/user') }}"
+                                <a href="{{ url('/users/manage') }}"
                                     class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
                                     Manage Users
                                 </a>

@@ -31,6 +31,10 @@
                                 <i class="fa-solid fa-users"></i> {{ $k->tipe_kelas }}
                             </span>
                             <span class="flex items-center gap-1">
+                                <i class="fa-solid fa-money-bill"></i>
+                                Rp {{ number_format($k->harga - ($k->harga * ($k->diskon ?? 0)) / 100, 0, ',', '.') }}
+                            </span>
+                            <span class="flex items-center gap-1">
                                 <i class="fa-solid fa-money-bill"></i> Rp {{ number_format($k->harga, 0, ',', '.') }}
                             </span>
                             <span class="flex items-center gap-1">
@@ -48,9 +52,10 @@
 
                     <div class="flex gap-2 mt-4">
                         <button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 btnOpenEdit transition"
-                            data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}" data-tipe="{{ $k->tipe_kelas }}"
-                            data-harga="{{ $k->harga }}" data-diskon="{{ $k->diskon }}"
-                            data-paket="{{ $k->tipe_paket }}" data-deskripsi="{{ $k->deskripsi }}"
+                            data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}"
+                            data-tipe="{{ $k->tipe_kelas }}" data-harga="{{ $k->harga }}"
+                            data-diskon="{{ $k->diskon }}" data-paket="{{ $k->tipe_paket }}"
+                            data-deskripsi="{{ $k->deskripsi }}"
                             data-waktu="{{ \Carbon\Carbon::parse($k->waktu_mulai)->format('H:i') }}">
                             Edit
                         </button>

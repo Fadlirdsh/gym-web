@@ -24,7 +24,7 @@ class Kelas extends Model
     protected $casts = [
         'harga' => 'decimal:2',
         'diskon' => 'decimal:2',
-        'waktu_mulai' => 'datetime:H:i', // hanya jam:menit
+        'waktu_mulai' => 'datetime', // hanya jam:menit
     ];
 
     // // relasi ke customer (jika ada pivot table customer_kelas)
