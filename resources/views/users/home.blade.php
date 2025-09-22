@@ -6,13 +6,13 @@
 @section('content')
     <div class="text-center">
         <h2 class="text-3xl font-extrabold text-white mb-4">
-            Selamat Datang, {{ Auth::user()->name ?? 'Admin' }}!
+            Selamat Datang, {{ $user->name ?? 'Admin' }}!
         </h2>
         <p class="text-gray-400 mb-6">
             Ini adalah halaman Home sederhana. Kamu bisa mengubah kontennya sesuai kebutuhan.
         </p>
         <a href="{{ url('/dashboard') }}"
-           class="inline-block bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-indigo-500 transition">
+            class="inline-block bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-indigo-500 transition">
             Pergi ke Dashboard
         </a>
     </div>
