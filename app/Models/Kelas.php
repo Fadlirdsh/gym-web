@@ -18,13 +18,15 @@ class Kelas extends Model
         'deskripsi',    // text
         'diskon',       // decimal
         'tipe_paket',   // Package, ClassPass, Drop In
-        'waktu_mulai',  // jam mulai kelas
+        // 'waktu_mulai',  // jam mulai kelas
+        'jumlah_token',
+        'expired_at',
     ];
 
     protected $casts = [
         'harga' => 'decimal:2',
         'diskon' => 'decimal:2',
-        'waktu_mulai' => 'datetime', // hanya jam:menit
+        // 'waktu_mulai' => 'datetime', // hanya jam:menit
     ];
 
     // // relasi ke customer (jika ada pivot table customer_kelas)

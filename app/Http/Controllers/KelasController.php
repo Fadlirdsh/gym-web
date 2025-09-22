@@ -21,16 +21,30 @@ class KelasController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_kelas' => 'required|string|max:100',
-            'tipe_kelas' => 'required|string|max:50',
-            'harga'      => 'required|numeric',
-            'deskripsi'  => 'nullable|string',
-            'diskon'     => 'nullable|numeric',
-            'tipe_paket' => 'nullable|string|max:50',
-            'waktu_mulai' => 'required|date_format:H:i',
+            'nama_kelas'  => 'required|string|max:100',
+            'tipe_kelas'  => 'required|string|max:50',
+            'harga'       => 'required|numeric',
+            'deskripsi'   => 'nullable|string',
+            'diskon'      => 'nullable|numeric|min:0|max:100',
+            'tipe_paket'  => 'nullable|string|max:50',
+            // 'waktu_mulai' => 'required|date',
+            'jumlah_token' => strtolower($request->tipe_paket) === 'classes'
+                ? 'required|integer|min:1'
+                : 'nullable',
+            'expired_at'   => strtolower($request->tipe_paket) === 'classes'
+                ? 'required|date'
+                : 'nullable',
         ]);
 
-        Kelas::create($request->all());
+        $data = $request->all();
+
+        // Ubah format datetime-local ke MySQL datetime
+        if (!empty($data['waktu_mulai'])) {
+            $data['waktu_mulai'] = date('Y-m-d H:i:s', strtotime($data['waktu_mulai']));
+        }
+
+        Kelas::create($data);
+
         return redirect()->route('kelas.index')->with('success', 'Kelas berhasil ditambahkan');
     }
 
@@ -41,18 +55,31 @@ class KelasController extends Controller
 
     public function update(Request $request, Kelas $kelas)
     {
-        //   dd($request->all(), $kelas->id);
         $request->validate([
-            'nama_kelas' => 'required|string|max:100',
-            'tipe_kelas' => 'required|string|max:50',
-            'harga'      => 'required|numeric',
-            'deskripsi'  => 'nullable|string',
-            'diskon'     => 'nullable|numeric',
-            'tipe_paket' => 'nullable|string|max:50',
-            'waktu_mulai' => 'required|date_format:H:i',
+            'nama_kelas'  => 'required|string|max:100',
+            'tipe_kelas'  => 'required|string|max:50',
+            'harga'       => 'required|numeric',
+            'deskripsi'   => 'nullable|string',
+            'diskon'      => 'nullable|numeric|min:0|max:100',
+            'tipe_paket'  => 'nullable|string|max:50',
+            // 'waktu_mulai' => 'required|date',
+            'jumlah_token' => $request->tipe_paket === 'Classes'
+                ? 'required|integer|min:1'
+                : 'nullable',
+            'expired_at'   => $request->tipe_paket === 'Classes'
+                ? 'required|date'
+                : 'nullable',
         ]);
 
-        $kelas->update($request->all());
+        $data = $request->all();
+
+        // Ubah format datetime-local ke MySQL datetime
+        if (!empty($data['waktu_mulai'])) {
+            $data['waktu_mulai'] = date('Y-m-d H:i:s', strtotime($data['waktu_mulai']));
+        }
+
+        $kelas->update($data);
+
         return redirect()->route('kelas.index')->with('success', 'Kelas berhasil diperbarui');
     }
 
