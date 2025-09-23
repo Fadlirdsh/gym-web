@@ -9,6 +9,7 @@
 
     {{-- CSS Tailwind --}}
     <link href="{{ asset('css/output.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     @vite('resources/js/app.js')
     @stack('styles')
 </head>
@@ -40,10 +41,11 @@
                                     Manage Kelas
                                 </a>
 
-                                <a href="#"
+                                <a href="{{ route('schedules.index') }}"
                                     class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
-                                    Manage Waktu
+                                    Manage Schedule
                                 </a>
+
                                 <a href="#"
                                     class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
                                     Manage Diskon
@@ -86,5 +88,6 @@
 
     @stack('scripts')
 </body>
+
 
 </html>
