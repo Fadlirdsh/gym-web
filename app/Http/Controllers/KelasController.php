@@ -14,7 +14,7 @@ class KelasController extends Controller
 
 // dd($kelas->first()->diskons, $kelas->first()->harga_diskon, $kelas->first()->diskon_persen);
 
-        return view('users.Kelas', compact('kelas'));
+        return view('admin.Kelas', compact('kelas'));
     }
 
     public function create()

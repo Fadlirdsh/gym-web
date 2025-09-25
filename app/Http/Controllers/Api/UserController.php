@@ -81,7 +81,7 @@ class UserController extends Controller
     {
         $members = User::where('role', 'pelanggan')->get();
         $kelas   = Kelas::all(); // <== kirim daftar kelas ke view
-        return view('users.manage', compact('members', 'kelas'));
+        return view('admin.manage', compact('members', 'kelas'));
     }
 
     public function storeWeb(Request $request)
@@ -108,7 +108,7 @@ class UserController extends Controller
     {
         $member = User::findOrFail($id);
         $kelas  = Kelas::all();
-        return view('users.edit', compact('member', 'kelas'));
+        return view('admin.edit', compact('member', 'kelas'));
     }
 
     public function updateWeb(Request $request, $id)

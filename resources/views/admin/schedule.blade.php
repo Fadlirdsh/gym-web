@@ -40,12 +40,9 @@
                         <td class="border px-2 py-1">{{ $schedule->trainer->name ?? '-' }}</td>
                         <td class="border px-2 py-1">
                             {{-- Tombol Update --}}
-                            <button type="button" class="text-blue-600 btnOpenUpdate"
-                                data-id="{{ $schedule->id }}"
-                                data-kelas="{{ $schedule->kelas_id }}"
-                                data-trainer="{{ $schedule->trainer_id }}"
-                                data-day="{{ $schedule->day }}"
-                                data-time="{{ $schedule->time }}">
+                            <button type="button" class="text-blue-600 btnOpenUpdate" data-id="{{ $schedule->id }}"
+                                data-kelas="{{ $schedule->kelas_id }}" data-trainer="{{ $schedule->trainer_id }}"
+                                data-day="{{ $schedule->day }}" data-time="{{ $schedule->time }}">
                                 Update
                             </button>
 
@@ -62,11 +59,13 @@
                             |
 
                             {{-- Toggle Active pakai switch --}}
-                            <form action="{{ route('schedules.toggle', $schedule->id) }}" method="POST" class="inline toggle-form">
+                            <form action="{{ route('schedules.toggle', $schedule->id) }}" method="POST"
+                                class="inline toggle-form">
                                 @csrf
                                 @method('PATCH')
                                 <label class="switch">
-                                    <input type="checkbox" onchange="this.form.submit()" {{ $schedule->is_active ? 'checked' : '' }}>
+                                    <input type="checkbox" onchange="this.form.submit()"
+                                        {{ $schedule->is_active ? 'checked' : '' }}>
                                     <span class="slider round"></span>
                                 </label>
                             </form>
@@ -110,7 +109,8 @@
 
                 <div>
                     <label class="block font-medium">Hari</label>
-                    <input type="text" name="day" class="w-full border rounded px-3 py-2" placeholder="Contoh: Senin" required>
+                    <input type="text" name="day" class="w-full border rounded px-3 py-2" placeholder="Contoh: Senin"
+                        required>
                 </div>
 
                 <div>
@@ -151,12 +151,13 @@
 
                 <div>
                     <label class="block font-medium">Trainer</label>
-                    <select name="trainer_id" id="updateTrainer" class="w-full border rounded px-3 py-2" required>
+                    <select name="trainer_id" class="w-full border rounded px-3 py-2" required>
                         <option value="">-- Pilih Trainer --</option>
                         @foreach ($trainers as $trainer)
                             <option value="{{ $trainer->id }}">{{ $trainer->name }}</option>
                         @endforeach
                     </select>
+
                 </div>
 
                 <div>
@@ -185,6 +186,22 @@
     {{-- Script buka/tutup modal & isi data update --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- Modal Tambah Jadwal ---
+            const modalCreate = document.getElementById('modalCreate');
+            const btnOpenCreate = document.getElementById('btnOpenCreate');
+            const btnCloseCreate = document.getElementById('btnCloseCreate');
+
+            btnOpenCreate.addEventListener('click', () => {
+                modalCreate.classList.remove('hidden');
+                modalCreate.classList.add('flex'); // supaya muncul ditengah
+            });
+
+            btnCloseCreate.addEventListener('click', () => {
+                modalCreate.classList.add('hidden');
+                modalCreate.classList.remove('flex');
+            });
+
+            // --- Modal Update Jadwal ---
             const modalUpdate = document.getElementById('modalUpdate');
             const btnCloseUpdate = document.getElementById('btnCloseUpdate');
             const formUpdate = document.getElementById('formUpdate');
@@ -204,12 +221,15 @@
 
                     formUpdate.action = `/schedules/${id}`;
                     modalUpdate.classList.remove('hidden');
+                    modalUpdate.classList.add('flex');
                 });
             });
 
             btnCloseUpdate.addEventListener('click', () => {
                 modalUpdate.classList.add('hidden');
+                modalUpdate.classList.remove('flex');
             });
         });
     </script>
+
 @endsection

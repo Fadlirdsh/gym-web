@@ -14,7 +14,7 @@ class DiskonController extends Controller
     {
         $diskons = Diskon::with('kelas')->get();
         $kelas = Kelas::all();
-        return view('users.diskon', compact('diskons', 'kelas'));
+        return view('admin.diskon', compact('diskons', 'kelas'));
     }
 
     // Simpan diskon baru

@@ -9,6 +9,9 @@ use App\Http\Controllers\KelasController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\DiskonController;
+use App\Http\Controllers\ReservasiController;
+use App\Http\Controllers\DashboardController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -67,17 +70,17 @@ Route::prefix('api')->middleware('jwt.auth')->group(function () {
         ]);
     });
 });
-
 /*
 |--------------------------------------------------------------------------
 | Dashboard (session protected)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth.session'])->group(function () {
-    // Halaman home (URL: /users/home)
-    Route::get('/users/home', function () {
-        return view('users.home');
+    // Halaman home (URL: /admin/home) → view admin.home
+    Route::get('/admin/home', function () {
+        return view('admin.home');
     })->name('home');
+
 
     /*
     |----------------------------------------------------------------------
@@ -91,15 +94,18 @@ Route::middleware(['auth.session'])->group(function () {
     });
 
     /*
-    |----------------------------------------------------------------------
-    | Manage User / Member
-    |----------------------------------------------------------------------
-    */
-    Route::get('/users/manage', [UserController::class, 'manage'])->name('users.manage');
-    Route::post('/users/manage', [UserController::class, 'storeWeb'])->name('users.store');
-    Route::get('/users/manage/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
-    Route::put('/users/manage/{id}', [UserController::class, 'updateWeb'])->name('users.update');
-    Route::delete('/users/manage/{id}', [UserController::class, 'destroyWeb'])->name('users.destroy');
+|----------------------------------------------------------------------
+| Manage User / Member (Admin)
+|----------------------------------------------------------------------
+*/
+    Route::prefix('admin')->group(function () {
+        Route::get('/manage', [UserController::class, 'manage'])->name('users.manage');
+        Route::post('/manage', [UserController::class, 'storeWeb'])->name('users.store');
+        Route::get('/manage/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/manage/{id}', [UserController::class, 'updateWeb'])->name('users.update');
+        Route::delete('/manage/{id}', [UserController::class, 'destroyWeb'])->name('users.destroy');
+    });
+
 
     /*
     |----------------------------------------------------------------------
@@ -116,4 +122,18 @@ Route::middleware(['auth.session'])->group(function () {
     |----------------------------------------------------------------------
     */
     Route::resource('diskon', DiskonController::class);
+
+    /*
+    |----------------------------------------------------------------------
+    | Dashboard
+    |----------------------------------------------------------------------
+    */
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+
+    /*
+    |----------------------------------------------------------------------
+    | Reservasi
+    |----------------------------------------------------------------------
+    */
+    Route::resource('reservasi', ReservasiController::class);
 });

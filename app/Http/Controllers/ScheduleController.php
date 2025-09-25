@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Schedule;
 use App\Models\Kelas;
-use App\Models\Trainer;
+use App\Models\User;
 
 class ScheduleController extends Controller
 {
@@ -13,15 +13,15 @@ class ScheduleController extends Controller
     {
         $schedules = Schedule::with(['kelas', 'trainer'])->get();
         $kelas = Kelas::all();
-        $trainers = Trainer::all();
+        $trainers = User::where('role', 'trainer')->get(); // ambil dari users
 
-        return view('users.schedule', compact('schedules', 'kelas', 'trainers'));
+        return view('admin.schedule', compact('schedules', 'kelas', 'trainers'));
     }
 
     public function create()
     {
         $kelas = Kelas::all();
-        $trainers = Trainer::all();
+        $trainers = User::where('role', 'trainer')->get(); // ambil dari users
 
         return view('admin.schedules.create', compact('kelas', 'trainers'));
     }
