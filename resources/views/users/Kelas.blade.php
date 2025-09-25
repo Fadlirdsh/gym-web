@@ -29,64 +29,64 @@
                         <div class="flex flex-wrap gap-4 mt-3 text-gray-300 text-sm">
                             <span class="flex items-center gap-1">
                                 <i class="fa-solid fa-users"></i> {{ $k->tipe_kelas }}
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <i class="fa-solid fa-money-bill"></i>
-                                Rp {{ number_format($k->harga - ($k->harga * ($k->diskon ?? 0)) / 100, 0, ',', '.') }}
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <i class="fa-solid fa-money-bill"></i> Rp {{ number_format($k->harga, 0, ',', '.') }}
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <i class="fa-solid fa-percent"></i> {{ $k->diskon }}%
-                            </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-solid fa-money-bill"></i>
+                                    Rp {{ number_format($k->harga, 0, ',', '.') }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-solid fa-percent"></i>
+                                    Diskon: {{ $k->diskon_persen }}%
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-solid fa-tag"></i>
+                                    Harga Setelah Diskon: Rp {{ number_format($k->harga_diskon, 0, ',', '.') }}
+                                </span>
 
-                            <span class="flex items-center gap-1">
-                                <i class="fa-solid fa-box"></i> {{ $k->tipe_paket }}
-                            </span>
-                            {{-- <span class="flex items-center gap-1">
-                                <i class="fa-solid fa-clock"></i> {{ $k->waktu_mulai }}
-                            </span> --}}
-                            <span class="flex items-center gap-1">
-                                <i class="fa-solid fa-ticket"></i> Token: {{ $k->jumlah_token ?? '-' }}
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <i class="fa-solid fa-hourglass-end"></i>
-                                Expired:
-                                {{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('d-m-Y H:i') : '-' }}
-                            </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-solid fa-box"></i> {{ $k->tipe_paket }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-solid fa-ticket"></i> Token: {{ $k->jumlah_token ?? '-' }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fa-solid fa-hourglass-end"></i>
+                                    Expired:
+                                    {{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('d-m-Y H:i') : '-' }}
+                                </span>
                         </div>
                         <p class="mt-3 text-gray-400 text-sm">{{ $k->deskripsi }}</p>
                     </div>
 
-                    <button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 btnOpenEdit transition"
-                        data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}" data-tipe="{{ $k->tipe_kelas }}"
-                        data-harga="{{ $k->harga }}" data-diskon="{{ $k->diskon }}"
-                        data-paket="{{ $k->tipe_paket }}" data-deskripsi="{{ $k->deskripsi }}"
-                        {{-- data-waktu="{{ $k->waktu_mulai ? \Carbon\Carbon::parse($k->waktu_mulai)->format('Y-m-d\TH:i') : '' }}" --}}
-                        data-token="{{ $k->jumlah_token }}"
-                        data-expired="{{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('Y-m-d\TH:i') : '' }}">
-                        Edit
-                    </button>
-
-                    <form action="{{ route('kelas.destroy', ['kelas' => $k->id]) }}" method="POST"
-                        onsubmit="return confirm('Yakin hapus data ini?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition">
-                            Hapus
+                    <div class="flex gap-2 mt-4">
+                        <button class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 btnOpenEdit transition"
+                            data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}"
+                            data-tipe="{{ $k->tipe_kelas }}" data-harga="{{ $k->harga }}"
+                            data-paket="{{ $k->tipe_paket }}" data-deskripsi="{{ $k->deskripsi }}"
+                            data-token="{{ $k->jumlah_token }}"
+                            data-expired="{{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('Y-m-d\TH:i') : '' }}">
+                            Edit
                         </button>
-                    </form>
+
+                        <form action="{{ route('kelas.destroy', ['kelas' => $k->id]) }}" method="POST"
+                            onsubmit="return confirm('Yakin hapus data ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit"
+                                class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                                Hapus
+                            </button>
+                        </form>
+                    </div>
                 </div>
+            @empty
+                <div class="col-span-full text-center py-12 text-gray-400 border border-dashed border-gray-600 rounded-lg">
+                    <i class="fa-solid fa-folder-open text-4xl mb-2"></i>
+                    <p>Belum ada data kelas.</p>
+                </div>
+            @endforelse
         </div>
-    @empty
-        <div class="col-span-full text-center py-12 text-gray-400 border border-dashed border-gray-600 rounded-lg">
-            <i class="fa-solid fa-folder-open text-4xl mb-2"></i>
-            <p>Belum ada data kelas.</p>
-        </div>
-        @endforelse
     </div>
-    </div>
+
 
     {{-- Modal Create --}}
     <div id="modalCreate" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
@@ -115,10 +115,10 @@
                     <label class="block font-medium">Harga</label>
                     <input type="number" name="harga" class="w-full border rounded px-3 py-2">
                 </div>
-                <div>
+                {{-- <div>
                     <label class="block font-medium">Diskon</label>
                     <input type="number" name="diskon" class="w-full border rounded px-3 py-2">
-                </div>
+                </div> --}}
                 {{-- Tipe paket --}}
                 @php
                     $tipePaket = ['General', 'First Timer', 'Free Points', 'Classes'];
@@ -170,8 +170,7 @@
                 @method('PUT')
                 <div>
                     <label class="block font-medium">Nama Kelas</label>
-                    <input type="text" id="editNama" name="nama_kelas" class="w-full border rounded px-3 py-2"
-                        required>
+                    <input type="text" id="editNama" name="nama_kelas" class="w-full border rounded px-3 py-2" required>
                 </div>
                 @php
                     $tipeKelas = ['Pilates Group', 'Pilates Private', 'Yoga Group', 'Yoga Private'];
@@ -186,10 +185,10 @@
                     <label class="block font-medium">Harga</label>
                     <input type="number" id="editHarga" name="harga" class="w-full border rounded px-3 py-2">
                 </div>
-                <div>
+                {{-- <div>
                     <label class="block font-medium">Diskon</label>
                     <input type="number" id="editDiskon" name="diskon" class="w-full border rounded px-3 py-2">
-                </div>
+                </div> --}}
                 {{-- Tipe Paket --}}
                 <select name="tipe_paket" id="tipePaketEdit" class="w-full border rounded px-3 py-2">
                     <option value="">-- Pilih Tipe Paket --</option>
@@ -261,7 +260,7 @@
                 // Isi field edit
                 document.getElementById("editNama").value = btn.dataset.nama;
                 document.getElementById("editHarga").value = btn.dataset.harga;
-                document.getElementById("editDiskon").value = btn.dataset.diskon;
+                // document.getElementById("editDiskon").value = btn.dataset.diskon;
                 document.getElementById("editPaket").value = btn.dataset.paket;
                 document.getElementById("editDeskripsi").value = btn.dataset.deskripsi;
                 document.getElementById("editWaktu").value = btn.dataset.waktu;
