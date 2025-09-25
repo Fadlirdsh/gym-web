@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kelas_id')->constrained('kelas')->cascadeOnDelete();
-            $table->foreignId('trainer_id')->constrained('trainers')->cascadeOnDelete();
+            $table->foreignId('trainer_id')->constrained('users')->onDelete('cascade');
             $table->string('day');                  // contoh: Monday
             $table->time('time');                   // jam kelas
             $table->string('class_focus')->nullable(); // optional

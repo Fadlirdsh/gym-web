@@ -100,9 +100,9 @@
                     </div>
 
                     <div class="flex justify-between mt-4">
-                        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Simpan</button>
+                        <button type="submit" class="bg-green-500 text-black px-4 py-2 rounded">Simpan</button>
                         <button type="button" id="btnCloseCreate"
-                            class="bg-gray-500 text-white px-4 py-2 rounded">Batal</button>
+                            class="bg-gray-500 text-black px-4 py-2 rounded">Batal</button>
                     </div>
                 </form>
             </div>
@@ -152,9 +152,9 @@
                     </div>
 
                     <div class="flex justify-between mt-4">
-                        <button type="submit" class="bg-yellow-500 text-white px-4 py-2 rounded">Update</button>
+                        <button type="submit" class="bg-yellow-500 text-black px-4 py-2 rounded">Update</button>
                         <button type="button" id="btnCloseEdit"
-                            class="bg-gray-500 text-white px-4 py-2 rounded">Batal</button>
+                            class="bg-gray-500 text-black px-4 py-2 rounded">Batal</button>
                     </div>
                 </form>
             </div>
