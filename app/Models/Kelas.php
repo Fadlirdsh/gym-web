@@ -12,26 +12,63 @@ class Kelas extends Model
     protected $table = 'kelas'; // nama tabel di database
 
     protected $fillable = [
-        'nama_kelas',   // contoh: Pilates Group, Yoga Private
-        'tipe_kelas',   // Group / Private
-        'harga',        // decimal
-        'deskripsi',    // text
-        'diskon',       // decimal
-        'tipe_paket',   // Package, ClassPass, Drop In
-        // 'waktu_mulai',  // jam mulai kelas
+        'nama_kelas',  
+        'tipe_kelas',  
+        'harga',       
+        'deskripsi',   
+        'tipe_paket',  
         'jumlah_token',
         'expired_at',
     ];
 
     protected $casts = [
         'harga' => 'decimal:2',
-        'diskon' => 'decimal:2',
-        // 'waktu_mulai' => 'datetime', // hanya jam:menit
     ];
 
-    // // relasi ke customer (jika ada pivot table customer_kelas)
-    // public function customers()
-    // {
-    //     return $this->belongsToMany(Customer::class, 'customer_kelas');
-    // }
+    // Tambahkan accessor ini supaya harga_diskon dan diskon_persen otomatis ada
+    protected $appends = ['harga_diskon', 'diskon_persen'];
+
+    public function diskons()
+    {
+        return $this->hasMany(Diskon::class);
+    }
+
+    public function hargaSetelahDiskon()
+    {
+        $diskon = $this->diskons()
+            ->where('tanggal_mulai', '<=', now())
+            ->where('tanggal_berakhir', '>=', now())
+            ->orderByDesc('persentase')
+            ->first();
+
+        if ($diskon) {
+            return $this->harga - ($this->harga * $diskon->persentase / 100);
+        }
+
+        return $this->harga;
+    }
+
+    // Accessor untuk harga_diskon
+    public function getHargaDiskonAttribute()
+    {
+        $diskon = $this->diskons()
+            ->where('tanggal_mulai', '<=', now())
+            ->where('tanggal_berakhir', '>=', now())
+            ->orderByDesc('persentase')
+            ->first();
+
+        return $diskon ? $this->harga - ($this->harga * $diskon->persentase / 100) : $this->harga;
+    }
+
+    // Accessor untuk persentase diskon
+    public function getDiskonPersenAttribute()
+    {
+        $diskon = $this->diskons()
+            ->where('tanggal_mulai', '<=', now())
+            ->where('tanggal_berakhir', '>=', now())
+            ->orderByDesc('persentase')
+            ->first();
+
+        return $diskon ? $diskon->persentase : 0;
+    }
 }

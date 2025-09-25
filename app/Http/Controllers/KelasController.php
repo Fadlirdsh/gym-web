@@ -9,7 +9,11 @@ class KelasController extends Controller
 {
     public function index()
     {
-        $kelas = Kelas::all();
+        // Ambil semua kelas sekaligus relasi diskon
+        $kelas = Kelas::with('diskons')->get();
+
+// dd($kelas->first()->diskons, $kelas->first()->harga_diskon, $kelas->first()->diskon_persen);
+
         return view('users.Kelas', compact('kelas'));
     }
 
@@ -25,9 +29,7 @@ class KelasController extends Controller
             'tipe_kelas'  => 'required|string|max:50',
             'harga'       => 'required|numeric',
             'deskripsi'   => 'nullable|string',
-            'diskon'      => 'nullable|numeric|min:0|max:100',
             'tipe_paket'  => 'nullable|string|max:50',
-            // 'waktu_mulai' => 'required|date',
             'jumlah_token' => strtolower($request->tipe_paket) === 'classes'
                 ? 'required|integer|min:1'
                 : 'nullable',
@@ -38,7 +40,6 @@ class KelasController extends Controller
 
         $data = $request->all();
 
-        // Ubah format datetime-local ke MySQL datetime
         if (!empty($data['waktu_mulai'])) {
             $data['waktu_mulai'] = date('Y-m-d H:i:s', strtotime($data['waktu_mulai']));
         }
@@ -48,11 +49,6 @@ class KelasController extends Controller
         return redirect()->route('kelas.index')->with('success', 'Kelas berhasil ditambahkan');
     }
 
-    // public function edit(Kelas $kelas)
-    // {
-    //     return view('users.kelas-edit', compact('kelas'));
-    // }
-
     public function update(Request $request, Kelas $kelas)
     {
         $request->validate([
@@ -60,9 +56,7 @@ class KelasController extends Controller
             'tipe_kelas'  => 'required|string|max:50',
             'harga'       => 'required|numeric',
             'deskripsi'   => 'nullable|string',
-            'diskon'      => 'nullable|numeric|min:0|max:100',
             'tipe_paket'  => 'nullable|string|max:50',
-            // 'waktu_mulai' => 'required|date',
             'jumlah_token' => $request->tipe_paket === 'Classes'
                 ? 'required|integer|min:1'
                 : 'nullable',
@@ -73,7 +67,6 @@ class KelasController extends Controller
 
         $data = $request->all();
 
-        // Ubah format datetime-local ke MySQL datetime
         if (!empty($data['waktu_mulai'])) {
             $data['waktu_mulai'] = date('Y-m-d H:i:s', strtotime($data['waktu_mulai']));
         }

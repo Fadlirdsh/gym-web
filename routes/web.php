@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\DiskonController;
 
 /*
 |--------------------------------------------------------------------------
@@ -108,4 +109,11 @@ Route::middleware(['auth.session'])->group(function () {
     Route::resource('schedules', ScheduleController::class)->except(['edit']);
     Route::patch('/schedules/{schedule}/toggle', [ScheduleController::class, 'toggleActive'])
         ->name('schedules.toggle');
+
+    /*
+    |----------------------------------------------------------------------
+    | Diskon
+    |----------------------------------------------------------------------
+    */
+    Route::resource('diskon', DiskonController::class);
 });

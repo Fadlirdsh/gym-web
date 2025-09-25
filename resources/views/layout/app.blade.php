@@ -46,7 +46,7 @@
                                     Manage Schedule
                                 </a>
 
-                                <a href="#"
+                                <a href="{{ route('diskon.index') }}"
                                     class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
                                     Manage Diskon
                                 </a>
