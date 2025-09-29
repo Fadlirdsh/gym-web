@@ -9,11 +9,8 @@ class KelasController extends Controller
 {
     public function index()
     {
-        // Ambil semua kelas sekaligus relasi diskon
+        // Ambil semua kelas sekaligus relasi diskon (untuk admin web)
         $kelas = Kelas::with('diskons')->get();
-
-// dd($kelas->first()->diskons, $kelas->first()->harga_diskon, $kelas->first()->diskon_persen);
-
         return view('admin.Kelas', compact('kelas'));
     }
 
@@ -25,11 +22,11 @@ class KelasController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_kelas'  => 'required|string|max:100',
-            'tipe_kelas'  => 'required|string|max:50',
-            'harga'       => 'required|numeric',
-            'deskripsi'   => 'nullable|string',
-            'tipe_paket'  => 'nullable|string|max:50',
+            'nama_kelas'   => 'required|string|max:100',
+            'tipe_kelas'   => 'required|string|max:50',
+            'harga'        => 'required|numeric',
+            'deskripsi'    => 'nullable|string',
+            'tipe_paket'   => 'nullable|string|max:50',
             'jumlah_token' => strtolower($request->tipe_paket) === 'classes'
                 ? 'required|integer|min:1'
                 : 'nullable',
@@ -52,11 +49,11 @@ class KelasController extends Controller
     public function update(Request $request, Kelas $kelas)
     {
         $request->validate([
-            'nama_kelas'  => 'required|string|max:100',
-            'tipe_kelas'  => 'required|string|max:50',
-            'harga'       => 'required|numeric',
-            'deskripsi'   => 'nullable|string',
-            'tipe_paket'  => 'nullable|string|max:50',
+            'nama_kelas'   => 'required|string|max:100',
+            'tipe_kelas'   => 'required|string|max:50',
+            'harga'        => 'required|numeric',
+            'deskripsi'    => 'nullable|string',
+            'tipe_paket'   => 'nullable|string|max:50',
             'jumlah_token' => $request->tipe_paket === 'Classes'
                 ? 'required|integer|min:1'
                 : 'nullable',
@@ -80,5 +77,33 @@ class KelasController extends Controller
     {
         $kelas->delete();
         return redirect()->route('kelas.index')->with('success', 'Kelas berhasil dihapus');
+    }
+
+    /**
+     * API untuk mobile app (Ionic)
+     */
+    public function apiIndex()
+    {
+        $kelas = Kelas::with('diskons')->get();
+
+        // transform data biar rapi sesuai kebutuhan frontend
+        $data = $kelas->map(function ($item) {
+            return [
+                'id'          => $item->id,
+                'nama_kelas'  => $item->nama_kelas,
+                'tipe_kelas'  => $item->tipe_kelas,
+                'harga'       => $item->harga,
+                'deskripsi'   => $item->deskripsi,
+                'tipe_paket'  => $item->tipe_paket,
+                'jumlah_token'=> $item->jumlah_token,
+                'expired_at'  => $item->expired_at,
+                'waktu_mulai' => $item->waktu_mulai,
+                'diskon_persen' => $item->diskons->first()->persen ?? 0,
+                'harga_diskon'  => $item->harga_diskon ?? $item->harga,
+                'sisa_kursi'    => $item->sisa_kursi ?? null, // kalau ada field kursi
+            ];
+        });
+
+        return response()->json($data);
     }
 }

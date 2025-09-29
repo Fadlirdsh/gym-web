@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Reservasi;
 use App\Models\User;
 use App\Models\Kelas;
+use App\Models\VisitLog;
 use Illuminate\Http\Request;
 
 class ReservasiController extends Controller
@@ -23,6 +24,29 @@ class ReservasiController extends Controller
     }
 
     /**
+     * Update status reservasi + catat ke visit log
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $reservasi = Reservasi::with('pelanggan')->findOrFail($id);
+
+        // update status reservasi
+        $reservasi->update([
+            'status' => $request->status,
+        ]);
+
+        // catat ke visit_logs
+        VisitLog::create([
+            'reservasi_id' => $reservasi->id,
+            'user_id'      => $reservasi->pelanggan_id, // simpan id pelanggan
+            'status'       => $request->status,
+            'catatan'      => $request->catatan ?? 'Status diubah menjadi ' . $request->status,
+        ]);
+
+        return redirect()->back()->with('success', 'Status reservasi diperbarui dan dicatat di Visit Log.');
+    }
+
+    /**
      * Form tambah reservasi
      */
     public function create()
@@ -35,7 +59,7 @@ class ReservasiController extends Controller
     }
 
     /**
-     * Simpan reservasi baru
+     * Simpan reservasi baru + log otomatis
      */
     public function store(Request $request)
     {
@@ -47,9 +71,18 @@ class ReservasiController extends Controller
             'status'       => 'required|in:pending,approved,canceled',
         ]);
 
-        Reservasi::create($request->all());
+        // simpan reservasi
+        $reservasi = Reservasi::create($request->all());
 
-        return redirect()->route('reservasi.index')->with('success', 'Reservasi berhasil ditambahkan');
+        // langsung catat ke visit_logs
+        VisitLog::create([
+            'reservasi_id' => $reservasi->id,
+            'user_id'      => $reservasi->pelanggan_id,
+            'status'       => $reservasi->status,
+            'catatan'      => 'Reservasi baru dibuat dengan status ' . $reservasi->status,
+        ]);
+
+        return redirect()->route('reservasi.index')->with('success', 'Reservasi berhasil ditambahkan dan dicatat di Visit Log');
     }
 
     /**
@@ -73,7 +106,7 @@ class ReservasiController extends Controller
     }
 
     /**
-     * Update reservasi
+     * Update reservasi (data umum, bukan status)
      */
     public function update(Request $request, Reservasi $reservasi)
     {

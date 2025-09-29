@@ -8,6 +8,7 @@ use App\Models\Kelas;
 use App\Models\Schedule;
 use App\Models\Diskon;
 use App\Models\Reservasi;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -30,8 +31,48 @@ class DashboardController extends Controller
 
         $totalReservations = Reservasi::count();
 
-        $latestUsers = User::latest()->take(5)->get();
+        $latestUsers = User::where('role', 'pelanggan')->latest()->take(5)->get();
         $latestDiscounts = Diskon::latest()->take(5)->get();
+
+        // Grafik data: reservasi per bulan
+        $reservations = Reservasi::select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('total', 'month')
+            ->toArray();
+
+        $reservationsPerMonth = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $reservationsPerMonth[$m] = $reservations[$m] ?? 0;
+        }
+
+
+        // Grafik data: pengguna baru per bulan
+        // Data pengguna baru trainer per bulan
+        $trainerPerMonth = User::where('role', 'trainer')
+            ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('total', 'month')
+            ->toArray();
+
+        // Data pengguna baru pelanggan per bulan
+        $pelangganPerMonth = User::where('role', 'pelanggan')
+            ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('total', 'month')
+            ->toArray();
+
+        // Pastikan setiap bulan punya nilai (0 jika tidak ada)
+        for ($i = 1; $i <= 12; $i++) {
+            if (!isset($trainerPerMonth[$i])) $trainerPerMonth[$i] = 0;
+            if (!isset($pelangganPerMonth[$i])) $pelangganPerMonth[$i] = 0;
+        }
+
+        ksort($trainerPerMonth);
+        ksort($pelangganPerMonth);
+
 
         return view('admin.dashboard', compact(
             'totalUsers',
@@ -42,7 +83,10 @@ class DashboardController extends Controller
             'totalReservations',
             'latestUsers',
             'upcomingSchedules',
-            'latestDiscounts'
+            'latestDiscounts',
+            'reservationsPerMonth',
+            'trainerPerMonth',
+            'pelangganPerMonth'
         ));
     }
 }
