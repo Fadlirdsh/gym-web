@@ -23,6 +23,20 @@ class VisitLog extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id')->where('role', 'pelanggan');
+    }
+    // VisitLog.php
+    public function scopeApprovedOnDate($query, $date)
+    {
+        return $query->whereHas('reservasi', function ($q) {
+            $q->where('status', 'approved');
+        })->whereDate('created_at', $date);
+    }
+
+    public function scopeApprovedBetween($query, $startDate, $endDate)
+    {
+        return $query->whereHas('reservasi', function ($q) {
+            $q->where('status', 'approved');
+        })->whereBetween('created_at', [$startDate, $endDate]);
     }
 }
