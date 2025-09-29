@@ -54,11 +54,21 @@
                                     class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
                                     Data
                                 </a>
-                                <a href="#"
+                                <a href="{{ route('visitlog.index') }}"
                                     class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
                                     Visit Log
                                 </a>
                             </div>
+                            <form id="logout-form" action="{{ route('admin.logout') }}" method="POST"
+                                style="display: none;">
+                                @csrf
+                            </form>
+
+                            <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                                Logout
+                            </button>
+
                         </div>
                     </div>
 

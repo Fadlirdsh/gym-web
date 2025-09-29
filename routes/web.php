@@ -1,21 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\DiskonController;
 use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\DashboardController;
-
+use App\Http\Controllers\VisitLogController;
 
 /*
 |--------------------------------------------------------------------------
-| Redirect ke login
+| Redirect default
 |--------------------------------------------------------------------------
 */
 
@@ -23,117 +20,55 @@ Route::get('/', fn() => redirect()->route('admin.login'));
 
 /*
 |--------------------------------------------------------------------------
-| Auth (Login)
+| Auth (Login & Logout)
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->group(function () {
-    // Halaman login
-    Route::get('/login', fn() => view('auth.login'))->name('admin.login');
-
-    // Proses login (JWT)
-    Route::post('/api/login', function (Request $request) {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        $user = User::where('email', $request->email)->first();
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Email atau password salah'], 422);
-        }
-
-        $token = JWTAuth::fromUser($user);
-
-        return response()->json([
-            'message' => 'Login berhasil',
-            'token'   => $token,
-            'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-            ],
-        ]);
-    })->name('admin.login.post');
+Route::prefix('admin')->middleware('web')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/login', [LoginController::class, 'login'])->name('admin.login.submit');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
 });
 
 /*
 |--------------------------------------------------------------------------
-| API (JWT protected)
+| Admin Routes (hanya untuk role=admin)
 |--------------------------------------------------------------------------
 */
-Route::prefix('api')->middleware('jwt.auth')->group(function () {
-    Route::get('/home', function () {
-        return response()->json([
-            'message' => 'Selamat datang di home!',
-            'data'    => 'Ini data rahasia hanya untuk user login',
-        ]);
+Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(function () {
+    Route::get('/home', [LoginController::class, 'dashboard'])->name('admin.home');
+
+    // Manage User / Member
+    Route::prefix('manage')->group(function () {
+        Route::get('/', [UserController::class, 'manage'])->name('users.manage');
+        Route::post('/', [UserController::class, 'storeWeb'])->name('users.store');
+        Route::get('/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/{id}', [UserController::class, 'updateWeb'])->name('users.update');
+        Route::delete('/{id}', [UserController::class, 'destroyWeb'])->name('users.destroy');
     });
-});
-/*
-|--------------------------------------------------------------------------
-| Dashboard (session protected)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth.session'])->group(function () {
-    // Halaman home (URL: /admin/home) → view admin.home
-    Route::get('/admin/home', function () {
-        return view('admin.home');
-    })->name('home');
 
-
-    /*
-    |----------------------------------------------------------------------
-    | Resource Kelas
-    |----------------------------------------------------------------------
-    */
+    // Resource Kelas
     Route::prefix('users')->group(function () {
         Route::resource('kelas', KelasController::class)->parameters([
             'kelas' => 'kelas',
         ]);
     });
 
-    /*
-|----------------------------------------------------------------------
-| Manage User / Member (Admin)
-|----------------------------------------------------------------------
-*/
-    Route::prefix('admin')->group(function () {
-        Route::get('/manage', [UserController::class, 'manage'])->name('users.manage');
-        Route::post('/manage', [UserController::class, 'storeWeb'])->name('users.store');
-        Route::get('/manage/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
-        Route::put('/manage/{id}', [UserController::class, 'updateWeb'])->name('users.update');
-        Route::delete('/manage/{id}', [UserController::class, 'destroyWeb'])->name('users.destroy');
-    });
-
-
-    /*
-    |----------------------------------------------------------------------
-    | Schedule
-    |----------------------------------------------------------------------
-    */
+    // Schedule
     Route::resource('schedules', ScheduleController::class)->except(['edit']);
     Route::patch('/schedules/{schedule}/toggle', [ScheduleController::class, 'toggleActive'])
         ->name('schedules.toggle');
 
-    /*
-    |----------------------------------------------------------------------
-    | Diskon
-    |----------------------------------------------------------------------
-    */
+    // Diskon
     Route::resource('diskon', DiskonController::class);
 
-    /*
-    |----------------------------------------------------------------------
-    | Dashboard
-    |----------------------------------------------------------------------
-    */
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
-    /*
-    |----------------------------------------------------------------------
-    | Reservasi
-    |----------------------------------------------------------------------
-    */
+    // Reservasi
     Route::resource('reservasi', ReservasiController::class);
+    Route::patch('/reservasi/{id}/status', [ReservasiController::class, 'updateStatus'])
+    ->name('reservasi.updateStatus');
+
+    // VisitLog
+    Route::get('/visitlog', [VisitLogController::class, 'index'])->name('visitlog.index');
 });

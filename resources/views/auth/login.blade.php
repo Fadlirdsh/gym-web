@@ -15,20 +15,24 @@
             <h2 class="text-2xl font-bold text-white">Login Admin</h2>
         </div>
 
-        <div id="errorMessage" class="mb-4 text-red-400 text-sm"></div>
+        @if ($errors->any())
+            <div class="mb-4 text-red-400 text-sm">
+                {{ $errors->first() }}
+            </div>
+        @endif
 
-        <form id="loginForm" class="space-y-4">
+        <form method="POST" action="{{ route('admin.login.submit') }}" class="space-y-4">
             @csrf
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-100">Email</label>
-                <input id="email" type="email" required
+                <input id="email" name="email" type="email" required
                     class="mt-1 block w-full rounded-md bg-white/5 px-3 py-2 text-white placeholder-gray-400 focus:outline-indigo-500"
                     placeholder="admin@example.com">
             </div>
 
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-100">Password</label>
-                <input id="password" type="password" required
+                <input id="password" name="password" type="password" required
                     class="mt-1 block w-full rounded-md bg-white/5 px-3 py-2 text-white placeholder-gray-400 focus:outline-indigo-500"
                     placeholder="••••••••">
             </div>
@@ -39,38 +43,6 @@
             </button>
         </form>
     </div>
-
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            try {
-                const response = await fetch('/admin/api/login', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ email, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    // Simpan token JWT
-                    localStorage.setItem('jwt_token', data.token);
-                    alert('Login berhasil!');
-                    // Redirect ke halaman home
-                    window.location.href = '/users/home';
-                } else {
-                    document.getElementById('errorMessage').innerText = data.message || 'Login gagal';
-                }
-            } catch (err) {
-                console.error(err);
-                document.getElementById('errorMessage').innerText = 'Terjadi kesalahan, coba lagi.';
-            }
-        });
-    </script>
 
 </body>
 
