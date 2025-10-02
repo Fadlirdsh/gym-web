@@ -12,13 +12,14 @@ class Kelas extends Model
     protected $table = 'kelas'; // nama tabel di database
 
     protected $fillable = [
-        'nama_kelas',  
-        'tipe_kelas',  
-        'harga',       
-        'deskripsi',   
-        'tipe_paket',  
+        'nama_kelas',
+        'tipe_kelas',
+        'harga',
+        'deskripsi',
+        'tipe_paket',
         'jumlah_token',
         'expired_at',
+        'kapasitas',
     ];
 
     protected $casts = [
@@ -70,5 +71,9 @@ class Kelas extends Model
             ->first();
 
         return $diskon ? $diskon->persentase : 0;
+    }
+    public function reservasi()
+    {
+        return $this->hasMany(\App\Models\Reservasi::class, 'kelas_id');
     }
 }

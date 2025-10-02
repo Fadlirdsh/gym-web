@@ -51,13 +51,13 @@ class UserController extends Controller
 
         $request->validate([
             'name'     => 'sometimes|required|string|max:255',
-            'email'    => ['sometimes','required','string','email', Rule::unique('users')->ignore($user->id)],
+            'email'    => ['sometimes', 'required', 'string', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => 'sometimes|required|string|min:6',
         ]);
 
-        if($request->has('name'))     $user->name = $request->name;
-        if($request->has('email'))    $user->email = $request->email;
-        if($request->has('password')) $user->password = Hash::make($request->password);
+        if ($request->has('name'))     $user->name = $request->name;
+        if ($request->has('email'))    $user->email = $request->email;
+        if ($request->has('password')) $user->password = Hash::make($request->password);
 
         $user->save();
 
@@ -117,7 +117,7 @@ class UserController extends Controller
 
         $request->validate([
             'name'                  => 'required|string|max:255',
-            'email'                 => ['required','email', Rule::unique('users')->ignore($member->id)],
+            'email'                 => ['required', 'email', Rule::unique('users')->ignore($member->id)],
             'password'              => 'nullable|string|min:6|confirmed',
             'kelas_id'              => 'required|exists:kelas,id',
         ]);
@@ -139,5 +139,11 @@ class UserController extends Controller
         $member->delete();
 
         return redirect()->route('users.manage')->with('success', 'Member berhasil dihapus');
+    }
+
+    public function pelanggan()
+    {
+        $pelanggan = User::where('role', 'pelanggan')->get();
+        return response()->json($pelanggan);
     }
 }
