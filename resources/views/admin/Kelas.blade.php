@@ -151,6 +151,11 @@
                     <label class="block font-medium">Expired At</label>
                     <input type="datetime-local" name="expired_at" class="w-full border rounded px-3 py-2">
                 </div>
+                <div class="mb-3">
+                    <label for="kapasitas" class="form-label">Kapasitas</label>
+                    <input type="number" name="kapasitas" id="kapasitas" class="form-control" value="20" min="1"
+                        required>
+                </div>
                 <div class="flex justify-end gap-2 pt-4">
                     <button type="button" id="btnCloseCreate"
                         class="px-4 py-2 bg-gray-500 text-black rounded hover:bg-gray-600">Batal</button>
@@ -170,7 +175,8 @@
                 @method('PUT')
                 <div>
                     <label class="block font-medium">Nama Kelas</label>
-                    <input type="text" id="editNama" name="nama_kelas" class="w-full border rounded px-3 py-2" required>
+                    <input type="text" id="editNama" name="nama_kelas" class="w-full border rounded px-3 py-2"
+                        required>
                 </div>
                 @php
                     $tipeKelas = ['Pilates Group', 'Pilates Private', 'Yoga Group', 'Yoga Private'];
@@ -210,6 +216,11 @@
                     <label class="block font-medium">Jumlah Token</label>
                     <input type="number" id="editToken" name="jumlah_token" class="w-full border rounded px-3 py-2"
                         min="0">
+                </div>
+                <div class="mb-3">
+                    <label for="kapasitas" class="form-label">Kapasitas</label>
+                    <input type="number" name="kapasitas" id="kapasitas" class="form-control" value="20"
+                        min="1" required>
                 </div>
                 <div>
                     <label class="block font-medium">Expired At</label>

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamps();                      // created_at & updated_at
         });
     }
-
+                                                                                                                                                                                        
     public function down(): void
     {
         Schema::dropIfExists('kelas');

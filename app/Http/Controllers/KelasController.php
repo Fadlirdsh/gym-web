@@ -33,6 +33,7 @@ class KelasController extends Controller
             'expired_at'   => strtolower($request->tipe_paket) === 'classes'
                 ? 'required|date'
                 : 'nullable',
+            'kapasitas' => 'required|integer|min:1',
         ]);
 
         $data = $request->all();
@@ -60,6 +61,7 @@ class KelasController extends Controller
             'expired_at'   => $request->tipe_paket === 'Classes'
                 ? 'required|date'
                 : 'nullable',
+            'kapasitas' => $request->kapasitas,
         ]);
 
         $data = $request->all();
@@ -95,12 +97,12 @@ class KelasController extends Controller
                 'harga'       => $item->harga,
                 'deskripsi'   => $item->deskripsi,
                 'tipe_paket'  => $item->tipe_paket,
-                'jumlah_token'=> $item->jumlah_token,
+                'jumlah_token' => $item->jumlah_token,
                 'expired_at'  => $item->expired_at,
                 'waktu_mulai' => $item->waktu_mulai,
                 'diskon_persen' => $item->diskons->first()->persen ?? 0,
                 'harga_diskon'  => $item->harga_diskon ?? $item->harga,
-                'sisa_kursi'    => $item->sisa_kursi ?? null, // kalau ada field kursi
+                'sisa_kursi'    => $item->kapasitas,    
             ];
         });
 

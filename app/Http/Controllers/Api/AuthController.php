@@ -17,10 +17,16 @@ class AuthController extends Controller
             return response()->json(['error' => 'Email atau password salah'], 401);
         }
 
+        $user = Auth::guard('api')->user(); // ← ambil user setelah login
+
+        if (!in_array($user->role, ['pelanggan'])) {
+            return response()->json(['error' => 'Anda tidak memiliki akses'], 403);
+        }
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60 // ✅ ubah auth() → JWTAuth
+            'expires_in' => JWTAuth::factory()->getTTL() * 60
         ]);
     }
 }
