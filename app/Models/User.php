@@ -44,4 +44,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    public function kupon()
+    {
+        return $this->hasOne(KuponPengguna::class, 'user_id');
+    }
 }

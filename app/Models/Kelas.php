@@ -20,20 +20,34 @@ class Kelas extends Model
         'jumlah_token',
         'expired_at',
         'kapasitas',
+        'gambar',
     ];
 
     protected $casts = [
         'harga' => 'decimal:2',
     ];
 
-    // Tambahkan accessor ini supaya harga_diskon dan diskon_persen otomatis ada
-    protected $appends = ['harga_diskon', 'diskon_persen'];
+    // Tambahkan accessor ini supaya harga_diskon, diskon_persen, dan SISA_KURSI otomatis ada
+    protected $appends = ['harga_diskon', 'diskon_persen', 'sisa_kursi'];
+
+    // --- Accessor Baru untuk Sisa Kursi ---
+    /**
+     * Accessor untuk sisa_kursi (kapasitas dikurangi jumlah reservasi).
+     * Properti ini bergantung pada pemanggilan withCount('reservasi') di Controller.
+     */
+    public function getSisaKursiAttribute()
+    {
+        // Pastikan reservasi_count ada (hasil dari withCount('reservasi'))
+        return $this->kapasitas - ($this->reservasi_count ?? 0);
+    }
+    // ----------------------------------------
 
     public function diskons()
     {
         return $this->hasMany(Diskon::class);
     }
 
+    // Metode ini tidak lagi diperlukan jika menggunakan getHargaDiskonAttribute
     public function hargaSetelahDiskon()
     {
         $diskon = $this->diskons()
@@ -72,8 +86,19 @@ class Kelas extends Model
 
         return $diskon ? $diskon->persentase : 0;
     }
+    
     public function reservasi()
     {
         return $this->hasMany(\App\Models\Reservasi::class, 'kelas_id');
+    }
+    
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class, 'kelas_id');
+    }
+
+    public function trainer()
+    {
+        return $this->belongsTo(Trainer::class, 'trainer_id');
     }
 }

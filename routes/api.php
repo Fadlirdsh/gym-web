@@ -6,23 +6,45 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReservasiController;
 use App\Http\Controllers\Api\KelasController;
+use App\Http\Controllers\Api\KuponController;
 
-// Route API untuk Kelas
+
+// =====================
+// 🔹 ROUTE API KELAS
+// =====================
 Route::apiResource('kelas', KelasController::class);
 
-// Route API untuk Reservasi
-Route::apiResource('reservasi', ReservasiController::class);
+// =====================
+// 🔹 ROUTE API RESERVASI
+// =====================
+Route::middleware(['jwt.auth', 'role:pelanggan'])->apiResource('reservasi', ReservasiController::class);
 
-// Route API untuk User
+// =====================
+// 🔹 ROUTE API USER
+// =====================
 Route::apiResource('users', UserController::class);
 Route::get('/pelanggan', [UserController::class, 'pelanggan']);
 
-// Login API (tanpa prefix admin)
+// =====================
+// 🔹 AUTH (LOGIN / REGISTER / GOOGLE LOGIN)
+// =====================
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/google-login', [AuthController::class, 'googleLogin']);
+Route::post('/register', [AuthController::class, 'register']);
 
-// Jika butuh auth user
-// Route::middleware('auth:sanctum')->get('/user', fn (Request $request) => $request->user());
-
+// =====================
+// 🔹 AMBIL DATA USER LOGIN (JWT)
+// =====================
 Route::middleware(['jwt.auth', 'role:pelanggan'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// =====================
+// 🔹 KUPON FREECLASS
+// =====================
+Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
+    Route::get('/kupon', [KuponController::class, 'aktif']);   // ambil kupon aktif
+    Route::post('/kupon/claim', [KuponController::class, 'claim']); // klaim kupon baru
+    Route::post('/kupon/pakai', [KuponController::class, 'pakai']); // pakai kupon
+});
+
