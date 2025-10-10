@@ -31,6 +31,7 @@ Route::get('/pelanggan', [UserController::class, 'pelanggan']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
 
 // =====================
 // 🔹 AMBIL DATA USER LOGIN (JWT)

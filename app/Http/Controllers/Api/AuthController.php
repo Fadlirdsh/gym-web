@@ -27,9 +27,10 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'access_token' => $token,
+            'access_token' => $token, // 🔹 nama token disamakan
             'token_type' => 'bearer',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60
+            'expires_in' => JWTAuth::factory()->getTTL() * 60,
+            'user' => $user
         ]);
     }
 
@@ -87,18 +88,26 @@ class AuthController extends Controller
             'role' => 'pelanggan',
         ]);
 
-        // Buat token
-        $token = JWTAuth::fromUser($user);
+        // Buat token login otomatis setelah register
+        $token = Auth::guard('api')->login($user);
 
         return response()->json([
             'message' => 'Registrasi pelanggan berhasil.',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-            ],
-            'token' => $token
+            'access_token' => $token, // 🔹 sama kayak login
+            'token_type' => 'bearer',
+            'expires_in' => JWTAuth::factory()->getTTL() * 60,
+            'user' => $user
         ], 201);
+    }
+
+    public function logout(Request $request)
+    {
+        try {
+            // Blacklist token agar tidak bisa dipakai lagi
+            JWTAuth::invalidate(JWTAuth::getToken());
+            return response()->json(['message' => 'Logout berhasil, token telah diblacklist']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Gagal logout atau token tidak valid'], 400);
+        }
     }
 }
