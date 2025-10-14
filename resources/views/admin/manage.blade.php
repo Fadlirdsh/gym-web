@@ -50,7 +50,15 @@
                         <td class="px-4 py-2">{{ $member->name }}</td>
                         <td class="px-4 py-2">{{ $member->email }}</td>
                         <td class="px-4 py-2">
-                            {{ $member->kelas->nama_kelas ?? '-' }}
+                            @if ($member->kelas->isNotEmpty())
+                                @foreach ($member->kelas as $kelas)
+                                    {{ $kelas->nama_kelas }}@if (!$loop->last)
+                                        ,
+                                    @endif
+                                @endforeach
+                            @else
+                                -
+                            @endif
                         </td>
                         <td class="px-4 py-2 space-x-4">
                             <a href="{{ route('users.edit', $member->id) }}"
@@ -65,12 +73,12 @@
                             </form>
                         </td>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="px-4 py-4 text-center text-gray-300">Belum ada member</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-@endsection
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-4 text-center text-gray-300">Belum ada member</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    @endsection

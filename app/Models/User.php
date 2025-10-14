@@ -15,8 +15,7 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
-        'kelas_id', // tambahkan ini supaya mass assignment kelas_id bisa
-        'role',     // opsional, kalau kamu menyimpan role user
+        'role', // opsional, kalau kamu menyimpan role user
     ];
 
     protected $hidden = [
@@ -24,16 +23,8 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
-    /**
-     * Relasi ke model Kelas
-     */
-    public function kelas()
-    {
-        return $this->belongsTo(\App\Models\Kelas::class, 'kelas_id');
-    }
-
     // =====================
-    // Implementasi JWT
+    // JWT
     // =====================
     public function getJWTIdentifier()
     {
@@ -45,6 +36,30 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
+    // =====================
+    // Relasi
+    // =====================
+
+    // 1️⃣ Relasi ke Member
+    public function member()
+    {
+        return $this->hasOne(Member::class);
+    }
+
+    // 2️⃣ Relasi ke kelas via pivot (kelas_member)
+    public function kelas()
+    {
+        return $this->belongsToMany(
+            \App\Models\Kelas::class,
+            'kelas_member',   // nama tabel pivot
+            'member_id',      // FK di pivot untuk member
+            'kelas_id'        // FK di pivot untuk kelas
+        )
+        ->withPivot(['jumlah_token', 'expired_at'])
+        ->withTimestamps();
+    }
+
+    // 3️⃣ Relasi ke kupon
     public function kupon()
     {
         return $this->hasOne(KuponPengguna::class, 'user_id');
