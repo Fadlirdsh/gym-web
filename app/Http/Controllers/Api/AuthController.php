@@ -89,7 +89,7 @@ class AuthController extends Controller
         ]);
 
         // Buat token login otomatis setelah register
-        $token = Auth::guard('api')->login($user);
+            $token = JWTAuth::fromUser($user);
 
         return response()->json([
             'message' => 'Registrasi pelanggan berhasil.',

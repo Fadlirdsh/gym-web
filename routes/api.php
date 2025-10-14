@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReservasiController;
 use App\Http\Controllers\Api\KelasController;
 use App\Http\Controllers\Api\KuponController;
+use App\Http\Controllers\Api\MemberController;
 
 
 // =====================
@@ -49,3 +50,12 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::post('/kupon/pakai', [KuponController::class, 'pakai']); // pakai kupon
 });
 
+// =====================
+// 🔹 MEMBER 
+// =====================
+Route::apiResource('member', MemberController::class)->only(['store']);
+
+// Route custom
+Route::post('/member/ikut-kelas', [MemberController::class, 'ikutKelas']);
+Route::post('/member/aktivasi/{member_id}', [MemberController::class, 'aktivasi']);
+Route::get('/member/kelas/{user_id}', [MemberController::class, 'kelasMember']);
