@@ -22,26 +22,50 @@ class ReservasiController extends Controller
 
     public function store(Request $request)
     {
-        // Log::info('Data request:', $request->all());
-        // Log::info('User:', auth()->user());
         $request->validate([
             'kelas_id' => 'required|exists:kelas,id',
             'date'     => 'required|date',
             'time'     => 'required|string',
+            'jumlah_kelas' => 'nullable|integer|min:1', // tambahkan untuk member
         ]);
 
         $user = auth()->user();
-
         $kelas = \App\Models\Kelas::findOrFail($request->kelas_id);
 
-        // Buat jadwal berdasarkan input date dan time
+        // Cek membership user
+        $member = \App\Models\Member::where('user_id', $user->id)
+            ->where('status', 'aktif')
+            ->first();
+
+        $jumlahBooking = $request->jumlah_kelas ?? 1; // default 1
+
+        if ($member) {
+            // Jika member, cek apakah masih punya sisa kelas
+            if ($member->sisa_kelas < $jumlahBooking) {
+                return response()->json([
+                    'message' => 'Sisa kelas kamu tidak mencukupi. Silakan perpanjang membership.'
+                ], 400);
+            }
+
+            // Kurangi sisa kelas sesuai jumlah booking
+            $member->decrement('sisa_kelas', $jumlahBooking);
+        } else {
+            // Jika bukan member, batasi hanya 1 kelas
+            if ($jumlahBooking > 1) {
+                return response()->json([
+                    'message' => 'Non-member hanya dapat memesan 1 kelas per booking.'
+                ], 403);
+            }
+        }
+
+        // Gabungkan tanggal dan waktu jadi jadwal
         $jadwal = $request->date . ' ' . $request->time;
 
         $reservasi = \App\Models\Reservasi::create([
             'pelanggan_id' => $user->id,
             'trainer_id'   => $kelas->trainer_id ?? 1,
             'kelas_id'     => $kelas->id,
-            'jadwal' => Carbon::parse($request->jadwal),
+            'jadwal'       => Carbon::parse($jadwal),
             'status'       => 'pending',
         ]);
 
