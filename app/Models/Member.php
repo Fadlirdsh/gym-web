@@ -11,10 +11,14 @@ class Member extends Model
 
     protected $fillable = [
         'user_id',
+        'maks_kelas',
+        'tipe_kelas',
+        'harga',
         'tanggal_mulai',
         'tanggal_berakhir',
         'status',
     ];
+
 
     public function user()
     {
@@ -28,10 +32,10 @@ class Member extends Model
             ->withTimestamps();
     }
 
-    public function members()
-    {
-        return $this->belongsToMany(Member::class, 'kelas_member')
-            ->withPivot(['jumlah_token', 'expired_at'])
-            ->withTimestamps();
-    }
+    // public function members()
+    // {
+    //     return $this->belongsToMany(Member::class, 'kelas_member')
+    //         ->withPivot(['jumlah_token', 'expired_at'])
+    //         ->withTimestamps();
+    // }
 }

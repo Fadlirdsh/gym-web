@@ -86,15 +86,22 @@ class Kelas extends Model
 
         return $diskon ? $diskon->persentase : 0;
     }
-    
+
     public function reservasi()
     {
         return $this->hasMany(\App\Models\Reservasi::class, 'kelas_id');
     }
-    
+
     public function schedules()
     {
         return $this->hasMany(Schedule::class, 'kelas_id');
+    }
+
+    public function members()
+    {
+        return $this->belongsToMany(Member::class, 'kelas_member')
+            ->withPivot(['jumlah_token', 'expired_at'])
+            ->withTimestamps();
     }
 
     public function trainer()
