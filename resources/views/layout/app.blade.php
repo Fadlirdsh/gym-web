@@ -56,6 +56,10 @@
                                     class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
                                     Data
                                 </a>
+                                <a href="{{ route('voucher.index') }}"
+                                    class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
+                                    Manage Voucher
+                                </a>
                                 <a href="{{ route('visitlog.index') }}"
                                     class="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
                                     Visit Log
