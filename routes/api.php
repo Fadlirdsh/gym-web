@@ -56,17 +56,10 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 // =====================
 // 🔹 MEMBER (FITUR MEMBERSHIP)
 // =====================
-Route::prefix('member')->group(function () {
-    // Daftar member baru
+Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::post('/', [MemberController::class, 'store']);
-
-    // Aktivasi member (ubah status ke aktif)
     Route::put('/aktivasi/{member_id}', [MemberController::class, 'aktivasi']);
-
-    // Lihat daftar kelas yang dimiliki member
     Route::get('/kelas/{user_id}', [MemberController::class, 'kelasMember']);
-
-    // Ikut kelas (kurangi token)
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
 });
 

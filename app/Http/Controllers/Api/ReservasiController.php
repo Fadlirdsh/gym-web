@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Reservasi;
 use Illuminate\Http\Request;
+use App\Models\Reservasi;
+use App\Models\Kelas;
+use App\Models\Member;
 use Carbon\Carbon;
-// use Illuminate\Support\Facades\Log;
-
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ReservasiController extends Controller
 {
@@ -26,42 +27,65 @@ class ReservasiController extends Controller
             'kelas_id' => 'required|exists:kelas,id',
             'date'     => 'required|date',
             'time'     => 'required|string',
-            'jumlah_kelas' => 'nullable|integer|min:1', // tambahkan untuk member
+            'tipe_paket' => 'required|string', // pastikan tipe paket dikirim
         ]);
 
-        $user = auth()->user();
-        $kelas = \App\Models\Kelas::findOrFail($request->kelas_id);
+        // Ambil user dari token JWT
+        $user = JWTAuth::parseToken()->authenticate();
+        $kelas = Kelas::findOrFail($request->kelas_id);
 
-        // Cek membership user
-        $member = \App\Models\Member::where('user_id', $user->id)
+        // Ambil member jika ada
+        $member = Member::where('user_id', $user->id)
             ->where('status', 'aktif')
             ->first();
 
-        $jumlahBooking = $request->jumlah_kelas ?? 1; // default 1
+        // Daftar tipe paket yang diperbolehkan
+        $allPackages = ["General", "3 Classes", "5 Classes", "6 Classes", "10 Classes", "20 Classes"];
+        $generalOnly = ["General"];
 
         if ($member) {
-            // Jika member, cek apakah masih punya sisa kelas
-            if ($member->sisa_kelas < $jumlahBooking) {
+            // Member aktif → boleh semua paket
+            if (!in_array($request->tipe_paket, $allPackages)) {
                 return response()->json([
-                    'message' => 'Sisa kelas kamu tidak mencukupi. Silakan perpanjang membership.'
+                    'message' => 'Tipe paket tidak valid.'
                 ], 400);
             }
 
-            // Kurangi sisa kelas sesuai jumlah booking
-            $member->decrement('sisa_kelas', $jumlahBooking);
+            // Jika pilih selain General → cek kelas & token
+            if ($request->tipe_paket !== 'General') {
+                $pivot = $member->kelas()->where('kelas_id', $kelas->id)->first();
+
+                if (!$pivot) {
+                    return response()->json([
+                        'message' => 'Kelas ini tidak termasuk dalam paket membership Anda.'
+                    ], 400);
+                }
+
+                if ($pivot->pivot->jumlah_token <= 0) {
+                    return response()->json([
+                        'message' => 'Kuota kelas Anda sudah habis. Silakan perpanjang membership.'
+                    ], 400);
+                }
+
+                // Kurangi token
+                $member->kelas()->updateExistingPivot($kelas->id, [
+                    'jumlah_token' => $pivot->pivot->jumlah_token - 1
+                ]);
+            }
         } else {
-            // Jika bukan member, batasi hanya 1 kelas
-            if ($jumlahBooking > 1) {
+            // Bukan member / pending / nonaktif → hanya boleh General
+            if (!in_array($request->tipe_paket, $generalOnly)) {
                 return response()->json([
-                    'message' => 'Non-member hanya dapat memesan 1 kelas per booking.'
+                    'message' => 'Hanya paket General yang bisa dipilih untuk non-member atau member nonaktif/pending.'
                 ], 403);
             }
         }
 
-        // Gabungkan tanggal dan waktu jadi jadwal
+        // Gabungkan tanggal & waktu
         $jadwal = $request->date . ' ' . $request->time;
 
-        $reservasi = \App\Models\Reservasi::create([
+        // Simpan data reservasi
+        $reservasi = Reservasi::create([
             'pelanggan_id' => $user->id,
             'trainer_id'   => $kelas->trainer_id ?? 1,
             'kelas_id'     => $kelas->id,
@@ -102,7 +126,7 @@ class ReservasiController extends Controller
 
     public function currentUser()
     {
-        $user = auth()->user();
+        $user = JWTAuth::parseToken()->authenticate();
 
         if ($user && $user->role === 'pelanggan') {
             return response()->json([
