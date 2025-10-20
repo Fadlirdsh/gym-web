@@ -72,3 +72,9 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // VisitLog
     Route::get('/visitlog', [VisitLogController::class, 'index'])->name('visitlog.index');
 });
+
+
+// Voucher
+Route::get('/admin/voucher', function () {
+    return view('admin.voucher');
+})->name('voucher.index');
