@@ -4,68 +4,37 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Schedule;
-use App\Models\Kelas;
-use App\Models\User;
 
 class ScheduleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $schedules = Schedule::with(['kelas', 'trainer'])->get();
-        $kelas = Kelas::all();
-        $trainers = User::where('role', 'trainer')->get(); // ambil dari users
-
-        return view('admin.schedule', compact('schedules', 'kelas', 'trainers'));
-    }
-
-    public function create()
-    {
-        $kelas = Kelas::all();
-        $trainers = User::where('role', 'trainer')->get(); // ambil dari users
-
-        return view('admin.schedules.create', compact('kelas', 'trainers'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'kelas_id'   => 'required',
-            'trainer_id' => 'required',
-            'day'        => 'required',
-            'time'       => 'required',
+        // Query dasar
+        $query = Schedule::with([
+            'kelas',
+            'trainer',
+            'reservasi.pelanggan'
         ]);
 
-        Schedule::create($request->all());
+        // Filter berdasarkan nama client
+        if ($request->filled('client')) {
+            $query->whereHas('reservasi.pelanggan', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->client . '%');
+            });
+        }
 
-        return redirect()
-            ->route('schedules.index')
-            ->with('success', 'Jadwal berhasil ditambahkan.');
-    }
+        // Filter berdasarkan tanggal
+        if ($request->filled('date')) {
+            $query->whereDate('time', $request->date);
+        }
 
-    // edit atau update
-    public function update(Request $request, Schedule $schedule)
-    {
-        $request->validate([
-            'kelas_id'   => 'required|exists:kelas,id',
-            'trainer_id' => 'required|exists:trainers,id',
-            'day'        => 'required|string|max:20',
-            'time'       => 'required',
-        ]);
+        // Filter berdasarkan jam
+        if ($request->filled('time')) {
+            $query->whereTime('time', $request->time);
+        }
 
-        $schedule->update([
-            'kelas_id'   => $request->kelas_id,
-            'trainer_id' => $request->trainer_id,
-            'day'        => $request->day,
-            'time'       => $request->time,
-        ]);
+        $schedules = $query->get();
 
-        return redirect()->route('schedules.index')->with('success', 'Jadwal berhasil diperbarui.');
-    }
-    public function toggleActive(Schedule $schedule)
-    {
-        $schedule->is_active = !$schedule->is_active; // kalau 1 jadi 0, kalau 0 jadi 1
-        $schedule->save();
-
-        return redirect()->back()->with('success', 'Status jadwal berhasil diubah.');
+        return view('admin.schedule', compact('schedules'));
     }
 }
