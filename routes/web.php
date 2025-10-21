@@ -54,9 +54,9 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     });
 
     // Schedule
-    Route::resource('schedules', ScheduleController::class)->except(['edit']);
-    Route::patch('/schedules/{schedule}/toggle', [ScheduleController::class, 'toggleActive'])
-        ->name('schedules.toggle');
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('/schedules/filter', [ScheduleController::class, 'filter'])->name('schedules.filter');
+
 
     // Diskon
     Route::resource('diskon', DiskonController::class);
@@ -67,7 +67,7 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // Reservasi
     Route::resource('reservasi', ReservasiController::class);
     Route::patch('/reservasi/{id}/status', [ReservasiController::class, 'updateStatus'])
-    ->name('reservasi.updateStatus');
+        ->name('reservasi.updateStatus');
 
     // VisitLog
     Route::get('/visitlog', [VisitLogController::class, 'index'])->name('visitlog.index');

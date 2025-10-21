@@ -27,4 +27,8 @@ class Schedule extends Model
     {
         return $this->belongsTo(User::class, 'trainer_id');
     }
+    public function reservasi()
+    {
+        return $this->hasMany(\App\Models\Reservasi::class, 'kelas_id', 'kelas_id');
+    }
 }
