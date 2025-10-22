@@ -9,6 +9,7 @@ use App\Http\Controllers\DiskonController;
 use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\VisitLogController;
+use App\Http\Controllers\VoucherController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,10 +72,9 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
 
     // VisitLog
     Route::get('/visitlog', [VisitLogController::class, 'index'])->name('visitlog.index');
+   
+    // Voucher
+    Route::resource('voucher', VoucherController::class);
 });
 
 
-// Voucher
-Route::get('/admin/voucher', function () {
-    return view('admin.voucher');
-})->name('voucher.index');
