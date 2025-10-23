@@ -1,34 +1,47 @@
-{{-- resources/views/users/home.blade.php --}}
 @extends('layout.app')
 
-@section('title', 'Home')
+@section('title', 'Dashboard Admin')
 
 @section('content')
-    <div class="text-center">
-        <h2 class="text-3xl font-extrabold text-white mb-4">
-            Selamat Datang, {{ $user->name ?? 'Admin' }}!
-        </h2>
-        <p class="text-gray-400 mb-6">
-            Ini adalah halaman Home sederhana. Kamu bisa mengubah kontennya sesuai kebutuhan.
-        </p>
-        <a href="{{ url('/dashboard') }}"
-            class="inline-block bg-indigo-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-indigo-500 transition">
-            Pergi ke Dashboard
-        </a>
+<div class="text-center mb-10">
+    <h2 class="text-3xl font-extrabold text-white mb-2">
+        Selamat Datang, {{ $user->name ?? 'Admin' }} 👋
+    </h2>
+    <p class="text-gray-400">
+        Berikut ringkasan aktivitas hari ini di sistem Gym kamu.
+    </p>
+</div>
+
+{{-- 📊 Kartu Statistik --}}
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-gray-800 rounded-lg shadow p-6 text-center">
+        <h3 class="text-lg font-semibold text-white mb-2">Total Pelanggan</h3>
+        {{-- <p class="text-4xl font-bold text-indigo-400">{{ $totalPelanggan }}</p> --}}
+        <p class="text-gray-400 text-sm mt-1">Jumlah seluruh pelanggan terdaftar</p>
     </div>
 
-    <section class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gray-800 rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-white mb-2">Fitur MEMEK LOER1</h3>
-            <p class="text-gray-400 text-sm">Deskripsi singkat tentang fitur pertama.</p>
-        </div>
-        <div class="bg-gray-800 rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-white mb-2">Fitur 2</h3>
-            <p class="text-gray-400 text-sm">Deskripsi singkat tentang fitur kedua.</p>
-        </div>
-        <div class="bg-gray-800 rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-white mb-2">Fitur 3</h3>
-            <p class="text-gray-400 text-sm">Deskripsi singkat tentang fitur ketiga.</p>
-        </div>
-    </section>
+    <div class="bg-gray-800 rounded-lg shadow p-6 text-center">
+        <h3 class="text-lg font-semibold text-white mb-2">Reservasi Hari Ini</h3>
+        {{-- <p class="text-4xl font-bold text-green-400">{{ $reservasiHariIni }}</p> --}}
+        <p class="text-gray-400 text-sm mt-1">Total reservasi yang masuk hari ini</p>
+    </div>
+
+    <div class="bg-gray-800 rounded-lg shadow p-6 text-center">
+        <h3 class="text-lg font-semibold text-white mb-2">Kunjungan Hari Ini</h3>
+        {{-- <p class="text-4xl font-bold text-yellow-400">{{ $kunjunganHariIni }}</p> --}}
+        <p class="text-gray-400 text-sm mt-1">Jumlah pelanggan yang hadir hari ini</p>
+    </div>
+</section>
+
+{{-- 🔗 Tombol Navigasi Cepat --}}
+<div class="mt-12 flex flex-wrap justify-center gap-4">
+    <a href="{{ url('admin/dashboard') }}"
+        class="bg-indigo-600 text-white px-6 py-3 rounded-lg shadow hover:bg-indigo-500 transition">
+        📈 Lihat Dashboard Data
+    </a>
+    <a href="{{ url('admin/visitlog') }}"
+        class="bg-green-600 text-white px-6 py-3 rounded-lg shadow hover:bg-green-500 transition">
+        📋 Lihat Visit Log
+    </a>
+</div>
 @endsection
