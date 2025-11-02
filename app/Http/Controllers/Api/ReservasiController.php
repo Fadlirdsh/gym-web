@@ -24,79 +24,98 @@ class ReservasiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'kelas_id' => 'required|exists:kelas,id',
-            'date'     => 'required|date',
-            'time'     => 'required|string',
-            'tipe_paket' => 'required|string', // pastikan tipe paket dikirim
+            'kelas_id'   => 'required|exists:kelas,id',
+            'date'       => 'required|date',
+            'time'       => 'required|string',
+            'tipe_paket' => 'required|string',
         ]);
 
-        // Ambil user dari token JWT
         $user = JWTAuth::parseToken()->authenticate();
         $kelas = Kelas::findOrFail($request->kelas_id);
 
-        // Ambil member jika ada
         $member = Member::where('user_id', $user->id)
             ->where('status', 'aktif')
             ->first();
 
-        // Daftar tipe paket yang diperbolehkan
-        $allPackages = ["General", "3 Classes", "5 Classes", "6 Classes", "10 Classes", "20 Classes"];
+        $allPackages = ["General", "3 Classes", "5 Classes", "10 Classes", "20 Classes"];
         $generalOnly = ["General"];
 
         if ($member) {
-            // Member aktif → boleh semua paket
             if (!in_array($request->tipe_paket, $allPackages)) {
-                return response()->json([
-                    'message' => 'Tipe paket tidak valid.'
-                ], 400);
-            }
-
-            // Jika pilih selain General → cek kelas & token
-            if ($request->tipe_paket !== 'General') {
-                $pivot = $member->kelas()->where('kelas_id', $kelas->id)->first();
-
-                if (!$pivot) {
-                    return response()->json([
-                        'message' => 'Kelas ini tidak termasuk dalam paket membership Anda.'
-                    ], 400);
-                }
-
-                if ($pivot->pivot->jumlah_token <= 0) {
-                    return response()->json([
-                        'message' => 'Kuota kelas Anda sudah habis. Silakan perpanjang membership.'
-                    ], 400);
-                }
-
-                // Kurangi token
-                $member->kelas()->updateExistingPivot($kelas->id, [
-                    'jumlah_token' => $pivot->pivot->jumlah_token - 1
-                ]);
+                return response()->json(['message' => 'Tipe paket tidak valid.'], 400);
             }
         } else {
-            // Bukan member / pending / nonaktif → hanya boleh General
             if (!in_array($request->tipe_paket, $generalOnly)) {
-                return response()->json([
-                    'message' => 'Hanya paket General yang bisa dipilih untuk non-member atau member nonaktif/pending.'
-                ], 403);
+                return response()->json(['message' => 'Hanya paket General untuk non-member.'], 403);
             }
         }
 
-        // Gabungkan tanggal & waktu
+        // 🔹 Hitung harga dari tabel kelas
+        $harga = $this->ambilHargaDariKelas($kelas, $request->tipe_paket);
+
         $jadwal = $request->date . ' ' . $request->time;
 
-        // Simpan data reservasi
         $reservasi = Reservasi::create([
             'pelanggan_id' => $user->id,
             'trainer_id'   => $kelas->trainer_id ?? 1,
             'kelas_id'     => $kelas->id,
             'jadwal'       => Carbon::parse($jadwal),
             'status'       => 'pending',
+            'tipe_paket'   => $request->tipe_paket,
+            'harga'        => $harga,
         ]);
 
         return response()->json([
             'message' => 'Reservasi berhasil dibuat',
             'data'    => $reservasi,
         ], 201);
+    }
+
+    /**
+     * 🔹 Endpoint untuk ambil harga dari kelas berdasarkan tipe paket
+     */
+    public function getHarga(Request $request)
+    {
+        $request->validate([
+            'class_name' => 'required|string',
+            'tipe_paket' => 'required|string',
+        ]);
+
+        $kelas = Kelas::where('nama_kelas', $request->class_name)->first();
+
+        if (!$kelas) {
+            return response()->json(['message' => 'Kelas tidak ditemukan.'], 404);
+        }
+
+        $harga = $this->ambilHargaDariKelas($kelas, $request->tipe_paket);
+
+        return response()->json([
+            'harga' => $harga,
+            'nama_kelas' => $kelas->nama_kelas,
+        ]);
+    }
+
+    /**
+     * 🔹 Fungsi bantu ambil harga dari tabel kelas
+     */
+    private function ambilHargaDariKelas($kelas, $tipePaket)
+    {
+        $baseHarga = $kelas->harga;
+
+        switch ($tipePaket) {
+            case 'General':
+                return $baseHarga;
+            case '3 Classes':
+                return $baseHarga * 3 * 0.95; // contoh diskon 5%
+            case '5 Classes':
+                return $baseHarga * 5 * 0.90; // diskon 10%
+            case '10 Classes':
+                return $baseHarga * 10 * 0.85; // diskon 15%
+            case '20 Classes':
+                return $baseHarga * 20 * 0.80; // diskon 20%
+            default:
+                return $baseHarga;
+        }
     }
 
     public function show($id)
