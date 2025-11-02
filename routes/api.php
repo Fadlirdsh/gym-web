@@ -19,6 +19,7 @@ Route::apiResource('kelas', KelasController::class);
 // 🔹 ROUTE API RESERVASI
 // =====================
 Route::middleware(['jwt.auth', 'role:pelanggan'])->apiResource('reservasi', ReservasiController::class);
+Route::get('/harga', [ReservasiController::class, 'getHarga']);
 
 // =====================
 // 🔹 ROUTE API USER
