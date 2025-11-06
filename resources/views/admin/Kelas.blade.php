@@ -97,7 +97,7 @@
 
 
     {{-- Modal Create --}}
-    <div id="modalCreate" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+    <div id="modalCreate" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 animate-fadeIn">
             <h2 class="text-xl font-bold mb-4">Tambah Kelas</h2>
             <form action="{{ route('kelas.store') }}" method="POST" enctype="multipart/form-data" class="space-y-3">
@@ -175,7 +175,7 @@
     </div>
 
     {{-- Modal Edit --}}
-    <div id="modalEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+    <div id="modalEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 animate-fadeIn">
             <h2 class="text-xl font-bold mb-4">Edit Kelas</h2>
             <form id="formEdit" method="POST" enctype="multipart/form-data" class="space-y-3">
@@ -260,6 +260,22 @@
                 opacity: 1;
                 transform: scale(1);
             }
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 25px 30px;
+            border-radius: 10px;
+            width: 90%;
+            /* <= boleh diubah sesukamu */
+            max-width: 400px;
+            /* <= biar ga terlalu lebar */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: zoomIn 0.3s ease;
+            position: relative;
+            top: 0;
+            /* pastikan tidak ada offset vertikal */
+            transform: translateY(0);
         }
     </style>
 
