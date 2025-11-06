@@ -6,18 +6,18 @@
 <div class="container mx-auto p-6">
     <h1 class="text-2xl font-bold mb-4">Visit Log</h1>
 
-    {{-- 🔍 Filter tunggal tanggal --}}
-    <form method="GET" class="mb-4 flex space-x-2">
-        <input type="date" name="date" value="{{ request('date') }}" class="border p-2 rounded">
-        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Filter</button>
+<div class="flex flex-wrap justify-between items-center mb-5">
+    <div class="flex gap-2">
+        <a href="?filter=today" class="bg-blue-600 text-white px-3 py-1 rounded">Hari Ini</a>
+        <a href="?filter=yesterday" class="bg-gray-600 text-white px-3 py-1 rounded">Kemarin</a>
+        <a href="?filter=week" class="bg-green-600 text-white px-3 py-1 rounded">Minggu Ini</a>
+    </div>
+    <form method="GET" class="flex gap-2">
+        <input type="date" name="from" class="border border-gray-600 bg-gray-800 text-white rounded px-2 py-1">
+        <input type="date" name="to" class="border border-gray-600 bg-gray-800 text-white rounded px-2 py-1">
+        <button class="bg-cyan-600 text-white px-3 py-1 rounded">Filter</button>
     </form>
-
-    {{-- 🔍 Filter range tanggal --}}
-    <form method="GET" class="mb-4 flex space-x-2">
-        <input type="date" name="from_date" value="{{ request('from_date') }}" class="border p-2 rounded">
-        <input type="date" name="to_date" value="{{ request('to_date') }}" class="border p-2 rounded">
-        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Filter Range</button>
-    </form>
+</div>
 
     {{-- 📋 Tabel Visit Log --}}
     <div class="overflow-x-auto">

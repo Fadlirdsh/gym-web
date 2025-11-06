@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\UserController;
+// use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReservasiController;
 use App\Http\Controllers\Api\KelasController;
@@ -21,11 +21,11 @@ Route::apiResource('kelas', KelasController::class);
 Route::middleware(['jwt.auth', 'role:pelanggan'])->apiResource('reservasi', ReservasiController::class);
 Route::get('/harga', [ReservasiController::class, 'getHarga']);
 
-// =====================
-// 🔹 ROUTE API USER
-// =====================
-Route::apiResource('users', UserController::class);
-Route::get('/pelanggan', [UserController::class, 'pelanggan']);
+// // =====================
+// // 🔹 ROUTE API USER
+// // =====================
+// Route::apiResource('users', UserController::class);
+// Route::get('/pelanggan', [UserController::class, 'pelanggan']);
 
 // =====================
 // 🔹 AUTH (LOGIN / REGISTER / GOOGLE LOGIN)

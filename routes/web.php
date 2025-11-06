@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\KelasController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\DiskonController;
 use App\Http\Controllers\ReservasiController;
@@ -35,13 +35,15 @@ Route::prefix('admin')->middleware('web')->group(function () {
 | Admin Routes (hanya untuk role=admin)
 |--------------------------------------------------------------------------
 */
+
 Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(function () {
     Route::get('/home', [LoginController::class, 'dashboard'])->name('admin.home');
 
     // Manage User / Member
     Route::prefix('manage')->group(function () {
         Route::get('/', [UserController::class, 'manage'])->name('users.manage');
-        Route::post('/', [UserController::class, 'storeWeb'])->name('users.store');
+        Route::post('/', [UserController::class, 'storeWeb'])->name('users.store');          // buat akun pelanggan
+        Route::post('/member', [UserController::class, 'storeMember'])->name('members.store'); // buat member untuk pelanggan
         Route::get('/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('/{id}', [UserController::class, 'updateWeb'])->name('users.update');
         Route::delete('/{id}', [UserController::class, 'destroyWeb'])->name('users.destroy');
@@ -57,7 +59,6 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // Schedule
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::get('/schedules/filter', [ScheduleController::class, 'filter'])->name('schedules.filter');
-
 
     // Diskon
     Route::resource('diskon', DiskonController::class);
@@ -76,5 +77,3 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // Voucher
     Route::resource('voucher', VoucherController::class);
 });
-
-
