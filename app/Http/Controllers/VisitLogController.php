@@ -11,23 +11,42 @@ class VisitLogController extends Controller
     {
         $query = VisitLog::with(['user', 'reservasi.kelas']);
 
-        if ($request->filled('from_date') && $request->filled('to_date')) {
-            // filter range tanggal
-            $visitLogs = $query->approvedBetween($request->from_date, $request->to_date)
-                ->latest()
-                ->get();
-        } elseif ($request->filled('date')) {
-            // filter per tanggal tertentu
-            $visitLogs = $query->approvedOnDate($request->date)
-                ->latest()
-                ->get();
-        } else {
-            // default hari ini
-            $visitLogs = $query->approvedOnDate(today())
-                ->latest()
-                ->get();
+        // 🔹 Jika filter cepat (today, yesterday, week)
+        if ($request->filter) {
+            switch ($request->filter) {
+                case 'today':
+                    $query->whereDate('created_at', today());
+                    break;
+
+                case 'yesterday':
+                    $query->whereDate('created_at', today()->subDay());
+                    break;
+
+                case 'week':
+                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    break;
+            }
+        }
+        // 🔹 Jika filter manual by date range
+        elseif ($request->filled('from') && $request->filled('to')) {
+            $query->whereBetween('created_at', [
+                $request->from . ' 00:00:00',
+                $request->to . ' 23:59:59',
+            ]);
+        }
+        // 🔹 Jika filter satu tanggal (opsional)
+        elseif ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        }
+        // 🔹 Default: tampilkan data hari ini
+        else {
+            $query->whereDate('created_at', today());
         }
 
+        // 🔹 Ambil hasil akhir
+        $visitLogs = $query->latest()->get();
+
+        // 🔹 Tampilkan ke view
         return view('admin.visitlog', compact('visitLogs'));
     }
 }
