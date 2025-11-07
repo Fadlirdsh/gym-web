@@ -6,12 +6,6 @@
 <div class="container mx-auto p-6">
     <h1 class="text-2xl font-bold mb-4">Visit Log</h1>
 
-    {{-- 🔍 Filter tunggal tanggal --}}
-    <form method="GET" class="mb-4 flex space-x-2">
-        <input type="date" name="date" value="{{ request('date') }}" class="border p-2 rounded">
-        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Filter</button>
-    </form>
-
     {{-- 🔍 Filter range tanggal --}}
     <form method="GET" class="mb-4 flex space-x-2">
         <input type="date" name="from_date" value="{{ request('from_date') }}" class="border p-2 rounded">
