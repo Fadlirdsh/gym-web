@@ -84,17 +84,13 @@ class UserController extends Controller
      */
     public function manage()
     {
-        // Semua user yang role nya pelanggan (untuk dropdown bikin member)
         $pelanggan = User::where('role', 'pelanggan')->orderBy('created_at', 'desc')->get();
-
-        // Semua member yang sudah terdaftar beserta data user
-        $members = Member::with('user')->orderBy('created_at', 'desc')->get();
-
+        $members = User::orderBy('created_at', 'desc')->get();
         return view('admin.manage', compact('pelanggan', 'members'));
     }
 
     /**
-     * Admin membuat akun (pelanggan atau trainer)
+     * Admin membuat akun (hanya pelanggan yang boleh dibuat lewat form web)
      */
     public function storeWeb(Request $request)
     {
@@ -102,17 +98,22 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'role'     => 'required|in:pelanggan,trainer', // ✅ Tambahan validasi role
+            'role'     => 'required|in:pelanggan,trainer',
         ]);
+
+        // ✅ Validasi tambahan: hanya role pelanggan yang bisa dibuat
+        if ($request->role !== 'pelanggan') {
+            return back()->withErrors(['role' => 'Hanya akun dengan role pelanggan yang bisa ditambahkan.'])->withInput();
+        }
 
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role'     => $request->role, // ✅ Ambil dari input, bukan default pelanggan
+            'role'     => $request->role,
         ]);
 
-        return redirect()->route('users.manage')->with('success', 'Akun ' . ucfirst($request->role) . ' berhasil ditambahkan');
+        return redirect()->route('users.manage')->with('success', 'Akun pelanggan berhasil ditambahkan');
     }
 
     /**
@@ -135,12 +136,12 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:6|confirmed',
-            'role'     => 'required|in:pelanggan,trainer', // ✅ Tambahan validasi role
+            'role'     => 'required|in:pelanggan,trainer',
         ]);
 
         $user->name  = $request->name;
         $user->email = $request->email;
-        $user->role  = $request->role; // ✅ Bisa ubah role juga
+        $user->role  = $request->role;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
@@ -179,7 +180,6 @@ class UserController extends Controller
             return back()->with('error', 'Hanya pelanggan yang bisa dijadikan member.');
         }
 
-        // Hapus membership lama jika ada
         Member::where('user_id', $user->id)->delete();
 
         Member::create([
