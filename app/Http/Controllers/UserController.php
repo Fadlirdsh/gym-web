@@ -101,11 +101,6 @@ class UserController extends Controller
             'role'     => 'required|in:pelanggan,trainer',
         ]);
 
-        // ✅ Validasi tambahan: hanya role pelanggan yang bisa dibuat
-        if ($request->role !== 'pelanggan') {
-            return back()->withErrors(['role' => 'Hanya akun dengan role pelanggan yang bisa ditambahkan.'])->withInput();
-        }
-
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
@@ -113,7 +108,7 @@ class UserController extends Controller
             'role'     => $request->role,
         ]);
 
-        return redirect()->route('users.manage')->with('success', 'Akun pelanggan berhasil ditambahkan');
+        return redirect()->route('users.manage')->with('success', 'Akun ' . $request->role . ' berhasil ditambahkan');
     }
 
     /**
