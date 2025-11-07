@@ -4,8 +4,10 @@
 const btnOpenCreate = document.getElementById("btnOpenCreate");
 const modalCreate = document.getElementById("modalCreate");
 const btnCloseCreate = document.getElementById("btnCloseCreate");
+const btnCloseCreateBottom = document.getElementById("btnCloseCreateBottom");
 
-btnOpenCreate.addEventListener("click", () => {
+btnOpenCreate?.addEventListener("click", () => {
+  if (!modalCreate) return;
   modalCreate.style.display = "flex";
   modalCreate.style.alignItems = "center";
   modalCreate.style.justifyContent = "center";
@@ -16,7 +18,7 @@ btnOpenCreate.addEventListener("click", () => {
   modalCreate.style.position = "fixed";
   modalCreate.style.top = "0";
   modalCreate.style.left = "0";
-  modalCreate.style.width = "90%";
+  modalCreate.style.width = "100%";
   modalCreate.style.height = "100%";
   modalCreate.style.backgroundColor = "rgba(0,0,0,0.5)";
   modalCreate.style.zIndex = "9999";
@@ -27,11 +29,15 @@ btnOpenCreate.addEventListener("click", () => {
   }, 10);
 });
 
-btnCloseCreate.addEventListener("click", () => {
-  modalCreate.style.opacity = "0";
-  setTimeout(() => {
-    modalCreate.style.display = "none";
-  }, 300);
+// Tutup modal Create (atas & bawah)
+[btnCloseCreate, btnCloseCreateBottom].forEach((btn) => {
+  btn?.addEventListener("click", () => {
+    if (!modalCreate) return;
+    modalCreate.style.opacity = "0";
+    setTimeout(() => {
+      modalCreate.style.display = "none";
+    }, 300);
+  });
 });
 
 // ========================
@@ -39,18 +45,20 @@ btnCloseCreate.addEventListener("click", () => {
 // ========================
 const modalEdit = document.getElementById("modalEdit");
 const btnCloseEdit = document.getElementById("btnCloseEdit");
+const btnCloseEditBottom = document.getElementById("btnCloseEditBottom");
 const formEdit = document.getElementById("formEdit");
 const editTipe = document.getElementById("editTipe");
 
 document.querySelectorAll(".btnOpenEdit").forEach((btn) => {
   btn.addEventListener("click", () => {
+    if (!modalEdit) return;
+
     modalEdit.style.display = "flex";
     modalEdit.style.alignItems = "center";
     modalEdit.style.justifyContent = "center";
     modalEdit.style.opacity = "0";
     modalEdit.style.transition = "opacity 0.3s ease";
 
-    // pastikan muncul di tengah layar
     modalEdit.style.position = "fixed";
     modalEdit.style.top = "0";
     modalEdit.style.left = "0";
@@ -80,14 +88,20 @@ document.querySelectorAll(".btnOpenEdit").forEach((btn) => {
   });
 });
 
-btnCloseEdit.addEventListener("click", () => {
-  modalEdit.style.opacity = "0";
-  setTimeout(() => {
-    modalEdit.style.display = "none";
-  }, 300);
+// Tutup modal Edit (atas & bawah)
+[btnCloseEdit, btnCloseEditBottom].forEach((btn) => {
+  btn?.addEventListener("click", () => {
+    if (!modalEdit) return;
+    modalEdit.style.opacity = "0";
+    setTimeout(() => {
+      modalEdit.style.display = "none";
+    }, 300);
+  });
 });
 
+// ========================
 // Tutup modal kalau klik di luar kontennya
+// ========================
 window.addEventListener("click", (e) => {
   if (e.target === modalCreate) {
     modalCreate.style.opacity = "0";
