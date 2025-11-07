@@ -18,8 +18,10 @@
             <form action="{{ route('users.store') }}" method="POST">
                 @csrf
                 <input type="text" name="name" placeholder="Nama" class="mb-2 p-2 rounded w-full text-black" required>
-                <input type="email" name="email" placeholder="Email" class="mb-2 p-2 rounded w-full text-black" required>
-                <input type="password" name="password" placeholder="Password" class="mb-2 p-2 rounded w-full text-black" required>
+                <input type="email" name="email" placeholder="Email" class="mb-2 p-2 rounded w-full text-black"
+                    required>
+                <input type="password" name="password" placeholder="Password" class="mb-2 p-2 rounded w-full text-black"
+                    required>
                 <input type="password" name="password_confirmation" placeholder="Konfirmasi Password"
                     class="mb-2 p-2 rounded w-full text-black" required>
 
@@ -27,7 +29,7 @@
                 <div class="mb-3">
                     <select name="role" class="p-2 rounded w-full text-black" required>
                         <option value="pelanggan" style="color: black">Pelanggan</option>
-                        <option value="trainer" styl    e="color: black">Trainer</option>
+                        <option value="trainer" styl e="color: black">Trainer</option>
                     </select>
                 </div>
 
@@ -84,15 +86,12 @@
                         <td class="px-4 py-2">{{ $member->email }}</td>
                         <td class="px-4 py-2">{{ $member->role }}</td>
                         <td class="px-4 py-2">
-                            @if ($member->member)
-                                {{ ucfirst($member->member->status) }}
-                            @else
-                                -
-                            @endif
+                            {{ $member->member ? ucfirst($member->member->status) : '-' }}
                         </td>
                         <td class="px-4 py-2 space-x-2">
                             <a href="{{ route('users.edit', $member->id) }}"
                                 class="bg-yellow-500 px-2 py-1 rounded hover:bg-yellow-400">Edit</a>
+
                             <form action="{{ route('users.destroy', $member->id) }}" method="POST" class="inline-block">
                                 @csrf
                                 @method('DELETE')
