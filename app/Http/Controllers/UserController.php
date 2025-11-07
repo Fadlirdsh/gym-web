@@ -26,12 +26,14 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|email|unique:users',
             'password' => 'required|string|min:6',
+            'role'     => 'required|in:pelanggan,trainer',
         ]);
 
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
+            'role'     => $request->role,
         ]);
 
         return response()->json($user, 201);
@@ -82,7 +84,6 @@ class UserController extends Controller
      */
     public function manage()
     {
-        
         // Semua user yang role nya pelanggan (untuk dropdown bikin member)
         $pelanggan = User::where('role', 'pelanggan')->orderBy('created_at', 'desc')->get();
 
@@ -93,7 +94,7 @@ class UserController extends Controller
     }
 
     /**
-     * Admin membuat akun pelanggan baru
+     * Admin membuat akun (pelanggan atau trainer)
      */
     public function storeWeb(Request $request)
     {
@@ -101,16 +102,17 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
+            'role'     => 'required|in:pelanggan,trainer', // ✅ Tambahan validasi role
         ]);
 
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'role'     => 'pelanggan',
+            'role'     => $request->role, // ✅ Ambil dari input, bukan default pelanggan
         ]);
 
-        return redirect()->route('users.manage')->with('success', 'Akun pelanggan berhasil ditambahkan');
+        return redirect()->route('users.manage')->with('success', 'Akun ' . ucfirst($request->role) . ' berhasil ditambahkan');
     }
 
     /**
@@ -133,16 +135,20 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:6|confirmed',
+            'role'     => 'required|in:pelanggan,trainer', // ✅ Tambahan validasi role
         ]);
 
         $user->name  = $request->name;
         $user->email = $request->email;
+        $user->role  = $request->role; // ✅ Bisa ubah role juga
+
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
+
         $user->save();
 
-        return redirect()->route('users.manage')->with('success', 'Akun pelanggan berhasil diperbarui');
+        return redirect()->route('users.manage')->with('success', 'Akun ' . ucfirst($request->role) . ' berhasil diperbarui');
     }
 
     /**

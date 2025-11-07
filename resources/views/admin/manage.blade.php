@@ -14,17 +14,25 @@
         {{-- Form buat akun pelanggan --}}
         {{-- ================== --}}
         <div class="mb-6 p-4 bg-gray-800 rounded">
-            <h2 class="text-xl font-semibold text-white mb-2">Tambah Akun Pelanggan</h2>
+            <h2 class="text-xl font-semibold text-white mb-2">Tambah Akun</h2>
             <form action="{{ route('users.store') }}" method="POST">
                 @csrf
-                <input type="text" name="name" placeholder="Nama" class="mb-2 p-2 rounded w-full" required>
-                <input type="email" name="email" placeholder="Email" class="mb-2 p-2 rounded w-full" required>
-                <input type="password" name="password" placeholder="Password" class="mb-2 p-2 rounded w-full" required>
+                <input type="text" name="name" placeholder="Nama" class="mb-2 p-2 rounded w-full text-black" required>
+                <input type="email" name="email" placeholder="Email" class="mb-2 p-2 rounded w-full text-black" required>
+                <input type="password" name="password" placeholder="Password" class="mb-2 p-2 rounded w-full text-black" required>
                 <input type="password" name="password_confirmation" placeholder="Konfirmasi Password"
-                    class="mb-2 p-2 rounded w-full" required>
+                    class="mb-2 p-2 rounded w-full text-black" required>
+
+                {{-- 🔹 Pilih Role --}}
+                <div class="mb-3">
+                    <select name="role" class="p-2 rounded w-full text-black" required>
+                        <option value="pelanggan" style="color: black">Pelanggan</option>
+                        <option value="trainer" styl    e="color: black">Trainer</option>
+                    </select>
+                </div>
 
                 <button type="submit" class="bg-indigo-500 px-4 py-2 rounded text-white hover:bg-indigo-400">
-                    Buat Akun Pelanggan
+                    Buat Akun
                 </button>
             </form>
         </div>
