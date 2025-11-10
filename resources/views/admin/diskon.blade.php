@@ -1,167 +1,117 @@
 @extends('layout.app')
 
-@section('title', 'Diskon')
+@section('title', 'Manajemen Diskon')
 
 @section('content')
-    <div class="container mx-auto p-6">
+<div class="container mx-auto px-6 py-8 space-y-10" x-data="{ showDiskonModal: false }">
 
-        <h1 class="text-2xl font-bold mb-4">Manage Diskon</h1>
-
-        <!-- Tombol Tambah Diskon -->
-        <button id="btnOpenCreate" class="bg-blue-500 text-white px-4 py-2 rounded">
+    {{-- ========================= --}}
+    {{-- 🔹 Header + Tombol Tambah --}}
+    {{-- ========================= --}}
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Daftar Diskon</h2>
+        <button 
+            @click="showDiskonModal = true" 
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
             + Tambah Diskon
         </button>
-
-        <!-- Tabel Diskon -->
-        <table class="w-full mt-4 border border-gray-300">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="p-2 border">ID</th>
-                    <th class="p-2 border">Kelas</th>
-                    <th class="p-2 border">Nama Diskon</th>
-                    <th class="p-2 border">Persentase</th>
-                    <th class="p-2 border">Mulai</th>
-                    <th class="p-2 border">Berakhir</th>
-                    <th class="p-2 border">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($diskons as $diskon)
-                    <tr>
-                        <td class="p-2 border">{{ $diskon->id }}</td>
-                        <td class="p-2 border">{{ $diskon->kelas->nama_kelas ?? '-' }}</td>
-                        <td class="p-2 border">{{ $diskon->nama_diskon }}</td>
-                        <td class="p-2 border">{{ $diskon->persentase }}%</td>
-                        <td class="p-2 border">{{ $diskon->tanggal_mulai }}</td>
-                        <td class="p-2 border">{{ $diskon->tanggal_berakhir }}</td>
-                        <td class="p-2 border space-x-1">
-                            <!-- Tombol Edit pakai modal -->
-                            <button class="btnOpenEdit bg-yellow-500 text-white px-2 py-1 rounded"
-                                data-id="{{ $diskon->id }}" data-kelas_id="{{ $diskon->kelas_id }}"
-                                data-nama_diskon="{{ $diskon->nama_diskon }}" data-persentase="{{ $diskon->persentase }}"
-                                data-tanggal_mulai="{{ $diskon->tanggal_mulai }}"
-                                data-tanggal_berakhir="{{ $diskon->tanggal_berakhir }}">
-                                Edit
-                            </button>
-
-                            <!-- Hapus -->
-                            <form action="{{ route('diskon.destroy', $diskon->id) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded"
-                                    onclick="return confirm('Yakin hapus diskon ini?')">Hapus</button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="p-2 text-center">Belum ada data diskon</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-
-        <!-- Modal Tambah Diskon -->
-        <div id="modalCreate" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
-            <div class="bg-white p-6 rounded shadow-lg w-96">
-                <h2 class="text-xl font-bold mb-4">Tambah Diskon</h2>
-
-                <form action="{{ route('diskon.store') }}" method="POST" class="space-y-4">
-                    @csrf
-
-                    <div>
-                        <label class="block">Pilih Kelas</label>
-                        <select name="kelas_id" class="border p-2 w-full">
-                            @foreach ($kelas as $k)
-                                <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block">Nama Diskon</label>
-                        <input type="text" name="nama_diskon" class="border p-2 w-full" required>
-                    </div>
-
-                    <div>
-                        <label class="block">Persentase (%)</label>
-                        <input type="number" name="persentase" min="1" max="100" class="border p-2 w-full"
-                            required>
-                    </div>
-
-                    <div>
-                        <label class="block">Tanggal Mulai</label>
-                        <input type="date" name="tanggal_mulai" class="border p-2 w-full" required>
-                    </div>
-
-                    <div>
-                        <label class="block">Tanggal Berakhir</label>
-                        <input type="date" name="tanggal_berakhir" class="border p-2 w-full" required>
-                    </div>
-
-                    <div class="flex justify-between mt-4">
-                        <button type="submit" class="bg-green-500 text-black px-4 py-2 rounded">Simpan</button>
-                        <button type="button" id="btnCloseCreate"
-                            class="bg-gray-500 text-black px-4 py-2 rounded">Batal</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Modal Edit Diskon -->
-        <div id="modalEdit" class="hidden fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
-            <div class="bg-white p-6 rounded shadow-lg w-96">
-                <h2 class="text-xl font-bold mb-4">Edit Diskon</h2>
-
-                <form id="formEditDiskon" method="POST" class="space-y-4">
-                    @csrf
-                    @method('PUT')
-
-                    <input type="hidden" name="id" id="editId">
-
-                    <div>
-                        <label class="block">Pilih Kelas</label>
-                        <select name="kelas_id" id="editKelasId" class="border p-2 w-full">
-                            @foreach ($kelas as $k)
-                                <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block">Nama Diskon</label>
-                        <input type="text" name="nama_diskon" id="editNamaDiskon" class="border p-2 w-full" required>
-                    </div>
-
-                    <div>
-                        <label class="block">Persentase (%)</label>
-                        <input type="number" name="persentase" id="editPersentase" min="1" max="100"
-                            class="border p-2 w-full" required>
-                    </div>
-
-                    <div>
-                        <label class="block">Tanggal Mulai</label>
-                        <input type="date" name="tanggal_mulai" id="editTanggalMulai" class="border p-2 w-full"
-                            required>
-                    </div>
-
-                    <div>
-                        <label class="block">Tanggal Berakhir</label>
-                        <input type="date" name="tanggal_berakhir" id="editTanggalBerakhir" class="border p-2 w-full"
-                            required>
-                    </div>
-
-                    <div class="flex justify-between mt-4">
-                        <button type="submit" class="bg-yellow-500 text-black px-4 py-2 rounded">Update</button>
-                        <button type="button" id="btnCloseEdit"
-                            class="bg-gray-500 text-black px-4 py-2 rounded">Batal</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
     </div>
 
-    <!-- JavaScript untuk modal -->
-@vite('resources/js/diskon.js')
+    {{-- ========================= --}}
+    {{-- 🔹 Tabel Diskon --}}
+    {{-- ========================= --}}
+    <table class="min-w-full border border-gray-300 text-black">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="border px-4 py-2">Nama Diskon</th>
+                <th class="border px-4 py-2">Persentase</th>
+                <th class="border px-4 py-2">Kelas</th>
+                <th class="border px-4 py-2">Tanggal Mulai</th>
+                <th class="border px-4 py-2">Tanggal Berakhir</th>
+                <th class="border px-4 py-2">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($diskons as $diskon)
+                <tr class="hover:bg-gray-50">
+                    <td class="border px-4 py-2">{{ $diskon->nama_diskon }}</td>
+                    <td class="border px-4 py-2">{{ $diskon->persentase }}%</td>
+                    <td class="border px-4 py-2">{{ $diskon->kelas->nama ?? '-' }}</td>
+                    <td class="border px-4 py-2">{{ $diskon->tanggal_mulai }}</td>
+                    <td class="border px-4 py-2">{{ $diskon->tanggal_berakhir }}</td>
+                    <td class="border px-4 py-2 text-center">
+                        <a href="#" class="text-blue-500 hover:underline">Edit</a> |
+                        <a href="#" class="text-red-500 hover:underline">Hapus</a>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="text-center border py-3 text-gray-500">Belum ada data diskon</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{-- ==================================================== --}}
+    {{-- 🔹 Modal Tambah Diskon --}}
+    {{-- ==================================================== --}}
+    <div 
+        x-show="showDiskonModal" 
+        x-transition 
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+        <div class="bg-white text-black rounded-lg w-full max-w-md p-6 relative">
+            <h3 class="text-lg font-semibold mb-4">Tambah Diskon</h3>
+            <form action="{{ route('diskon.store') }}" method="POST">
+                @csrf
+                <div class="mb-3">
+                    <label class="block text-sm font-medium">Nama Diskon</label>
+                    <input type="text" name="nama_diskon" required 
+                        class="w-full border rounded px-3 py-2 text-black focus:ring focus:ring-blue-200">
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium">Persentase (%)</label>
+                    <input type="number" name="persentase" min="1" max="100" required 
+                        class="w-full border rounded px-3 py-2 text-black focus:ring focus:ring-blue-200">
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium">Kelas</label>
+                    <select name="kelas_id" required class="w-full border rounded px-3 py-2 text-black">
+                        <option value="">-- Pilih Kelas --</option>
+                        @foreach ($kelas as $k)
+                            <option value="{{ $k->id }}">{{ $k->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium">Tanggal Mulai</label>
+                    <input type="date" name="tanggal_mulai" required 
+                        class="w-full border rounded px-3 py-2 text-black focus:ring focus:ring-blue-200">
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium">Tanggal Berakhir</label>
+                    <input type="date" name="tanggal_berakhir" required 
+                        class="w-full border rounded px-3 py-2 text-black focus:ring focus:ring-blue-200">
+                </div>
+
+                <div class="flex justify-end gap-3 mt-4">
+                    <button type="button" 
+                        @click="showDiskonModal = false" 
+                        class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
 @endsection
