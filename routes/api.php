@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ReservasiController;
 use App\Http\Controllers\Api\KelasController;
 use App\Http\Controllers\Api\KuponController;
 use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\DiskonController;
 
 
 // =====================
@@ -52,8 +53,10 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 });
 
 // =====================
-// 🔹 MEMBER 
+// 🔹 DISKON
 // =====================
+Route::apiResource('diskon', DiskonController::class);
+
 // =====================
 // 🔹 MEMBER (FITUR MEMBERSHIP)
 // =====================

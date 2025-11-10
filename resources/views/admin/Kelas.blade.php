@@ -53,7 +53,8 @@
                                     {{ number_format($k->harga_diskon, 0, ',', '.') }}</span>
                             </p>
                             <p><i class="fa-solid fa-box mr-1 text-purple-400"></i> Paket: {{ $k->tipe_paket }}</p>
-                            <p><i class="fa-solid fa-ticket mr-1 text-pink-400"></i> Token: {{ $k->jumlah_token ?? '-' }}</p>
+                            <p><i class="fa-solid fa-ticket mr-1 text-pink-400"></i> Token: {{ $k->jumlah_token ?? '-' }}
+                            </p>
                             <p><i class="fa-solid fa-hourglass-end mr-1 text-red-400"></i> Expired:
                                 {{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('d-m-Y H:i') : '-' }}
                             </p>
@@ -65,9 +66,10 @@
                         <div class="flex flex-col sm:flex-row gap-2 mt-5">
                             <button
                                 class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium btnOpenEdit transition"
-                                data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}" data-tipe="{{ $k->tipe_kelas }}"
-                                data-harga="{{ $k->harga }}" data-paket="{{ $k->tipe_paket }}"
-                                data-deskripsi="{{ $k->deskripsi }}" data-token="{{ $k->jumlah_token }}"
+                                data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}"
+                                data-tipe="{{ $k->tipe_kelas }}" data-harga="{{ $k->harga }}"
+                                data-paket="{{ $k->tipe_paket }}" data-deskripsi="{{ $k->deskripsi }}"
+                                data-token="{{ $k->jumlah_token }}"
                                 data-expired="{{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('Y-m-d\TH:i') : '' }}"
                                 data-kapasitas="{{ $k->kapasitas }}">
                                 <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
@@ -93,113 +95,125 @@
             @endforelse
         </div>
     </div>
-{{-- ✅ Modal (Create & Edit) --}}
-@foreach (['Create' => 'Tambah Kelas', 'Edit' => 'Edit Kelas'] as $modalId => $modalTitle)
+    {{-- ✅ Modal (Create & Edit) --}}
+  @foreach (['Create' => 'Tambah Kelas', 'Edit' => 'Edit Kelas'] as $modalId => $modalTitle)
     <div id="modal{{ $modalId }}"
-        class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+        class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
         <div
-            class="bg-gray-800 text-gray-200 rounded-2xl w-full max-w-lg p-6 border border-gray-700 shadow-2xl animate-fadeIn text-base">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-semibold text-white">{{ $modalTitle }}</h2>
-                <button type="button" id="btnClose{{ $modalId }}" class="text-gray-400 hover:text-white transition">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
+            class="bg-gray-800 text-gray-200 rounded-2xl w-full max-w-lg border border-gray-700 shadow-2xl animate-fadeIn
+            flex flex-col max-h-[90vh]">
 
-            <form action="{{ $modalId === 'Create' ? route('kelas.store') : '' }}" method="POST"
-                enctype="multipart/form-data" id="form{{ $modalId }}" class="space-y-4">
-                @csrf
-                @if ($modalId === 'Edit') @method('PUT') @endif
-
-                {{-- Nama Kelas --}}
-                <div>
-                    <label class="block mb-1 font-medium">Nama Kelas</label>
-                    <input type="text" name="nama_kelas" id="{{ strtolower($modalId) }}Nama"
-                        class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                        required>
+            {{-- Scrollable Content --}}
+            <div class="overflow-y-auto px-6 py-6 flex-1 space-y-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-white">{{ $modalTitle }}</h2>
+                    <button type="button" id="btnClose{{ $modalId }}"
+                        class="text-gray-400 hover:text-white transition">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
                 </div>
 
-                {{-- Tipe Kelas --}}
-                <div>
-                    <label class="block mb-1 font-medium">Tipe Kelas</label>
-                    <select name="tipe_kelas" id="{{ strtolower($modalId) }}Tipe"
-                        class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        @foreach (['Pilates Group', 'Pilates Private', 'Yoga Group', 'Yoga Private'] as $tipe)
-                            <option value="{{ $tipe }}">{{ $tipe }}</option>
-                        @endforeach
-                    </select>
-                </div>
+                <form action="{{ $modalId === 'Create' ? route('kelas.store') : '' }}" method="POST"
+                    enctype="multipart/form-data" id="form{{ $modalId }}" class="space-y-4">
+                    @csrf
+                    @if ($modalId === 'Edit')
+                        @method('PUT')
+                    @endif
 
-                {{-- Harga --}}
-                <div>
-                    <label class="block mb-1 font-medium">Harga</label>
-                    <input type="number" name="harga" id="{{ strtolower($modalId) }}Harga"
-                        class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-
-                {{-- Paket, Token, Kapasitas, Expired --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {{-- Nama Kelas --}}
                     <div>
-                        <label class="block mb-1 font-medium">Tipe Paket</label>
-                        <select name="tipe_paket" id="{{ strtolower($modalId) }}Paket"
+                        <label class="block mb-1 font-medium">Nama Kelas</label>
+                        <input type="text" name="nama_kelas" id="{{ strtolower($modalId) }}Nama"
+                            class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                            required>
+                    </div>
+
+                    {{-- Tipe Kelas --}}
+                    <div>
+                        <label class="block mb-1 font-medium">Tipe Kelas</label>
+                        <select name="tipe_kelas" id="{{ strtolower($modalId) }}Tipe"
                             class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <option value="">-- Pilih Tipe Paket --</option>
-                            @foreach (['General', 'First Timer', 'Free Points', 'Classes'] as $paket)
-                                <option value="{{ $paket }}">{{ $paket }}</option>
+                            @foreach (['Pilates Group', 'Pilates Private', 'Yoga Group', 'Yoga Private'] as $tipe)
+                                <option value="{{ $tipe }}">{{ $tipe }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Jumlah Token</label>
-                        <input type="number" name="jumlah_token" id="{{ strtolower($modalId) }}Token"
-                            class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Kapasitas</label>
-                        <input type="number" name="kapasitas" id="{{ strtolower($modalId) }}Kapasitas"
-                            class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm" value="20" min="1"
-                            required>
-                    </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Expired At</label>
-                        <input type="datetime-local" name="expired_at" id="{{ strtolower($modalId) }}Expired"
-                            class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm">
-                    </div>
-                </div>
 
-                {{-- Deskripsi --}}
-                <div>
-                    <label class="block mb-1 font-medium">Deskripsi</label>
-                    <textarea name="deskripsi" id="{{ strtolower($modalId) }}Deskripsi"
-                        class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-                        rows="3"></textarea>
-                </div>
+                    {{-- Harga --}}
+                    <div>
+                        <label class="block mb-1 font-medium">Harga</label>
+                        <input type="number" name="harga" id="{{ strtolower($modalId) }}Harga"
+                            class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
 
-                {{-- Gambar --}}
-                <div>
-                    <label class="block mb-1 font-medium">Gambar</label>
-                    <input type="file" name="gambar"
-                        class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm"
-                        accept="image/*">
-                    <div id="preview{{ $modalId }}Gambar" class="mt-3"></div>
-                </div>
+                    {{-- Paket, Token, Kapasitas, Expired --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block mb-1 font-medium">Tipe Paket</label>
+                            <select name="tipe_paket" id="{{ strtolower($modalId) }}Paket"
+                                class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="">-- Pilih Tipe Paket --</option>
+                                @foreach (['General', 'First Timer', 'Free Points', 'Classes'] as $paket)
+                                    <option value="{{ $paket }}">{{ $paket }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                {{-- Tombol --}}
-                <div class="absolute bottom-4 right-4 flex gap-2">
-                    <button type="button" id="btnClose{{ $modalId }}Bottom"
-                        class="px-4 py-2 bg-gray-700 text-white text-sm rounded-md hover:bg-gray-600 transition">
-                        Batal
-                    </button>
-                    <button type="submit"
-                        class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition">
-                        {{ $modalId === 'Create' ? 'Simpan' : 'Update' }}
-                    </button>
-                </div>
-            </form>
+                        {{-- Hanya tampilkan jumlah token di Create --}}
+                        @if($modalId === 'Create')
+                        <div>
+                            <label class="block mb-1 font-medium">Jumlah Token</label>
+                            <input type="number" name="jumlah_token" id="{{ strtolower($modalId) }}Token"
+                                class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm">
+                        </div>
+                        @endif
+
+                        <div>
+                            <label class="block mb-1 font-medium">Kapasitas</label>
+                            <input type="number" name="kapasitas" id="{{ strtolower($modalId) }}Kapasitas"
+                                class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm" value="20"
+                                min="1" required>
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Expired At</label>
+                            <input type="datetime-local" name="expired_at" id="{{ strtolower($modalId) }}Expired"
+                                class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm">
+                        </div>
+                    </div>
+
+                    {{-- Deskripsi --}}
+                    <div>
+                        <label class="block mb-1 font-medium">Deskripsi</label>
+                        <textarea name="deskripsi" id="{{ strtolower($modalId) }}Deskripsi"
+                            class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                            rows="3"></textarea>
+                    </div>
+
+                    {{-- Gambar --}}
+                    <div>
+                        <label class="block mb-1 font-medium">Gambar</label>
+                        <input type="file" name="gambar"
+                            class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm"
+                            accept="image/*">
+                        <div id="preview{{ $modalId }}Gambar" class="mt-3"></div>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Tombol tetap di bawah modal --}}
+            <div class="px-6 py-4 border-t border-gray-700 flex justify-end gap-2 bg-gray-800">
+                <button type="button" id="btnClose{{ $modalId }}Bottom"
+                    class="px-4 py-2 bg-gray-700 text-white text-sm rounded-md hover:bg-gray-600 transition">
+                    Batal
+                </button>
+                <button type="submit" form="form{{ $modalId }}"
+                    class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition">
+                    {{ $modalId === 'Create' ? 'Simpan' : 'Update' }}
+                </button>
+            </div>
         </div>
     </div>
 @endforeach
-
 
     {{-- Animasi Fade --}}
     <style>
