@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Voucher;
 use Carbon\Carbon;
+use App\Models\Kelas;
 
 class VoucherController extends Controller
 {
@@ -13,8 +14,9 @@ class VoucherController extends Controller
      */
     public function index()
     {
-        $vouchers = Voucher::with('kelas')->get(); // ambil semua voucher beserta relasi kelas
-        return view('admin.voucher', compact('vouchers'));
+        $vouchers = Voucher::with('kelas')->get();
+        $kelas = Kelas::all(); // ambil semua kelas
+        return view('admin.voucher', compact('vouchers', 'kelas'));
     }
 
 
@@ -23,19 +25,20 @@ class VoucherController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'kode' => 'required|unique:vouchers,kode',
-            'deskripsi' => 'required',
-            'diskon_persen' => 'required|integer|min:1|max:100',
-            'kelas_id' => 'nullable|exists:kelas,id',
-            'role_target' => 'required|in:semua,pelanggan,member',
+        $validated = $request->validate([
+            'kode' => 'required|string|unique:vouchers,kode',
+            'deskripsi' => 'required|string',
+            'diskon_persen' => 'required|numeric|min:0|max:100',
             'tanggal_mulai' => 'required|date',
             'tanggal_akhir' => 'required|date|after_or_equal:tanggal_mulai',
-            'kuota' => 'required|integer|min:0',
+            'kuota' => 'required|numeric|min:1',
+            'role_target' => 'required|in:semua,pelanggan,member',
             'status' => 'required|in:aktif,nonaktif',
+            'kelas_id' => 'nullable|exists:kelas,id'
         ]);
 
-        $voucher = Voucher::create($request->all());
+        $voucher = Voucher::create($validated);
+
         return response()->json([
             'success' => true,
             'voucher' => $voucher
