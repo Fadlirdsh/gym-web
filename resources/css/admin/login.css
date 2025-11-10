@@ -19,11 +19,10 @@
 }
 
 /* =========================
-   🌄 Background Formal
+   🌄 Background Login Gelap
 ========================= */
 body {
     background: radial-gradient(circle at top right, #1e3a8a, #0f172a 60%);
-    background-attachment: fixed;
     font-family: "Inter", "Poppins", sans-serif;
     color: #e5e7eb;
     min-height: 100vh;
@@ -54,7 +53,7 @@ body {
 }
 
 /* =========================
-   🪪 Heading & Branding
+   🪪 Heading & Subtitle
 ========================= */
 .login-card h2 {
     font-family: "Poppins", sans-serif;
@@ -74,11 +73,22 @@ body {
 /* =========================
    ✏️ Input Form Elegan
 ========================= */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.label {
+    color: #d1d5db;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
 input[type="email"],
 input[type="password"] {
     width: 100%;
     padding: 0.75rem 1rem;
-    margin-top: 0.25rem;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -99,7 +109,52 @@ input:focus {
 }
 
 /* =========================
-   🎯 Tombol Aksi Formal
+   👁 Password Toggle
+========================= */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding: 10px 40px 10px 12px;
+    border-radius: 8px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.password-wrapper input::placeholder {
+    color: #9ca3af;
+}
+
+.password-wrapper input:focus {
+    box-shadow: 0 0 0 2px #6366f1;
+}
+
+.eye-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    color: #9ca3af;
+    transform: translateY(-50%);
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.eye-icon:hover {
+    color: #d1d5db;
+    transform: translateY(-50%) scale(1.05);
+}
+
+/* =========================
+   🎯 Tombol Login
 ========================= */
 button {
     width: 100%;
@@ -153,223 +208,4 @@ button:active {
 }
 .login-footer a:hover {
     text-decoration: underline;
-}
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.label {
-    color: #d1d5db;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.password-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.password-wrapper input {
-    width: 100%;
-    padding: 10px 40px 10px 12px;
-    border-radius: 8px;
-    border: none;
-    background-color: rgba(255, 255, 255, 0.05);
-    color: white;
-    font-size: 1rem;
-    outline: none;
-    transition: all 0.2s ease;
-}
-
-.password-wrapper input::placeholder {
-    color: #9ca3af;
-}
-
-.password-wrapper input:focus {
-    box-shadow: 0 0 0 2px #6366f1;
-}
-
-.eye-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    width: 20px;
-    height: 20px;
-    color: #9ca3af;
-    transform: translateY(-50%);
-    cursor: pointer;
-    transition: color 0.2s ease, transform 0.2s ease;
-}
-
-.eye-icon:hover {
-    color: #d1d5db;
-    transform: translateY(-50%) scale(1.05);
-}
-
-body {
-    font-family: "Inter", sans-serif;
-}
-
-.top-navbar-custom {
-    height: 56px;
-    background: #1f2937;
-    border-bottom: 1px solid #2f3a4a;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 50;
-}
-
-.top-navbar-custom input {
-    background: #111827;
-    border: 1px solid #374151;
-    padding: 7px 14px;
-    border-radius: 6px;
-    color: #e5e7eb;
-    width: 220px;
-    font-size: 14px;
-}
-
-.sidebar-link {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: 0.15s;
-}
-
-.sidebar-link:hover {
-    background: #334155;
-    color: white;
-}
-
-/* === COLLAPSE STYLING === */
-:root {
-    --sidebar-w-full: 16rem;
-    --sidebar-w-collapsed: 5rem;
-}
-
-@media (min-width: 768px) {
-    .sidebar.collapsed {
-        width: var(--sidebar-w-collapsed) !important;
-        min-width: var(--sidebar-w-collapsed) !important;
-    }
-
-    #appLayout.sidebar-collapsed {
-        padding-left: var(--sidebar-w-collapsed) !important;
-    }
-
-    header.sidebar-collapsed {
-        left: var(--sidebar-w-collapsed) !important;
-    }
-}
-
-.sidebar.collapsed .sidebar-label {
-    display: none;
-}
-
-.sidebar.collapsed .sidebar-logo-text {
-    display: none;
-}
-
-.sidebar.collapsed .sidebar-logo img {
-    max-width: 36px;
-    height: auto;
-}
-
-.sidebar.collapsed .sidebar-link {
-    justify-content: center;
-}
-
-#sidebar,
-header,
-#appLayout {
-    transition: all 0.25s ease;
-}
-
-
-/* ===== 🎨 Sidebar Modern Flat Style ===== */
-.sidebar {
-  background: linear-gradient(180deg, #0b2e67, #0f3e94);
-  color: #e6e8ef;
-  border-right: none;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.25);
-  font-family: "Inter", sans-serif;
-}
-
-.sidebar-logo {
-  justify-content: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-logo img {
-  height: 42px;
-  filter: brightness(1.1);
-}
-
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 18px;
-  border-radius: 10px;
-  margin: 4px 0;
-  font-size: 14px;
-  color: #d1d5db;
-  transition: all 0.25s ease;
-}
-
-.sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
-
-.sidebar-link.bg-blue-600 {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
-}
-
-/* Logout Section */
-.sidebar .p-4 {
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.sidebar button {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #f87171;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.sidebar button:hover {
-  background: rgba(239, 68, 68, 0.25);
-  color: #fff;
-}
-
-/* ===== Main Content Contrast ===== */
-body {
-  background: #f7f9fc;
-  color: #111827;
-}
-
-header {
-  background: #fff !important;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-header .top-navbar-custom {
-  background: #fff;
-}
-
-.top-navbar-custom input {
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  color: #111;
 }
