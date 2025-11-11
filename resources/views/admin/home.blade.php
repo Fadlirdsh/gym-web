@@ -3,7 +3,7 @@
 @section('content')
 
 {{-- ✅ Wrapper mengikuti style layout yang benar --}}
-<div class="ml-64 p-8 pt-24 w-full">
+<div class=" p-8 pt-24 w-full">
 
     <div class="text-center mb-10">
         <h2 class="text-3xl font-extrabold text-white mb-2">
