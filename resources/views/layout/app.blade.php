@@ -114,11 +114,11 @@
     <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1 text-sm">
       @php
         $menu = [
-          ['url' => url('/admin/home'), 'label' => 'Dashboard', 'pattern' => 'admin/home'],
+          ['url' => url('/admin/home'), 'label' => 'Home', 'pattern' => 'admin/home'],
           ['url' => url('/admin/manage'), 'label' => 'Manage Users', 'pattern' => 'admin/manage'],
           ['url' => route('kelas.index'), 'label' => 'Manage Kelas', 'pattern' => 'kelas*'],
           ['url' => route('schedules.index'), 'label' => 'Manage Schedule', 'pattern' => 'schedules*'],
-          ['url' => route('dashboard.index'), 'label' => 'Data', 'pattern' => 'dashboard*'],
+          ['url' => route('dashboard.index'), 'label' => 'Dashboard Data', 'pattern' => 'dashboard*'],
           ['url' => route('visitlog.index'), 'label' => 'Visit Log', 'pattern' => 'visitlog*'],
         ];
       @endphp

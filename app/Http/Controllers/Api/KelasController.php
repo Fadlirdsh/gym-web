@@ -28,21 +28,19 @@ class KelasController extends Controller
                 'tipe_kelas'    => $item->tipe_kelas,
                 'harga'         => $item->harga,
                 'deskripsi'     => $item->deskripsi,
-                'tipe_paket'    => $item->tipe_paket,
-                'jumlah_token'  => $item->jumlah_token,
-                'expired_at'    => $item->expired_at,
                 'waktu_mulai'   => $item->waktu_mulai,
                 'diskon_persen' => $item->diskon_persen,
                 'harga_diskon'  => $item->harga_diskon,
                 'sisa_kursi'    => $item->sisa_kursi,
+                'tipe_paket'    => $item->tipe_paket, // tetap ditampilkan
 
-                // Info jadwal dan instruktur
+                // Info jadwal & instruktur
                 'hari'          => $jadwal->day ?? null,
                 'jam_mulai'     => $jadwal->time ?? null,
                 'instruktur'    => $item->trainer->name ?? 'Instruktur',
 
                 // Perbaikan gambar supaya URL valid
-                'gambar' => $item->gambar ? url($item->gambar) : null,
+                'gambar'        => $item->gambar ? url($item->gambar) : null,
             ];
         });
 
@@ -67,37 +65,75 @@ class KelasController extends Controller
             'tipe_kelas'    => $kelas->tipe_kelas,
             'harga'         => $kelas->harga,
             'deskripsi'     => $kelas->deskripsi,
-            'tipe_paket'    => $kelas->tipe_paket,
-            'jumlah_token'  => $kelas->jumlah_token,
-            'expired_at'    => $kelas->expired_at,
             'waktu_mulai'   => $kelas->waktu_mulai,
             'diskon_persen' => $kelas->diskon_persen,
             'harga_diskon'  => $kelas->harga_diskon,
             'sisa_kursi'    => $kelas->sisa_kursi,
+            'tipe_paket'    => $kelas->tipe_paket,
             'hari'          => $jadwal->day ?? null,
             'jam_mulai'     => $jadwal->time ?? null,
             'instruktur'    => $kelas->trainer->name ?? 'Instruktur',
-
-            // Perbaikan gambar supaya URL valid
-            'gambar'        => $kelas->gambar ? asset(implode('/', array_map('urlencode', explode('/', $kelas->gambar)))) : null,
+            'gambar'        => $kelas->gambar
+                ? asset(implode('/', array_map('urlencode', explode('/', $kelas->gambar))))
+                : null,
         ]);
     }
 
     /**
+     * POST /api/kelas
+     * Tambah data kelas baru.
+     * tipe_paket otomatis di-set ke "General".
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_kelas' => 'required|string|max:100',
+            'tipe_kelas' => 'required|string|max:50',
+            'harga' => 'required|numeric|min:0',
+            'deskripsi' => 'nullable|string',
+            'kapasitas' => 'required|integer|min:1',
+            'gambar' => 'nullable|image|max:2048',
+        ]);
+
+        // Upload gambar jika ada
+        $gambarPath = null;
+        if ($request->hasFile('gambar')) {
+            $gambarPath = $request->file('gambar')->store('uploads/kelas', 'public');
+        }
+
+        $kelas = Kelas::create([
+            'nama_kelas' => $validated['nama_kelas'],
+            'tipe_kelas' => $validated['tipe_kelas'],
+            'harga' => $validated['harga'],
+            'deskripsi' => $validated['deskripsi'] ?? null,
+            'kapasitas' => $validated['kapasitas'],
+            'tipe_paket' => 'General', // ✅ otomatis
+            'jumlah_token' => null,    // ❌ tidak dipakai
+            'expired_at' => null,      // ❌ tidak dipakai
+            'gambar' => $gambarPath,
+        ]);
+
+        return response()->json([
+            'message' => 'Kelas berhasil dibuat',
+            'data'    => $kelas,
+        ], 201);
+    }
+
+    /**
      * PUT /api/kelas/{id}
+     * Update data kelas tanpa menyertakan tipe_paket, jumlah_token, dan expired_at.
      */
     public function update(Request $request, $id)
     {
         $kelas = Kelas::findOrFail($id);
+
         $kelas->update($request->only([
             'nama_kelas',
             'tipe_kelas',
             'harga',
             'deskripsi',
             'kapasitas',
-            'tipe_paket',
-            'jumlah_token',
-            'gambar'
+            'gambar',
         ]));
 
         return response()->json([
