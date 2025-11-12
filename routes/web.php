@@ -42,7 +42,7 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // ===============================
     // 🏠 Halaman Home (Dashboard Ringkas)
     // ===============================
-    Route::get('/home', [\App\Http\Controllers\Admin\HomeController::class, 'index'])->name('home');
+    Route::get('/home', [\App\Http\Controllers\Admin\HomeController::class, 'index'])->name('admin.home');
 
 
     // ===============================
