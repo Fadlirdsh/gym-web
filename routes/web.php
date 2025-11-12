@@ -11,6 +11,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\VisitLogController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\ManageDiskonController;
+use App\Http\Controllers\Admin\HomeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,7 +39,11 @@ Route::prefix('admin')->middleware('web')->group(function () {
 */
 Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(function () {
 
-    Route::get('/home', [LoginController::class, 'dashboard'])->name('admin.home');
+    // ===============================
+    // 🏠 Halaman Home (Dashboard Ringkas)
+    // ===============================
+    Route::get('/home', [\App\Http\Controllers\Admin\HomeController::class, 'index'])->name('home');
+
 
     // ===============================
     // 👥 Manage User & Member
@@ -75,10 +80,7 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // ===============================
     // 🎟️ Voucher CRUD
     // ===============================
-    Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(function () {
-        Route::resource('voucher', VoucherController::class)->except(['create', 'edit']);
-    });
-
+    Route::resource('voucher', VoucherController::class)->except(['create', 'edit']);
 
     // ===============================
     // 📊 Dashboard
