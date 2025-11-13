@@ -12,7 +12,6 @@
         </div>
     @endif
 
-    {{-- 🧍 Form Tambah Akun --}}
     <div class="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-lg p-6">
         <h2 class="text-2xl font-semibold text-white mb-4 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -20,22 +19,22 @@
             </svg>
             Tambah Akun
         </h2>
+
         <form action="{{ route('users.store') }}" method="POST" class="space-y-3">
             @csrf
-            <div class="grid md:grid-cols-2 gap-3">
-                <input type="text" name="name" placeholder="Nama Lengkap"
-                    class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
-                <input type="email" name="email" placeholder="Email"
-                    class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
-            </div>
 
-            <div class="grid md:grid-cols-2 gap-3">
-                <input type="password" name="password" placeholder="Password"
-                    class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
-                <input type="password" name="password_confirmation" placeholder="Konfirmasi Password"
-                    class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
-            </div>
+            <input type="text" name="name" placeholder="Nama"
+                class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
 
+            <input type="email" name="email" placeholder="Email"
+                class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+
+            <input type="password" name="password" placeholder="Password"
+                class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+
+            <input type="password" name="password_confirmation" placeholder="Konfirmasi Password"
+                class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                
             {{-- Pilih Role --}}
             <div>
                 <select name="role"
@@ -57,7 +56,8 @@
     <div class="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-lg p-6">
         <h2 class="text-2xl font-semibold text-white mb-4 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 1.343-3 3v7h6v-7c0-1.657-1.343-3-3-3z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 1.343-3 3v7h6v-7c0-1.657-1.343-3-3-3z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 0v1m-6 0h6" />
             </svg>
             Tambah Member untuk Pelanggan
@@ -65,15 +65,19 @@
 
         <form action="{{ route('members.store') }}" method="POST" class="space-y-3">
             @csrf
-            <select name="user_id" class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-green-500 focus:outline-none" required>
+
+            <select name="user_id"
+                class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                required>
                 <option value="">-- Pilih Pelanggan --</option>
                 @foreach ($pelanggan as $user)
                     <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
                 @endforeach
             </select>
 
-            <input type="number" name="harga" placeholder="Harga (Rp)"
-                class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-green-500 focus:outline-none" required>
+            {{-- <input type="number" name="harga" placeholder="Harga (Rp)"
+                class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                required> --}}
 
             <button type="submit"
                 class="mt-3 bg-green-600 hover:bg-green-500 transition-all px-5 py-2.5 rounded-lg font-semibold text-white shadow-md hover:shadow-green-500/20">

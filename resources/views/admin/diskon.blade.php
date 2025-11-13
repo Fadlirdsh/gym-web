@@ -11,7 +11,7 @@
             💰 Manajemen Diskon
         </h1>
 
-        <button id="btnOpenCreate" 
+        <button id="btnOpenCreate"
             class="mt-3 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold shadow-lg transition flex items-center gap-2">
             ➕ Tambah Diskon
         </button>
@@ -78,9 +78,7 @@
         </table>
     </div>
 
-    {{-- ===================== --}}
     {{-- MODAL TAMBAH DISKON --}}
-    {{-- ===================== --}}
     <div id="modalCreate" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
         <div class="bg-gray-800 text-gray-100 rounded-2xl shadow-2xl w-96 p-6 border border-gray-700">
             <h2 class="text-2xl font-bold mb-4">Tambah Diskon</h2>
@@ -135,9 +133,7 @@
         </div>
     </div>
 
-    {{-- ===================== --}}
     {{-- MODAL EDIT DISKON --}}
-    {{-- ===================== --}}
     <div id="modalEdit" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
         <div class="bg-gray-800 text-gray-100 rounded-2xl shadow-2xl w-96 p-6 border border-gray-700">
             <h2 class="text-2xl font-bold mb-4">Edit Diskon</h2>

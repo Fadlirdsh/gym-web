@@ -32,7 +32,7 @@ class LoginController extends Controller
         ])->withInput();
     }
 
-    public function dashboard()
+    public function whboard()
     {
         return view('admin.home'); // view khusus dashboard admin
     }
