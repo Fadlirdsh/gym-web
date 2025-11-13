@@ -22,7 +22,7 @@ class AuthController extends Controller
 
         $user = Auth::guard('api')->user();
 
-        if (!in_array($user->role, ['pelanggan'])) {
+        if (!in_array($user->role, ['pelanggan', 'trainer'])) {
             return response()->json(['error' => 'Anda tidak memiliki akses'], 403);
         }
 
@@ -89,7 +89,7 @@ class AuthController extends Controller
         ]);
 
         // Buat token login otomatis setelah register
-            $token = JWTAuth::fromUser($user);
+        $token = JWTAuth::fromUser($user);
 
         return response()->json([
             'message' => 'Registrasi pelanggan berhasil.',
