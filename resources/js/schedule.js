@@ -1,44 +1,113 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // Ambil elemen form & input filter
+
+    /* =====================================================
+     *  FILTER: client, tanggal, waktu
+     * =====================================================*/
     const formFilter = document.querySelector("form[action*='schedules']");
     const inputClient = document.getElementById("client");
     const inputDate = document.getElementById("date");
     const inputTime = document.getElementById("time");
 
-    if (!formFilter) return;
+    if (formFilter) {
 
-    // Saat user menekan Enter di input nama client → langsung cari
-    if (inputClient) {
-        inputClient.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
+        // Tekan ENTER di input client → submit
+        if (inputClient) {
+            inputClient.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    formFilter.submit();
+                }
+            });
+        }
+
+        // Ganti tanggal → submit otomatis
+        if (inputDate) {
+            inputDate.addEventListener("change", () => {
                 formFilter.submit();
+            });
+        }
+
+        // Ganti jam → submit otomatis
+        if (inputTime) {
+            inputTime.addEventListener("change", () => {
+                formFilter.submit();
+            });
+        }
+
+        // Tombol reset → kembali ke route schedules.index
+        const btnReset = document.querySelector("a.bg-gray-400");
+        if (btnReset) {
+            btnReset.addEventListener("click", (e) => {
+                e.preventDefault();
+                window.location.href = formFilter.getAttribute("action");
+            });
+        }
+    }
+
+
+
+    /* =====================================================
+     *  ADD MODAL
+     * =====================================================*/
+    const addBtn = document.getElementById("btnAddSchedule");
+    const addModal = document.getElementById("addScheduleModal");
+    const closeAdd = document.getElementById("closeAddModal");
+
+    if (addBtn && addModal && closeAdd) {
+        addBtn.onclick = () => addModal.classList.remove("hidden");
+        closeAdd.onclick = () => addModal.classList.add("hidden");
+
+        // Klik luar modal untuk close
+        addModal.onclick = (e) => {
+            if (e.target === addModal) addModal.classList.add("hidden");
+        };
+    }
+
+
+
+    /* =====================================================
+     *  EDIT MODAL
+     * =====================================================*/
+    const editModal = document.getElementById("editScheduleModal");
+    const closeEdit = document.getElementById("closeEditModal");
+
+    document.querySelectorAll(".btnEdit").forEach(btn => {
+        btn.onclick = function () {
+
+            document.getElementById("editDay").value = this.dataset.day;
+            document.getElementById("editTime").value = this.dataset.time;
+            document.getElementById("editKelas").value = this.dataset.kelas;
+            document.getElementById("editTrainer").value = this.dataset.trainer;
+            document.getElementById("editStatus").value = this.dataset.status;
+
+            document.getElementById("editForm").action = "/schedules/" + this.dataset.id;
+
+            editModal.classList.remove("hidden");
+        };
+    });
+
+    if (closeEdit && editModal) {
+        closeEdit.onclick = () => editModal.classList.add("hidden");
+    }
+
+
+
+    /* =====================================================
+     *  DELETE MODAL
+     * =====================================================*/
+   document.addEventListener("DOMContentLoaded", () => {
+
+    document.querySelectorAll(".deleteForm").forEach(form => {
+        form.addEventListener("submit", function (e) {
+
+            const confirmDelete = confirm("Yakin ingin menghapus jadwal ini?");
+            if (!confirmDelete) {
+                e.preventDefault(); // batal submit
             }
-        });
-    }
 
-    // Saat user ganti tanggal → langsung submit
-    if (inputDate) {
-        inputDate.addEventListener("change", () => {
-            formFilter.submit();
         });
-    }
+    });
 
-    // Saat user ganti jam → langsung submit
-    if (inputTime) {
-        inputTime.addEventListener("change", () => {
-            formFilter.submit();
-        });
-    }
-
-    // Tambahan: tombol Reset kembali ke halaman tanpa query
-    const btnReset = document.querySelector("a.bg-gray-400");
-    if (btnReset) {
-        btnReset.addEventListener("click", (e) => {
-            e.preventDefault();
-            window.location.href = formFilter.getAttribute("action");
-        });
-    }
-
-    console.log("✅ Filter jadwal aktif: pencarian client, tanggal, dan jam siap digunakan.");
+});
+    // console.log("✅ schedule.js loaded tanpa duplikasi variabel.");
 });

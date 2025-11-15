@@ -42,8 +42,7 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // ===============================
     // 🏠 Halaman Home (Dashboard Ringkas)
     // ===============================
-    Route::get('/home', [\App\Http\Controllers\Admin\HomeController::class, 'index'])->name('admin.home');
-
+    Route::get('/home', [HomeController::class, 'index'])->name('admin.home');
 
     // ===============================
     // 👥 Manage User & Member
@@ -69,7 +68,10 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // ===============================
     // 🕒 Jadwal / Schedule
     // ===============================
-    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+    // gunakan resource, exclude create/edit karena pakai modal
+    Route::resource('schedules', ScheduleController::class)->except(['create', 'edit']);
+
+    // route filter tetap dipertahankan
     Route::get('/schedules/filter', [ScheduleController::class, 'filter'])->name('schedules.filter');
 
     // ===============================
