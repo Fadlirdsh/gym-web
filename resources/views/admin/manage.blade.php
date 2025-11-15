@@ -39,8 +39,8 @@
             <select name="role"
                 class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 required>
-                <option value="pelanggan" style="color: black">Pelanggan</option>
-                <option value="trainer" style="color: black">Trainer</option>
+                <option value="pelanggan" style="color: white">Pelanggan</option>
+                <option value="trainer" style="color: white">Trainer</option>
             </select>
 
             <button type="submit"
@@ -72,10 +72,6 @@
                     <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
                 @endforeach
             </select>
-
-            {{-- <input type="number" name="harga" placeholder="Harga (Rp)"
-                class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                required> --}}
 
             <button type="submit"
                 class="mt-3 bg-green-600 hover:bg-green-500 transition-all px-5 py-2.5 rounded-lg font-semibold text-white shadow-md hover:shadow-green-500/20">
