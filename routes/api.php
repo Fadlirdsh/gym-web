@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\KelasController;
 use App\Http\Controllers\Api\KuponController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\DiskonController;
+use App\Http\Controllers\Api\ScheduleApiController;
 
 
 // =====================
@@ -59,6 +60,12 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 Route::apiResource('diskon', DiskonController::class);
 
 // =====================
+// 🔹 SCHEDULUE
+// =====================
+Route::get('/schedules', [ScheduleApiController::class, 'index']);
+Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
+
+// =====================
 // 🔹 MEMBER (FITUR MEMBERSHIP)
 // =====================
 Route::prefix('member')->middleware('jwt.auth')->group(function () {
@@ -66,5 +73,5 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::put('/aktivasi/{member_id}', [MemberController::class, 'aktivasi']);
     Route::get('/kelas/{user_id}', [MemberController::class, 'kelasMember']);
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
-});
 
+});
