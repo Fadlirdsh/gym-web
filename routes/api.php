@@ -31,7 +31,8 @@ Route::get('/harga', [ReservasiController::class, 'getHarga']);
 
 // =====================
 // 🔹 AUTH (LOGIN / REGISTER / GOOGLE LOGIN)
-// =====================
+// =====================git pull origin main
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
