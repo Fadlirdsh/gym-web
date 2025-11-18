@@ -10,6 +10,12 @@ use App\Http\Controllers\Api\KuponController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
+use App\Http\Controllers\Api\AbsensiController;
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/absensi', [AbsensiController::class, 'absen']);
+});
+
 
 
 // =====================
