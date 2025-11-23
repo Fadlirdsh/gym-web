@@ -12,7 +12,6 @@
         </div>
     @endif
 
-    {{-- 🧍 Form Tambah Akun Pelanggan --}}
     <div class="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-lg p-6">
         <h2 class="text-2xl font-semibold text-white mb-4 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -42,6 +41,16 @@
                 <option value="pelanggan" style="color: white">Pelanggan</option>
                 <option value="trainer" style="color: white">Trainer</option>
             </select>
+
+            {{-- Pilih Role --}}
+            <div>
+                <select name="role"
+                    class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                    <option value="">-- Pilih Role --</option>
+                    <option value="pelanggan">Pelanggan</option>
+                    <option value="trainer">Trainer</option>
+                </select>
+            </div>
 
             <button type="submit"
                 class="mt-3 bg-indigo-600 hover:bg-indigo-500 transition-all px-5 py-2.5 rounded-lg font-semibold text-white shadow-md hover:shadow-indigo-500/20">
