@@ -198,4 +198,5 @@ class UserController extends Controller
         $pelanggan = User::where('role', 'pelanggan')->get();
         return response()->json($pelanggan);
     }
+    
 }
