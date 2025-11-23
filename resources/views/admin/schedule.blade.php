@@ -3,7 +3,6 @@
 @section('title', 'Jadwal Trainer')
 
 @section('content')
-<<<<<<< HEAD
 <div class="min-h-screen bg-gray-900 text-gray-100 px-6 py-8">
 
     {{-- HEADER --}}
@@ -114,7 +113,6 @@
                         <td colspan="10" class="text-center p-6 text-gray-400">
                             🚫 Belum ada data jadwal latihan untuk saat ini
                         </td>
-=======
     <div class="container py-4">
         <h1 class="mb-4 text-2xl font-bold">Jadwal Trainer</h1>
 
@@ -181,15 +179,14 @@
                 @empty
                     <tr>
                         <td colspan="7" class="text-center p-3">Belum ada data jadwal</td>
->>>>>>> ec6da5c243dfcd42c110dbc998fadeb3348fd6bb
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-<<<<<<< HEAD
+
 </div>
-=======
+
 
     {{-- ========================= --}}
     {{--      MODAL ADD            --}}
@@ -289,5 +286,4 @@
 
     @vite('resources/js/schedule.js')
 
->>>>>>> ec6da5c243dfcd42c110dbc998fadeb3348fd6bb
 @endsection
