@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\KuponController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
+use App\Http\Controllers\Api\UserController;
 
 // =====================
 // 🔹 ROUTE API KELAS (PUBLIC)
@@ -33,15 +34,19 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
 
 // 🔹 REFRESH TOKEN (AGAR USER TETAP LOGIN)
-// menggunakan middleware bawaan JWT
 Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refresh']);
 
 // =====================
 // 🔹 AMBIL DATA USER LOGIN (JWT PROTECTED)
 // =====================
 Route::middleware(['jwt.auth', 'role:pelanggan'])->get('/user', function () {
-    return auth()->user();   // JWT harus pakai auth()
+    return auth()->user();
 });
+
+// =====================
+// 🔹 ROUTE TRAINER (PUBLIC)
+// =====================
+Route::get('/users/trainer', [UserController::class, 'getTrainers']);  // <-- INI DIA
 
 // =====================
 // 🔹 KUPON FREECLASS
