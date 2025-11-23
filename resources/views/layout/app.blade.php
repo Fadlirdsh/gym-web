@@ -16,43 +16,23 @@
   @stack('styles')
 
   <style>
-    /* Glassmorphism */
     .glass {
       background: rgba(255,255,255,0.06);
-      -webkit-backdrop-filter: blur(10px) saturate(130%);
       backdrop-filter: blur(10px) saturate(130%);
       border: 1px solid rgba(255,255,255,0.06);
     }
-    @media (prefers-color-scheme: dark) {
-      .glass {
-        background: rgba(15,23,42,0.6);
-        border-color: rgba(255,255,255,0.06);
-      }
-    }
-
-    .sidebar { transition: width 0.3s cubic-bezier(.2,.9,.2,1), transform .3s ease; }
+    .sidebar { transition: width 0.3s cubic-bezier(.2,.9,.2,1); }
     .sidebar.collapsed { width: 4.5rem; }
-
     .sidebar.collapsed .sidebar-label,
-    .sidebar.collapsed .sidebar-logo-text {
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .25s ease;
-    }
-
+    .sidebar.collapsed .sidebar-logo-text { opacity: 0; pointer-events: none; }
     #appLayout { transition: all 0.3s ease; margin-left: 16rem; }
-    #appLayout.sidebar-collapsed { margin-left: 4.5rem !important; width: calc(100% - 4.5rem); }
-
+    #appLayout.sidebar-collapsed { margin-left: 4.5rem!important; }
     header { transition: all 0.3s ease; left: 16rem; }
-    header.sidebar-collapsed { left: 4.5rem !important; width: calc(100% - 4.5rem); }
-
-    #loader { display: none; align-items: center; justify-content: center; height: 200px; }
-    .spinner { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,.2); border-top: 3px solid #6366f1; border-radius: 50%; animation: spin .8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    header.sidebar-collapsed { left: 4.5rem!important; }
   </style>
 </head>
 
-<body class="min-h-screen flex overflow-x-hidden font-inter bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+<body class="min-h-screen flex overflow-x-hidden font-inter bg-gray-50 dark:bg-gray-900">
 
   <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-40 hidden md:hidden"></div>
 
@@ -60,10 +40,10 @@
   <aside id="sidebar"
     class="sidebar fixed inset-y-0 left-0 z-50 w-64 transform -translate-x-full md:translate-x-0 flex flex-col glass rounded-tr-3xl shadow-xl">
 
-    <div class="h-16 flex items-center justify-between px-6 border-b border-white/6">
+    <div class="h-16 flex items-center justify-between px-6 border-b border-white/10">
       <div class="flex items-center gap-3 w-full">
-        <img src="{{ asset('uploads/logo-paradise.png') }}" alt="Logo Paradise" class="h-10 w-auto">
-        <div id="logoSidebarToggle" class="font-semibold text-white text-lg tracking-wide cursor-pointer sidebar-logo-text">
+        <img src="{{ asset('uploads/logo-paradise.png') }}" class="h-10">
+        <div id="logoSidebarToggle" class="font-semibold text-white text-lg cursor-pointer sidebar-logo-text">
           Paradise Gym
         </div>
       </div>
@@ -85,17 +65,36 @@
       @foreach ($menu as $item)
         <a href="{{ $item['url'] }}"
           class="sidebar-link nav-item-transition flex items-center gap-3 px-4 py-2 rounded-lg
-            {{ request()->is($item['pattern']) ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-inset ring-indigo-600/30' : 'text-gray-300 hover:bg-indigo-500/8 hover:text-indigo-100' }}">
-          
-          {{-- 🔥 GANTI ICON HOME --}}
-          @if ($item['label'] === 'Home')
-            <i class="fa-solid fa-house w-5 h-5 text-current"></i>
-          @else
-            <!-- SVG Default -->
-            <svg class="h-5 w-5 flex-shrink-0 text-current" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M4 6h16M4 12h16M4 18h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          @endif
+            {{ request()->is($item['pattern']) ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-indigo-600/30' : 'text-gray-300 hover:bg-indigo-500/10 hover:text-indigo-100' }}">
+
+         {{-- 🔥 ICON KHUSUS UNTUK MANAGE USERS --}}
+@if ($item['label'] === 'Manage Users')
+    <i class="fa-solid fa-person w-5 h-5 text-current"></i>
+
+{{-- 🔥 ICON KHUSUS UNTUK MANAGE KELAS --}}
+@elseif ($item['label'] === 'Manage Kelas')
+    <i class="fa-solid fa-bars-progress w-5 h-5 text-current"></i>
+
+{{-- ICON HOME --}}
+@elseif ($item['label'] === 'Home')
+    <i class="fa-solid fa-house w-5 h-5 text-current"></i>
+
+@elseif ($item['label'] === 'Manage Schedule')
+    <i class="fa-solid fa-calendar w-5 h-5 text-current"></i>
+
+@elseif ($item['label'] === 'Dashboard Data')
+    <i class="fa-solid fa-chart-line"></i>
+
+@elseif ($item['label'] === 'Visit Log')
+    <i class="fa-solid fa-eye-low-vision"></i>
+
+{{-- ICON DEFAULT --}}
+@else
+    <svg class="h-5 w-5 text-current" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M4 6h16M4 12h16M4 18h16" stroke-width="2"
+        stroke-linecap="round" />
+    </svg>
+@endif
 
           <span class="sidebar-label">{{ $item['label'] }}</span>
         </a>
