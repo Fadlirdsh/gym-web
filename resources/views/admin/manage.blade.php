@@ -52,6 +52,16 @@
                 <option value="trainer" style="color: white">Trainer</option>
             </select>
 
+            {{-- Pilih Role --}}
+            <div>
+                <select name="role"
+                    class="p-3 rounded-lg w-full bg-gray-900 text-white border border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                    <option value="">-- Pilih Role --</option>
+                    <option value="pelanggan">Pelanggan</option>
+                    <option value="trainer">Trainer</option>
+                </select>
+            </div>
+
             <button type="submit"
                 class="mt-3 bg-indigo-600 hover:bg-indigo-500 transition-all px-5 py-2.5 rounded-lg font-semibold text-white shadow-md hover:shadow-indigo-500/20">
                 + Buat Akun
