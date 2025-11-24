@@ -142,12 +142,15 @@
         </button>
 
         <div x-show="open" x-collapse class="pl-8 space-y-1">
+          
           <a href="{{ route('diskon.index') }}"
             class="block px-3 py-2 rounded-md text-sm {{ request()->is('diskon*') ? 'bg-indigo-600/20 text-indigo-100' : 'text-gray-400 hover:text-indigo-100 hover:bg-indigo-500/8' }}">
+            <i class="fa-solid fa-dollar-sign"></i>
             Diskon Kelas
           </a>
           <a href="{{ route('voucher.index') }}"
             class="block px-3 py-2 rounded-md text-sm {{ request()->is('voucher*') ? 'bg-indigo-600/20 text-indigo-100' : 'text-gray-400 hover:text-indigo-100 hover:bg-indigo-500/8' }}">
+            <i class="fa-solid fa-ticket"></i>
             Voucher (User)
           </a>
         </div>

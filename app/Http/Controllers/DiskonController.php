@@ -13,7 +13,11 @@ class DiskonController extends Controller
     public function index()
     {
         $diskons = Diskon::with('kelas')->get();
-        $kelas = Kelas::all();
+        // Ambil hanya kelas yang belum memiliki diskon AKTIF
+        $kelas = Kelas::whereDoesntHave('diskons', function ($q) {
+            $q->where('tanggal_mulai', '<=', now())
+                ->where('tanggal_berakhir', '>=', now());
+        })->get();
         return view('admin.diskon', compact('diskons', 'kelas'));
     }
 
@@ -35,6 +39,16 @@ class DiskonController extends Controller
             'tanggal_mulai' => Carbon::parse($request->tanggal_mulai)->startOfDay(),
             'tanggal_berakhir' => Carbon::parse($request->tanggal_berakhir)->endOfDay(),
         ]);
+
+        $kelasSudahDiskon = Diskon::where('kelas_id', $request->kelas_id)
+            ->where('tanggal_mulai', '<=', now())
+            ->where('tanggal_berakhir', '>=', now())
+            ->exists();
+
+        if ($kelasSudahDiskon) {
+            return redirect()->back()->with('error', 'Kelas ini sudah memiliki diskon aktif!');
+        }
+
 
         return redirect()->back()->with('success', 'Diskon berhasil ditambahkan!');
     }
