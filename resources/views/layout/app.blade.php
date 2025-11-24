@@ -92,28 +92,19 @@
           class="sidebar-link nav-item-transition flex items-center gap-3 px-4 py-2 rounded-lg
               {{ request()->is($item['pattern']) ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-indigo-600/30' : 'text-gray-300 hover:bg-indigo-500/10 hover:text-indigo-100' }}">
 
-          {{-- 🔥 ICON KHUSUS UNTUK MANAGE USERS --}}
+          {{-- ICONS --}}
           @if ($item['label'] === 'Manage Users')
             <i class="fa-solid fa-person w-5 h-5 text-current"></i>
-
-            {{-- 🔥 ICON KHUSUS UNTUK MANAGE KELAS --}}
           @elseif ($item['label'] === 'Manage Kelas')
             <i class="fa-solid fa-bars-progress w-5 h-5 text-current"></i>
-
-            {{-- ICON HOME --}}
           @elseif ($item['label'] === 'Home')
             <i class="fa-solid fa-house w-5 h-5 text-current"></i>
-
           @elseif ($item['label'] === 'Manage Schedule')
             <i class="fa-solid fa-calendar w-5 h-5 text-current"></i>
-
           @elseif ($item['label'] === 'Dashboard Data')
             <i class="fa-solid fa-chart-line"></i>
-
           @elseif ($item['label'] === 'Visit Log')
             <i class="fa-solid fa-eye-low-vision"></i>
-
-            {{-- ICON DEFAULT --}}
           @else
             <svg class="h-5 w-5 text-current" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M4 6h16M4 12h16M4 18h16" stroke-width="2" stroke-linecap="round" />
@@ -126,15 +117,12 @@
 
       <!-- DROPDOWN DISKON -->
       @php $isDiskonActive = request()->is('diskon*') || request()->is('voucher*'); @endphp
-
       <div x-data="{ open: {{ $isDiskonActive ? 'true' : 'false' }} }" class="space-y-1">
         <button @click="open = !open"
           class="flex items-center w-full px-4 py-2 rounded-lg nav-item-transition
           {{ $isDiskonActive ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-inset ring-indigo-600/30' : 'text-gray-300 hover:bg-indigo-500/8 hover:text-indigo-100' }}">
-
           <i class="fa-solid fa-tags h-5 w-5 mr-2"></i>
           <span class="sidebar-label">Manage Diskon</span>
-
           <svg :class="{ 'rotate-180': open }" class="ml-auto h-4 w-4 transition-transform duration-200 text-gray-300"
             fill="none" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -142,16 +130,13 @@
         </button>
 
         <div x-show="open" x-collapse class="pl-8 space-y-1">
-          
           <a href="{{ route('diskon.index') }}"
             class="block px-3 py-2 rounded-md text-sm {{ request()->is('diskon*') ? 'bg-indigo-600/20 text-indigo-100' : 'text-gray-400 hover:text-indigo-100 hover:bg-indigo-500/8' }}">
-            <i class="fa-solid fa-dollar-sign"></i>
-            Diskon Kelas
+            <i class="fa-solid fa-dollar-sign"></i> Diskon Kelas
           </a>
           <a href="{{ route('voucher.index') }}"
             class="block px-3 py-2 rounded-md text-sm {{ request()->is('voucher*') ? 'bg-indigo-600/20 text-indigo-100' : 'text-gray-400 hover:text-indigo-100 hover:bg-indigo-500/8' }}">
-            <i class="fa-solid fa-ticket"></i>
-            Voucher (User)
+            <i class="fa-solid fa-ticket"></i> Voucher (User)
           </a>
         </div>
       </div>
@@ -200,6 +185,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -256,10 +242,7 @@
       document.querySelectorAll('.sidebar-link').forEach(link => {
         link.addEventListener('click', async (e) => {
           const url = e.currentTarget.getAttribute('href');
-
-          // 🔥 Jika menu dashboard → biarkan full page reload
           if (url.includes('/dashboard')) return;
-
           e.preventDefault();
           if (isMobile) mobileClose();
 
@@ -283,7 +266,10 @@
           }
         });
       });
+    });
+  </script>
 
-      @stack('scripts')
-</body >
-</html >
+  @stack('scripts')
+
+</body>
+</html>
