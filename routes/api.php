@@ -11,11 +11,7 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
 use App\Http\Controllers\Api\AbsensiController;
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/absensi', [AbsensiController::class, 'absen']);
-});
-
+use App\Http\Controllers\Api\UserController;
 
 // =====================
 // 🔹 ROUTE API KELAS (PUBLIC)
@@ -38,15 +34,26 @@ Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
 
-// 🔹 REFRESH TOKEN (AGAR USER TETAP LOGIN)
-// menggunakan middleware bawaan JWT
+// 🔹 REFRESH TOKEN
 Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refresh']);
 
 // =====================
-// 🔹 AMBIL DATA USER LOGIN (JWT PROTECTED)
+// 🔹 GET USER LOGIN DATA
 // =====================
 Route::middleware(['jwt.auth', 'role:pelanggan'])->get('/user', function () {
-    return auth()->user();   // JWT harus pakai auth()
+    return auth()->user();
+});
+
+// =====================
+// 🔹 ROUTE TRAINER (PUBLIC)
+// =====================
+Route::get('/users/trainer', [UserController::class, 'getTrainers']);
+
+// =====================
+// 🔹 ABSENSI (SANCTUM PROTECTED)
+// =====================
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/absensi', [AbsensiController::class, 'absen']);
 });
 
 // =====================
@@ -70,7 +77,7 @@ Route::get('/schedules', [ScheduleApiController::class, 'index']);
 Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
 
 // =====================
-// 🔹 MEMBER (FITUR MEMBERSHIP)
+// 🔹 MEMBER
 // =====================
 Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::post('/', [MemberController::class, 'store']);

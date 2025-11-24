@@ -9,9 +9,8 @@ use App\Models\Absensi;
 
 class AbsensiController extends Controller
 {
-    // Fungsi Haversine
     private function haversineDistance($lat1, $lon1, $lat2, $lon2) {
-        $earthRadius = 6371000; // meter
+        $earthRadius = 6371000;
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
 
@@ -19,9 +18,7 @@ class AbsensiController extends Controller
              cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
              sin($dLon/2) * sin($dLon/2);
 
-        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-
-        return $earthRadius * $c; // jarak dalam meter
+        return $earthRadius * (2 * atan2(sqrt($a), sqrt(1-$a)));
     }
 
     public function absen(Request $request)
@@ -32,18 +29,35 @@ class AbsensiController extends Controller
             'longitude' => 'required|numeric',
         ]);
 
+        // Cegah absen 2x
+        $check = Absensi::where('user_id', auth()->id())
+            ->whereDate('waktu', now()->toDateString())
+            ->first();
+
+        if ($check) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda sudah absen hari ini'
+            ], 400);
+        }
+
         $zona = Zona::findOrFail($request->zona_id);
         $jarak = $this->haversineDistance($request->latitude, $request->longitude, $zona->latitude, $zona->longitude);
 
         if ($jarak <= $zona->radius_m) {
             Absensi::create([
-                'user_id' => $request->user()->id,
+                'user_id' => auth()->id(),
                 'zona_id' => $zona->id,
                 'waktu' => now(),
+                'jarak_meter' => round($jarak)
             ]);
+
             return response()->json(['success' => true, 'message' => 'Absensi berhasil']);
-        } else {
-            return response()->json(['success' => false, 'message' => 'Anda berada di luar zona!']);
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => "Anda berada di luar zona! Jarak: " . round($jarak) . "m"
+        ], 400);
     }
 }
