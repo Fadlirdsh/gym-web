@@ -122,7 +122,11 @@
           class="flex items-center w-full px-4 py-2 rounded-lg nav-item-transition
           {{ $isDiskonActive ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-inset ring-indigo-600/30' : 'text-gray-300 hover:bg-indigo-500/8 hover:text-indigo-100' }}">
           <i class="fa-solid fa-tags h-5 w-5 mr-2"></i>
+
           <span class="sidebar-label">Manage Diskon</span>
+
+          <span class="sidebar-label">Promo Center</span>
+
           <svg :class="{ 'rotate-180': open }" class="ml-auto h-4 w-4 transition-transform duration-200 text-gray-300"
             fill="none" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -235,7 +239,7 @@
       updateLayout();
       window.addEventListener('resize', updateLayout);
 
-      // AJAX loader navigation
+      // AJAX loader
       const loader = document.getElementById('loader');
       const pageContent = document.getElementById('pageContent');
 

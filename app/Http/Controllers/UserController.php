@@ -27,6 +27,7 @@ class UserController extends Controller
             'email'    => 'required|string|email|unique:users',
             'password' => 'required|string|min:6',
             'role'     => 'required|in:pelanggan,trainer',
+            'phone'    => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
@@ -34,6 +35,7 @@ class UserController extends Controller
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'role'     => $request->role,
+            'phone'    => $request->phone,
         ]);
 
         return response()->json($user, 201);
@@ -55,11 +57,13 @@ class UserController extends Controller
             'name'     => 'sometimes|required|string|max:255',
             'email'    => ['sometimes', 'required', 'string', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => 'sometimes|required|string|min:6',
+            'phone'    => 'nullable|string|max:20',
         ]);
 
         if ($request->has('name'))     $user->name = $request->name;
         if ($request->has('email'))    $user->email = $request->email;
         if ($request->has('password')) $user->password = Hash::make($request->password);
+        if ($request->has('phone'))    $user->phone = $request->phone;
 
         $user->save();
 
@@ -99,6 +103,7 @@ class UserController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
             'role'     => 'required|in:pelanggan,trainer',
+            'phone'    => 'required|string|max:20',
         ]);
 
         User::create([
@@ -106,6 +111,7 @@ class UserController extends Controller
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'role'     => $request->role,
+            'phone'    => '+62' . ltrim($request->phone, '0'),
         ]);
 
         return redirect()->route('users.manage')->with('success', 'Akun ' . $request->role . ' berhasil ditambahkan');
@@ -132,11 +138,13 @@ class UserController extends Controller
             'email'    => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:6|confirmed',
             'role'     => 'required|in:pelanggan,trainer',
+            'phone'    => 'nullable|string|max:20',
         ]);
 
         $user->name  = $request->name;
         $user->email = $request->email;
         $user->role  = $request->role;
+        $user->phone = $request->phone;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
@@ -169,22 +177,35 @@ class UserController extends Controller
             'harga'      => 'required|integer|min:0',
         ]);
 
-        $user = User::findOrFail($user_id);
+        $user = User::with('member')->findOrFail($user_id);
 
+        // Hanya pelanggan yang boleh dibuatkan member
         if ($user->role !== 'pelanggan') {
             return back()->with('error', 'Hanya pelanggan yang bisa dijadikan member.');
         }
 
-        Member::where('user_id', $user->id)->delete();
+        // Jika user sudah punya member
+        if ($user->member) {
+            if ($user->member->status === 'aktif') {
+                return back()->with('error', 'Pelanggan ini masih memiliki member AKTIF.');
+            }
+            if ($user->member->status === 'pending') {
+                return back()->with('error', 'Pelanggan ini memiliki member yang masih PENDING.');
+            }
+            if ($user->member->status === 'nonaktif') {
+                $user->member->delete();
+            }
+        }
 
+        // Buat member baru
         Member::create([
-            'user_id'         => $user->id,
-            'maks_kelas'      => $request->maks_kelas,
-            'tipe_kelas'      => $request->tipe_kelas,
-            'harga'           => $request->harga,
-            'tanggal_mulai'   => now(),
+            'user_id'          => $user->id,
+            'maks_kelas'       => $request->maks_kelas,
+            'tipe_kelas'       => $request->tipe_kelas,
+            'harga'            => $request->harga,
+            'tanggal_mulai'    => now(),
             'tanggal_berakhir' => now()->addMonth(),
-            'status'          => 'aktif',
+            'status'           => 'aktif',
         ]);
 
         return back()->with('success', 'Membership berhasil dibuat untuk pelanggan.');
@@ -198,5 +219,4 @@ class UserController extends Controller
         $pelanggan = User::where('role', 'pelanggan')->get();
         return response()->json($pelanggan);
     }
-    
 }
