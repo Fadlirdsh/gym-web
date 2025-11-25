@@ -14,7 +14,6 @@ btnOpenCreate?.addEventListener("click", () => {
   modalCreate.style.opacity = "0";
   modalCreate.style.transition = "opacity 0.3s ease";
 
-  // pastikan muncul di tengah layar
   modalCreate.style.position = "fixed";
   modalCreate.style.top = "0";
   modalCreate.style.left = "0";
@@ -23,7 +22,6 @@ btnOpenCreate?.addEventListener("click", () => {
   modalCreate.style.backgroundColor = "rgba(0,0,0,0.5)";
   modalCreate.style.zIndex = "9999";
 
-  // efek fade-in
   setTimeout(() => {
     modalCreate.style.opacity = "1";
   }, 10);
@@ -79,12 +77,9 @@ document.querySelectorAll(".btnOpenEdit").forEach((btn) => {
     document.getElementById("editHarga").value = btn.dataset.harga;
     document.getElementById("tipePaketEdit").value = btn.dataset.paket;
     document.getElementById("editDeskripsi").value = btn.dataset.deskripsi;
-    document.getElementById("editToken").value = btn.dataset.token;
-    document.getElementById("editExpired").value = btn.dataset.expired;
     document.getElementById("editKapasitas").value = btn.dataset.kapasitas;
+    document.getElementById('editExpired').value = btn.dataset.expired;
     editTipe.value = btn.dataset.tipe;
-
-    toggleTokenFieldsEdit();
   });
 });
 
@@ -100,7 +95,7 @@ document.querySelectorAll(".btnOpenEdit").forEach((btn) => {
 });
 
 // ========================
-// Tutup modal kalau klik di luar kontennya
+// Tutup modal kalau klik di luar konten
 // ========================
 window.addEventListener("click", (e) => {
   if (e.target === modalCreate) {
@@ -114,45 +109,5 @@ window.addEventListener("click", (e) => {
 });
 
 // ========================
-// Toggle token/expired field (biarkan tetap sama)
+// Token/Expired REMOVED (karena tidak digunakan di halaman Kelas)
 // ========================
-const tipeInputCreate = document.querySelector('#modalCreate [name="tipe_paket"]');
-const tokenInputCreate = document.querySelector('#modalCreate [name="jumlah_token"]');
-const expiredInputCreate = document.querySelector('#modalCreate [name="expired_at"]');
-
-function toggleTokenFieldsCreate() {
-  if (tipeInputCreate.value.toLowerCase() === "classes") {
-    tokenInputCreate.parentElement.style.display = "block";
-    expiredInputCreate.parentElement.style.display = "block";
-    tokenInputCreate.setAttribute("required", "required");
-    expiredInputCreate.setAttribute("required", "required");
-  } else {
-    tokenInputCreate.parentElement.style.display = "none";
-    expiredInputCreate.parentElement.style.display = "none";
-    tokenInputCreate.value = "";
-    expiredInputCreate.value = "";
-    tokenInputCreate.removeAttribute("required");
-    expiredInputCreate.removeAttribute("required");
-  }
-}
-if (tipeInputCreate) {
-  tipeInputCreate.addEventListener("input", toggleTokenFieldsCreate);
-  toggleTokenFieldsCreate();
-}
-
-const tipeInputEdit = document.querySelector('#modalEdit [name="tipe_paket"]');
-const tokenInputEdit = document.querySelector('#modalEdit [name="jumlah_token"]');
-const expiredInputEdit = document.querySelector('#modalEdit [name="expired_at"]');
-
-function toggleTokenFieldsEdit() {
-  if (tipeInputEdit.value.toLowerCase() === "classes") {
-    tokenInputEdit.parentElement.style.display = "block";
-    expiredInputEdit.parentElement.style.display = "block";
-  } else {
-    tokenInputEdit.parentElement.style.display = "none";
-    expiredInputEdit.parentElement.style.display = "none";
-  }
-}
-if (tipeInputEdit) {
-  tipeInputEdit.addEventListener("input", toggleTokenFieldsEdit);
-}
