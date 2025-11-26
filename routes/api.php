@@ -72,8 +72,8 @@ Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
 // 🔹 MEMBER (FITUR MEMBERSHIP)
 // =====================
 Route::prefix('member')->middleware('jwt.auth')->group(function () {
-    Route::post('/', [MemberController::class, 'store']);
-    Route::put('/aktivasi/{member_id}', [MemberController::class, 'aktivasi']);
-    Route::get('/kelas/{user_id}', [MemberController::class, 'kelasMember']);
-    Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
+    Route::post('/store', [MemberController::class, 'store']);       // daftar member
+    Route::get('/kelas', [MemberController::class, 'kelasMember']);  // lihat kelas + token
+    Route::post('/bayar', [MemberController::class, 'bayarDummy']);  // dummy payment
+    Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']); // ikut kelas & token berkurang
 });
