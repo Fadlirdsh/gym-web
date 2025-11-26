@@ -9,15 +9,13 @@ class Kelas extends Model
 {
     use HasFactory;
 
-    protected $table = 'kelas'; // nama tabel di database
+    protected $table = 'kelas';
 
     protected $fillable = [
         'nama_kelas',
-        'tipe_kelas',
+        'tipe_kelas',   // ENUM: Pilates Group, Pilates Private, Yoga Group, Yoga Private
         'harga',
         'deskripsi',
-        'tipe_paket',
-        'jumlah_token',
         'expired_at',
         'kapasitas',
         'gambar',
@@ -27,27 +25,19 @@ class Kelas extends Model
         'harga' => 'decimal:2',
     ];
 
-    // Tambahkan accessor ini supaya harga_diskon, diskon_persen, dan SISA_KURSI otomatis ada
     protected $appends = ['harga_diskon', 'diskon_persen', 'sisa_kursi'];
 
-    // --- Accessor Baru untuk Sisa Kursi ---
-    /**
-     * Accessor untuk sisa_kursi (kapasitas dikurangi jumlah reservasi).
-     * Properti ini bergantung pada pemanggilan withCount('reservasi') di Controller.
-     */
+    // --- Accessor: Sisa Kursi ---
     public function getSisaKursiAttribute()
     {
-        // Pastikan reservasi_count ada (hasil dari withCount('reservasi'))
         return $this->kapasitas - ($this->reservasi_count ?? 0);
     }
-    // ----------------------------------------
 
     public function diskons()
     {
         return $this->hasMany(Diskon::class);
     }
 
-    // Metode ini tidak lagi diperlukan jika menggunakan getHargaDiskonAttribute
     public function hargaSetelahDiskon()
     {
         $diskon = $this->diskons()
@@ -56,14 +46,11 @@ class Kelas extends Model
             ->orderByDesc('persentase')
             ->first();
 
-        if ($diskon) {
-            return $this->harga - ($this->harga * $diskon->persentase / 100);
-        }
-
-        return $this->harga;
+        return $diskon
+            ? $this->harga - ($this->harga * $diskon->persentase / 100)
+            : $this->harga;
     }
 
-    // Accessor untuk harga_diskon
     public function getHargaDiskonAttribute()
     {
         $diskon = $this->diskons()
@@ -72,10 +59,11 @@ class Kelas extends Model
             ->orderByDesc('persentase')
             ->first();
 
-        return $diskon ? $this->harga - ($this->harga * $diskon->persentase / 100) : $this->harga;
+        return $diskon
+            ? $this->harga - ($this->harga * $diskon->persentase / 100)
+            : $this->harga;
     }
 
-    // Accessor untuk persentase diskon
     public function getDiskonPersenAttribute()
     {
         $diskon = $this->diskons()
@@ -107,5 +95,10 @@ class Kelas extends Model
     public function trainer()
     {
         return $this->belongsTo(Trainer::class, 'trainer_id');
+    }
+
+    public function scopeAktif($query)
+    {
+        return $query->where('expired_at', '>=', now()->toDateString());
     }
 }
