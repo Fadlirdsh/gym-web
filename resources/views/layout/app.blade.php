@@ -133,7 +133,7 @@
           {{ $isDiskonActive ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-inset ring-indigo-600/30' : 'text-gray-300 hover:bg-indigo-500/8 hover:text-indigo-100' }}">
 
           <i class="fa-solid fa-tags h-5 w-5 mr-2"></i>
-          <span class="sidebar-label">Manage Diskon</span>
+          <span class="sidebar-label">Promo Center</span>
 
           <svg :class="{ 'rotate-180': open }" class="ml-auto h-4 w-4 transition-transform duration-200 text-gray-300"
             fill="none" stroke="currentColor">
@@ -249,15 +249,13 @@
       updateLayout();
       window.addEventListener('resize', updateLayout);
 
-      // AJAX loader navigation
+      // AJAX loader
       const loader = document.getElementById('loader');
       const pageContent = document.getElementById('pageContent');
 
       document.querySelectorAll('.sidebar-link').forEach(link => {
         link.addEventListener('click', async (e) => {
           const url = e.currentTarget.getAttribute('href');
-
-          // 🔥 Jika menu dashboard → biarkan full page reload
           if (url.includes('/dashboard')) return;
 
           e.preventDefault();
@@ -283,7 +281,9 @@
           }
         });
       });
+    });
+  </script>
 
-      @stack('scripts')
-</body >
-</html >
+  @stack('scripts')
+</body>
+</html>       

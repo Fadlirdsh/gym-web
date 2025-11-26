@@ -14,50 +14,74 @@
     </div>
 
     <!-- Modal Overlay -->
-    <div id="addVoucherModal"
-         class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 opacity-0 pointer-events-none hidden transition-opacity duration-300">
+<div id="addVoucherModal"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 opacity-0 pointer-events-none hidden transition-opacity duration-300">
 
-        <!-- Modal Box -->
-        <div id="modalBox"
-             class="bg-gray-800 rounded-lg shadow-lg w-full max-w-lg p-6 transform scale-0 transition-all duration-300">
-            
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-white">Tambah Voucher</h2>
-                <button id="closeModalBtn" class="text-white text-2xl leading-none">&times;</button>
+    <!-- Modal Box (ukuran medium, responsif, scroll) -->
+    <div id="modalBox"
+        class="bg-gray-900 border border-gray-700 rounded-xl shadow-xl w-full max-w-lg p-6 transform scale-90 transition-all duration-300 max-h-[90vh] overflow-y-auto">
+
+        <div class="flex justify-between items-center mb-5">
+            <h2 class="text-2xl font-semibold text-white">Tambah Voucher</h2>
+            <button id="closeModalBtn" class="text-gray-300 text-3xl hover:text-white transition">&times;</button>
+        </div>
+
+        <!-- FORM -->
+        <form id="formAddVoucher" method="POST" action="{{ route('voucher.store') }}" class="space-y-4">
+            @csrf
+
+            <select name="kelas_id"
+                class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white text-base">
+                <option value="">Semua Kelas</option>
+                @foreach ($kelas as $k)
+                    <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
+                @endforeach
+            </select>
+
+            <input type="text" name="kode" placeholder="Kode Voucher"
+                class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white text-base">
+
+            <textarea name="deskripsi" placeholder="Deskripsi"
+                class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white text-base h-24"></textarea>
+
+            <div class="grid grid-cols-2 gap-4">
+                <input type="number" name="diskon_persen" placeholder="Diskon (%)"
+                    class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white text-base">
+
+                <input type="number" name="kuota" placeholder="Kuota"
+                    class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white text-base">
             </div>
 
-            <form id="formAddVoucher" method="POST" action="{{ route('voucher.store') }}">
-                @csrf
-                <select name="kelas_id" class="form-control mb-2" style="color: black">
-                    <option value="">Semua Kelas</option>
-                    @foreach ($kelas as $k)
-                        <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
-                    @endforeach
-                </select>
+            <div class="grid grid-cols-2 gap-4">
+                <input type="date" name="tanggal_mulai"
+                    class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white text-base">
 
-                <input type="text" name="kode" placeholder="Kode Voucher" class="form-control mb-2" style="color: black">
-                <textarea name="deskripsi" placeholder="Deskripsi" class="form-control mb-2" style="color: black"></textarea>
-                <input type="number" name="diskon_persen" placeholder="Diskon (%)" class="form-control mb-2" style="color: black">
-                <input type="date" name="tanggal_mulai" class="form-control mb-2" style="color: black">
-                <input type="date" name="tanggal_akhir" class="form-control mb-2" style="color: black">
-                <input type="number" name="kuota" placeholder="Kuota" class="form-control mb-2" style="color: black">
+                <input type="date" name="tanggal_akhir"
+                    class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white text-base">
+            </div>
 
-                <select name="role_target" class="form-control mb-2" style="color: black">
-                    <option value="semua">Semua</option>
-                    <option value="pelanggan">Pelanggan</option>
-                    <option value="member">Member</option>
-                </select>
+            <select name="role_target"
+                class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white text-base">
+                <option value="semua">Semua</option>
+                <option value="pelanggan">Pelanggan</option>
+                <option value="member">Member</option>
+            </select>
 
-                <select name="status" class="form-control mb-2" style="color: black">
-                    <option value="aktif">Aktif</option>
-                    <option value="nonaktif">Nonaktif</option>
-                </select>
+            <select name="status"
+                class="w-full p-3 rounded-lg bg-gray-800 border border-gray-600 text-white text-base">
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+            </select>
 
-                <button type="submit" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded mt-2 w-full">Simpan</button>
-            </form>
+            <button type="submit"
+                class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold text-base transition">
+                Simpan
+            </button>
+        </form>
 
-        </div>
     </div>
+</div>
+
 
     <!-- Tabel voucher -->
     <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
