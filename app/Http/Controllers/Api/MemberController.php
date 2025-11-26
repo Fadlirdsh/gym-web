@@ -45,6 +45,9 @@ class MemberController extends Controller
             'maks_kelas' => $request->maks_kelas,
             'tipe_kelas' => $request->tipe_kelas,
             'harga' => $request->harga,
+            'token_total' => $request->maks_kelas,
+            'token_terpakai' => 0,
+            'token_sisa' => $request->maks_kelas,
             'tanggal_mulai' => now(),
             'tanggal_berakhir' => now()->addMonth(),
             'status' => 'pending',
@@ -66,94 +69,124 @@ class MemberController extends Controller
 
         $member->update(['status' => 'aktif']);
 
-        $kelasList = Kelas::where('tipe_kelas', $member->tipe_kelas)->get();
-        foreach ($kelasList as $kelas) {
-            $member->kelas()->syncWithoutDetaching([
-                $kelas->id => [
-                    'jumlah_token' => $member->maks_kelas,
-                    'expired_at' => $member->tanggal_berakhir,
-                ]
-            ]);
-        }
-
         return response()->json([
-            'message' => 'Member diaktifkan dan token kelas diberikan',
+            'message' => 'Member diaktifkan',
             'member' => $member
         ]);
     }
 
-    // 3️⃣ Lihat kelas member
+    // 3️⃣ Lihat kelas & token member
     public function kelasMember()
     {
         $this->autoExpireMember();
 
         $user = JWTAuth::parseToken()->authenticate();
 
-        $member = Member::with('kelas')->where('user_id', $user->id)->first();
+        $member = Member::where('user_id', $user->id)->first();
 
         if (!$member) {
-            // User belum member → kembalikan data default
             return response()->json([
                 'id' => $user->id,
                 'user_id' => $user->id,
                 'status' => null,
-                'kelas' => [],
+                'token_total' => 0,
+                'token_terpakai' => 0,
+                'token_sisa' => 0,
+                'tipe_kelas' => null,
             ]);
         }
+
+        // Ambil kelas yang sesuai tipe member
+        $kelasList = Kelas::where('tipe_kelas', $member->tipe_kelas)->get();
 
         return response()->json([
             'id' => $member->id,
             'user_id' => $member->user_id,
             'status' => $member->status,
-            'kelas' => $member->kelas
+            'token_total' => $member->token_total,
+            'token_terpakai' => $member->token_terpakai,
+            'token_sisa' => $member->token_sisa,
+            'tipe_kelas' => $member->tipe_kelas,
+            'kelas' => $kelasList
         ]);
     }
 
-    // 4️⃣ Ikut kelas & kurangi token
+    // 4️⃣ Ikut kelas & kurangi token global member
     public function ikutKelas(Request $request)
     {
         $this->autoExpireMember();
 
         $request->validate([
             'kelas_id' => 'required|exists:kelas,id',
-            'tipe_paket' => 'required|string',
         ]);
 
         $user = JWTAuth::parseToken()->authenticate();
-        $kelasId = $request->kelas_id;
-        $kelas = Kelas::find($kelasId);
+        $kelas = Kelas::find($request->kelas_id);
+
+        $member = Member::where('user_id', $user->id)
+            ->where('status', 'aktif')
+            ->first();
 
         // User belum member atau nonaktif → hanya bisa ikut General
-        if (!$user->member || $user->member->status !== 'aktif') {
-            if ($request->tipe_paket !== 'General') {
-                return response()->json([
-                    'message' => 'Anda belum member aktif. Hanya bisa ikut paket General.'
-                ], 403);
-            }
+        if (!$member) {
+            return response()->json([
+                'message' => 'Anda belum memiliki membership aktif. Hanya bisa ikut paket General.'
+            ], 403);
         }
 
-        // Member aktif → cek token & paket
-        if ($user->member && $user->member->status === 'aktif' && $request->tipe_paket !== 'General') {
-            $pivot = $user->member->kelas()->where('kelas_id', $kelasId)->first();
-            if (!$pivot) {
-                return response()->json([
-                    'message' => 'Kelas ini tidak termasuk dalam paket membership Anda.'
-                ], 400);
-            }
-            if ($pivot->pivot->jumlah_token <= 0) {
-                return response()->json([
-                    'message' => 'Kuota kelas Anda sudah habis. Silakan perpanjang membership.'
-                ], 400);
-            }
-
-            // Kurangi token
-            $user->member->kelas()->updateExistingPivot($kelasId, [
-                'jumlah_token' => $pivot->pivot->jumlah_token - 1
-            ]);
+        // Pastikan token hanya untuk tipe kelas yang sama
+        if ($kelas->tipe_kelas !== $member->tipe_kelas) {
+            return response()->json([
+                'message' => "Kelas ini tidak termasuk paket membership Anda ({$member->tipe_kelas})."
+            ], 403);
         }
+
+        // Cek token
+        if ($member->token_sisa <= 0) {
+            return response()->json([
+                'message' => 'Token Anda habis. Silakan perpanjang membership.'
+            ], 403);
+        }
+
+        // Kurangi token
+        $member->token_terpakai += 1;
+        $member->token_sisa -= 1;
+        $member->save();
 
         return response()->json([
             'message' => 'Berhasil ikut kelas',
+            'token_sisa' => $member->token_sisa
         ]);
     }
+
+    public function bayarDummy(Request $request)
+{
+    $user = JWTAuth::parseToken()->authenticate();
+
+    $member = Member::where('user_id', $user->id)->first();
+
+    if (!$member) {
+        return response()->json(['message' => 'User belum punya member'], 404);
+    }
+
+    if ($member->status === 'aktif') {
+        return response()->json(['message' => 'Member sudah aktif'], 400);
+    }
+
+    // Simulasi pembayaran sukses
+    $member->update([
+        'status' => 'aktif',
+        'tanggal_mulai' => now(),
+        'tanggal_berakhir' => now()->addMonth(),
+        'token_total' => $member->maks_kelas,
+        'token_terpakai' => 0,
+        'token_sisa' => $member->maks_kelas,
+    ]);
+
+    return response()->json([
+        'message' => 'Pembayaran dummy sukses, member aktif!',
+        'member' => $member
+    ]);
+}
+
 }

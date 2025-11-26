@@ -29,6 +29,7 @@
             @forelse ($kelas as $k)
                 <div
                     class="group bg-gray-800/80 border border-gray-700 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200 overflow-hidden backdrop-blur-sm flex flex-col justify-between">
+
                     {{-- 🖼️ Gambar --}}
                     @if ($k->gambar)
                         <img src="{{ asset($k->gambar) }}" alt="{{ $k->nama_kelas }}"
@@ -47,17 +48,17 @@
                             <p><i class="fa-solid fa-users mr-1 text-indigo-400"></i> {{ $k->tipe_kelas }}</p>
                             <p><i class="fa-solid fa-money-bill mr-1 text-green-400"></i> Rp
                                 {{ number_format($k->harga, 0, ',', '.') }}</p>
+
                             <p><i class="fa-solid fa-percent mr-1 text-yellow-400"></i> Diskon: {{ $k->diskon_persen }}%</p>
                             <p><i class="fa-solid fa-tag mr-1 text-blue-400"></i> Harga Setelah Diskon:
                                 <span class="font-medium text-gray-100">Rp
                                     {{ number_format($k->harga_diskon, 0, ',', '.') }}</span>
                             </p>
-                            <p><i class="fa-solid fa-box mr-1 text-purple-400"></i> Paket: {{ $k->tipe_paket ?? 'General' }}
-                            </p>
-                            <p><i class="fa-solid fa-ticket mr-1 text-pink-400"></i> Token: {{ $k->jumlah_token ?? '-' }}
-                            </p>
+
+                            {{-- ❌ Paket & Token Dihapus --}}
+                            
                             <p><i class="fa-solid fa-hourglass-end mr-1 text-red-400"></i> Expired:
-                                {{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('d-m-Y H:i') : '-' }}
+                                {{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('d-m-Y') : '-' }}
                             </p>
                         </div>
 
@@ -67,10 +68,12 @@
                         <div class="flex flex-col sm:flex-row gap-2 mt-5">
                             <button
                                 class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium btnOpenEdit transition"
-                                data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}"
-                                data-tipe="{{ $k->tipe_kelas }}" data-harga="{{ $k->harga }}" data-paket="General"
-                                data-deskripsi="{{ $k->deskripsi }}" data-token="{{ $k->jumlah_token }}"
-                                data-expired="{{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('Y-m-d\TH:i') : '' }}"
+                                data-id="{{ $k->id }}"
+                                data-nama="{{ $k->nama_kelas }}"
+                                data-tipe="{{ $k->tipe_kelas }}"
+                                data-harga="{{ $k->harga }}"
+                                data-deskripsi="{{ $k->deskripsi }}"
+                                data-expired="{{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('Y-m-d') : '' }}"
                                 data-kapasitas="{{ $k->kapasitas }}">
                                 <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
                             </button>
@@ -96,12 +99,13 @@
         </div>
     </div>
 
-    {{-- ✅ Modal Create & Edit --}}
+    {{--  Modal Create & Edit --}}
     @foreach (['Create' => 'Tambah Kelas', 'Edit' => 'Edit Kelas'] as $modalId => $modalTitle)
         <div id="modal{{ $modalId }}"
             class="hidden fixed inset-0 z-50 items-center justify-center bg-black/70 backdrop-blur-sm p-4">
             <div
                 class="bg-gray-800 text-gray-200 rounded-2xl w-full max-w-lg border border-gray-700 shadow-2xl animate-fadeIn flex flex-col max-h-[90vh]">
+
                 <div class="overflow-y-auto px-6 py-6 flex-1 space-y-4">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-semibold text-white">{{ $modalTitle }}</h2>
@@ -149,7 +153,7 @@
                             <label class="block mb-1 font-medium">Kapasitas</label>
                             <input type="number" name="kapasitas" id="{{ strtolower($modalId) }}Kapasitas"
                                 class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm"
-                                value="20" min="1" required>
+                                min="1" value="20" required>
                         </div>
 
                         {{-- Deskripsi --}}
@@ -160,10 +164,10 @@
                                 rows="3"></textarea>
                         </div>
 
-                        {{-- Expired At --}}
+                        {{-- Expired --}}
                         <div>
                             <label class="block mb-1 font-medium">Expired At</label>
-                            <input type="datetime-local" name="expired_at" id="{{ strtolower($modalId) }}Expired"
+                            <input type="date" name="expired_at" id="{{ strtolower($modalId) }}Expired"
                                 class="w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
 
@@ -176,7 +180,7 @@
                             <div id="preview{{ $modalId }}Gambar" class="mt-3"></div>
                         </div>
 
-                        <input type="hidden" name="tipe_paket" value="General">
+                        {{-- ❌ Tipe Paket Dihapus --}}
                     </form>
                 </div>
 
@@ -194,7 +198,6 @@
         </div>
     @endforeach
 
-    {{-- Animasi Fade --}}
     <style>
         .animate-fadeIn {
             animation: fadeIn 0.25s ease-in-out;
