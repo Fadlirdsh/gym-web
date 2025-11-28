@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\MidtransController;
 
 // =====================
 // 🔹 ROUTE API KELAS (PUBLIC)
@@ -76,4 +77,5 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::get('/kelas', [MemberController::class, 'kelasMember']);  // lihat kelas + token
     Route::post('/bayar', [MemberController::class, 'bayarDummy']);  // dummy payment
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']); // ikut kelas & token berkurang
+    Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
 });
