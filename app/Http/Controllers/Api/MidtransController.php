@@ -59,4 +59,38 @@ class MidtransController extends Controller
             'token' => $snapToken,
         ]);
     }
+
+    public function getSnapToken(Request $request)
+    {
+        $request->validate([
+            'paket_id' => 'required|integer',
+            'harga' => 'required|integer',
+            'tipe_kelas' => 'required|string',
+            'maks_kelas' => 'required|integer',
+        ]);
+
+        $params = [
+            'transaction_details' => [
+                'order_id' => uniqid("ORD-"),
+                'gross_amount' => $request->harga,
+            ],
+            'item_details' => [
+                [
+                    'id' => $request->paket_id,
+                    'price' => $request->harga,
+                    'quantity' => 1,
+                    'name' => $request->tipe_kelas,
+                ]
+            ],
+            'customer_details' => [
+                'first_name' => auth()->user()->name ?? "User",
+            ]
+        ];
+
+        $snapToken = Snap::getSnapToken($params);
+
+        return response()->json([
+            'snapToken' => $snapToken
+        ]);
+    }
 }
