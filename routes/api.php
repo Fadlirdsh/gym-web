@@ -78,4 +78,6 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::post('/bayar', [MemberController::class, 'bayarDummy']);  // dummy payment
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']); // ikut kelas & token berkurang
     Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
+    Route::post('/midtrans/token', [MidtransController::class, 'getSnapToken']);
+
 });
