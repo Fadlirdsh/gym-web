@@ -19,7 +19,7 @@ class MemberController extends Controller
             ->update(['status' => 'nonaktif']);
     }
 
-    // 1️⃣ Daftar member
+    // 1️⃣ Daftar member (pending dulu)
     public function store(Request $request)
     {
         $this->autoExpireMember();
@@ -50,7 +50,7 @@ class MemberController extends Controller
             'token_sisa' => $request->maks_kelas,
             'tanggal_mulai' => now(),
             'tanggal_berakhir' => now()->addMonth(),
-            'status' => 'pending',
+            'status' => 'pending', // tetap pending sampai bayar
         ]);
 
         return response()->json([
@@ -59,7 +59,7 @@ class MemberController extends Controller
         ]);
     }
 
-    // 2️⃣ Aktivasi member
+    // 2️⃣ Aktivasi member (manual)
     public function aktivasi($member_id)
     {
         $this->autoExpireMember();
@@ -159,34 +159,34 @@ class MemberController extends Controller
         ]);
     }
 
+    // 5️⃣ Bayar dummy (untuk testing)
     public function bayarDummy(Request $request)
-{
-    $user = JWTAuth::parseToken()->authenticate();
+    {
+        $user = JWTAuth::parseToken()->authenticate();
 
-    $member = Member::where('user_id', $user->id)->first();
+        $member = Member::where('user_id', $user->id)->first();
 
-    if (!$member) {
-        return response()->json(['message' => 'User belum punya member'], 404);
+        if (!$member) {
+            return response()->json(['message' => 'User belum punya member'], 404);
+        }
+
+        if ($member->status === 'aktif') {
+            return response()->json(['message' => 'Member sudah aktif'], 400);
+        }
+
+        // Simulasi pembayaran sukses
+        $member->update([
+            'status' => 'aktif',
+            'tanggal_mulai' => now(),
+            'tanggal_berakhir' => now()->addMonth(),
+            'token_total' => $member->maks_kelas,
+            'token_terpakai' => 0,
+            'token_sisa' => $member->maks_kelas,
+        ]);
+
+        return response()->json([
+            'message' => 'Pembayaran dummy sukses, member aktif!',
+            'member' => $member
+        ]);
     }
-
-    if ($member->status === 'aktif') {
-        return response()->json(['message' => 'Member sudah aktif'], 400);
-    }
-
-    // Simulasi pembayaran sukses
-    $member->update([
-        'status' => 'aktif',
-        'tanggal_mulai' => now(),
-        'tanggal_berakhir' => now()->addMonth(),
-        'token_total' => $member->maks_kelas,
-        'token_terpakai' => 0,
-        'token_sisa' => $member->maks_kelas,
-    ]);
-
-    return response()->json([
-        'message' => 'Pembayaran dummy sukses, member aktif!',
-        'member' => $member
-    ]);
-}
-
 }
