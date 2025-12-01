@@ -28,11 +28,12 @@ class KelasController extends Controller
                 'tipe_kelas'    => $item->tipe_kelas,
                 'harga'         => $item->harga,
                 'deskripsi'     => $item->deskripsi,
+                'expired_at'    => $item->expired_at, // ✅ TAMBAH INI
                 'waktu_mulai'   => $item->waktu_mulai,
                 'diskon_persen' => $item->diskon_persen,
                 'harga_diskon'  => $item->harga_diskon,
                 'sisa_kursi'    => $item->sisa_kursi,
-                'tipe_paket'    => $item->tipe_paket, // tetap ditampilkan
+                'tipe_paket'    => $item->tipe_paket,
 
                 // Info jadwal & instruktur
                 'hari'          => $jadwal->day ?? null,
@@ -65,6 +66,7 @@ class KelasController extends Controller
             'tipe_kelas'    => $kelas->tipe_kelas,
             'harga'         => $kelas->harga,
             'deskripsi'     => $kelas->deskripsi,
+            'expired_at'    => $kelas->expired_at, // ✅ TAMBAH INI
             'waktu_mulai'   => $kelas->waktu_mulai,
             'diskon_persen' => $kelas->diskon_persen,
             'harga_diskon'  => $kelas->harga_diskon,
@@ -92,6 +94,7 @@ class KelasController extends Controller
             'harga' => 'required|numeric|min:0',
             'deskripsi' => 'nullable|string',
             'kapasitas' => 'required|integer|min:1',
+            'expired_at' => 'nullable|date', // ✅ VALIDASI DITAMBAH
             'gambar' => 'nullable|image|max:2048',
         ]);
 
@@ -107,9 +110,9 @@ class KelasController extends Controller
             'harga' => $validated['harga'],
             'deskripsi' => $validated['deskripsi'] ?? null,
             'kapasitas' => $validated['kapasitas'],
-            'tipe_paket' => 'General', // ✅ otomatis
-            'jumlah_token' => null,    // ❌ tidak dipakai
-            'expired_at' => null,      // ❌ tidak dipakai
+            'tipe_paket' => 'General',
+            'jumlah_token' => null,
+            'expired_at' => $validated['expired_at'] ?? null, // ✅ SIMPAN EXPIRED
             'gambar' => $gambarPath,
         ]);
 
@@ -121,7 +124,7 @@ class KelasController extends Controller
 
     /**
      * PUT /api/kelas/{id}
-     * Update data kelas tanpa menyertakan tipe_paket, jumlah_token, dan expired_at.
+     * Update data kelas.
      */
     public function update(Request $request, $id)
     {
@@ -134,6 +137,7 @@ class KelasController extends Controller
             'deskripsi',
             'kapasitas',
             'gambar',
+            'expired_at', // ✅ IZINKAN UPDATE EXPIRED
         ]));
 
         return response()->json([

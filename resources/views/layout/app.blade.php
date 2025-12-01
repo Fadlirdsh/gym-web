@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
+
 <head>
   <meta charset="UTF-8">
   <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -17,18 +18,42 @@
 
   <style>
     .glass {
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.06);
       backdrop-filter: blur(10px) saturate(130%);
-      border: 1px solid rgba(255,255,255,0.06);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
-    .sidebar { transition: width 0.3s cubic-bezier(.2,.9,.2,1); }
-    .sidebar.collapsed { width: 4.5rem; }
+
+    .sidebar {
+      transition: width 0.3s cubic-bezier(.2, .9, .2, 1);
+    }
+
+    .sidebar.collapsed {
+      width: 4.5rem;
+    }
+
     .sidebar.collapsed .sidebar-label,
-    .sidebar.collapsed .sidebar-logo-text { opacity: 0; pointer-events: none; }
-    #appLayout { transition: all 0.3s ease; margin-left: 16rem; }
-    #appLayout.sidebar-collapsed { margin-left: 4.5rem!important; }
-    header { transition: all 0.3s ease; left: 16rem; }
-    header.sidebar-collapsed { left: 4.5rem!important; }
+    .sidebar.collapsed .sidebar-logo-text {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #appLayout {
+      transition: all 0.3s ease;
+      margin-left: 16rem;
+    }
+
+    #appLayout.sidebar-collapsed {
+      margin-left: 4.5rem !important;
+    }
+
+    header {
+      transition: all 0.3s ease;
+      left: 16rem;
+    }
+
+    header.sidebar-collapsed {
+      left: 4.5rem !important;
+    }
   </style>
 </head>
 
@@ -65,36 +90,35 @@
       @foreach ($menu as $item)
         <a href="{{ $item['url'] }}"
           class="sidebar-link nav-item-transition flex items-center gap-3 px-4 py-2 rounded-lg
-            {{ request()->is($item['pattern']) ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-indigo-600/30' : 'text-gray-300 hover:bg-indigo-500/10 hover:text-indigo-100' }}">
+              {{ request()->is($item['pattern']) ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-indigo-600/30' : 'text-gray-300 hover:bg-indigo-500/10 hover:text-indigo-100' }}">
 
-         {{-- 🔥 ICON KHUSUS UNTUK MANAGE USERS --}}
-@if ($item['label'] === 'Manage Users')
-    <i class="fa-solid fa-person w-5 h-5 text-current"></i>
+          {{-- 🔥 ICON KHUSUS UNTUK MANAGE USERS --}}
+          @if ($item['label'] === 'Manage Users')
+            <i class="fa-solid fa-person w-5 h-5 text-current"></i>
 
-{{-- 🔥 ICON KHUSUS UNTUK MANAGE KELAS --}}
-@elseif ($item['label'] === 'Manage Kelas')
-    <i class="fa-solid fa-bars-progress w-5 h-5 text-current"></i>
+            {{-- 🔥 ICON KHUSUS UNTUK MANAGE KELAS --}}
+          @elseif ($item['label'] === 'Manage Kelas')
+            <i class="fa-solid fa-bars-progress w-5 h-5 text-current"></i>
 
-{{-- ICON HOME --}}
-@elseif ($item['label'] === 'Home')
-    <i class="fa-solid fa-house w-5 h-5 text-current"></i>
+            {{-- ICON HOME --}}
+          @elseif ($item['label'] === 'Home')
+            <i class="fa-solid fa-house w-5 h-5 text-current"></i>
 
-@elseif ($item['label'] === 'Manage Schedule')
-    <i class="fa-solid fa-calendar w-5 h-5 text-current"></i>
+          @elseif ($item['label'] === 'Manage Schedule')
+            <i class="fa-solid fa-calendar w-5 h-5 text-current"></i>
 
-@elseif ($item['label'] === 'Dashboard Data')
-    <i class="fa-solid fa-chart-line"></i>
+          @elseif ($item['label'] === 'Dashboard Data')
+            <i class="fa-solid fa-chart-line"></i>
 
-@elseif ($item['label'] === 'Visit Log')
-    <i class="fa-solid fa-eye-low-vision"></i>
+          @elseif ($item['label'] === 'Visit Log')
+            <i class="fa-solid fa-eye-low-vision"></i>
 
-{{-- ICON DEFAULT --}}
-@else
-    <svg class="h-5 w-5 text-current" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path d="M4 6h16M4 12h16M4 18h16" stroke-width="2"
-        stroke-linecap="round" />
-    </svg>
-@endif
+            {{-- ICON DEFAULT --}}
+          @else
+            <svg class="h-5 w-5 text-current" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M4 6h16M4 12h16M4 18h16" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          @endif
 
           <span class="sidebar-label">{{ $item['label'] }}</span>
         </a>
@@ -107,22 +131,26 @@
         <button @click="open = !open"
           class="flex items-center w-full px-4 py-2 rounded-lg nav-item-transition
           {{ $isDiskonActive ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-inset ring-indigo-600/30' : 'text-gray-300 hover:bg-indigo-500/8 hover:text-indigo-100' }}">
-          
-          <i class="fa-solid fa-tags h-5 w-5 mr-2"></i>
-          <span class="sidebar-label">Manage Diskon</span>
 
-          <svg :class="{ 'rotate-180': open }" class="ml-auto h-4 w-4 transition-transform duration-200 text-gray-300" fill="none" stroke="currentColor">
+          <i class="fa-solid fa-tags h-5 w-5 mr-2"></i>
+          <span class="sidebar-label">Promo Center</span>
+
+          <svg :class="{ 'rotate-180': open }" class="ml-auto h-4 w-4 transition-transform duration-200 text-gray-300"
+            fill="none" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
         <div x-show="open" x-collapse class="pl-8 space-y-1">
+          
           <a href="{{ route('diskon.index') }}"
             class="block px-3 py-2 rounded-md text-sm {{ request()->is('diskon*') ? 'bg-indigo-600/20 text-indigo-100' : 'text-gray-400 hover:text-indigo-100 hover:bg-indigo-500/8' }}">
+            <i class="fa-solid fa-dollar-sign"></i>
             Diskon Kelas
           </a>
           <a href="{{ route('voucher.index') }}"
             class="block px-3 py-2 rounded-md text-sm {{ request()->is('voucher*') ? 'bg-indigo-600/20 text-indigo-100' : 'text-gray-400 hover:text-indigo-100 hover:bg-indigo-500/8' }}">
+            <i class="fa-solid fa-ticket"></i>
             Voucher (User)
           </a>
         </div>
@@ -136,7 +164,8 @@
     <header class="fixed top-0 left-64 right-0 z-50 glass backdrop-blur-lg border-b border-white/6 shadow-sm">
       <div class="flex items-center justify-between px-6 h-16">
         <div class="flex items-center gap-3">
-          <button id="collapseSidebar" class="hidden md:inline-flex text-gray-200 px-2 py-1 rounded hover:bg-gray-700/30">⇤</button>
+          <button id="collapseSidebar"
+            class="hidden md:inline-flex text-gray-200 px-2 py-1 rounded hover:bg-gray-700/30">⇤</button>
         </div>
 
         <!-- Account -->
@@ -146,9 +175,11 @@
             <span class="hidden sm:block text-gray-200 text-sm font-medium">Admin</span>
           </button>
 
-          <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/6 rounded-lg shadow-lg z-50">
+          <div x-show="open" @click.away="open = false"
+            class="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/6 rounded-lg shadow-lg z-50">
             <div class="px-4 py-2 border-b border-white/6 text-sm text-gray-200">John Doe</div>
-            <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10">
+            <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+              class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10">
               Logout
             </button>
           </div>
@@ -157,7 +188,9 @@
     </header>
 
     <main id="mainContent" class="pt-20 p-6 flex-1 w-full min-h-screen">
-      <div id="loader"><div class="spinner"></div></div>
+      <div id="loader">
+        <div class="spinner"></div>
+      </div>
       <div id="pageContent">@yield('content')</div>
     </main>
 
@@ -169,86 +202,88 @@
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
   <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const collapseBtn = document.getElementById('collapseSidebar');
-    const appLayout = document.getElementById('appLayout');
-    const header = document.querySelector('header');
-    const logoToggle = document.getElementById('logoSidebarToggle');
+    document.addEventListener('DOMContentLoaded', function () {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      const collapseBtn = document.getElementById('collapseSidebar');
+      const appLayout = document.getElementById('appLayout');
+      const header = document.querySelector('header');
+      const logoToggle = document.getElementById('logoSidebarToggle');
 
-    let isMobile = window.innerWidth < 768;
+      let isMobile = window.innerWidth < 768;
 
-    function updateLayout() {
-      isMobile = window.innerWidth < 768;
-      if (isMobile) {
-        sidebar.classList.remove('collapsed');
-        appLayout.classList.remove('sidebar-collapsed');
-        header.classList.remove('sidebar-collapsed');
-        sidebar.classList.add('-translate-x-full');
-        overlay.classList.add('hidden');
-      } else {
-        sidebar.classList.remove('-translate-x-full');
-        overlay.classList.add('hidden');
-        if (localStorage.getItem('sidebarCollapsed') === '1') {
-          sidebar.classList.add('collapsed');
-          appLayout.classList.add('sidebar-collapsed');
-          header.classList.add('sidebar-collapsed');
+      function updateLayout() {
+        isMobile = window.innerWidth < 768;
+        if (isMobile) {
+          sidebar.classList.remove('collapsed');
+          appLayout.classList.remove('sidebar-collapsed');
+          header.classList.remove('sidebar-collapsed');
+          sidebar.classList.add('-translate-x-full');
+          overlay.classList.add('hidden');
+        } else {
+          sidebar.classList.remove('-translate-x-full');
+          overlay.classList.add('hidden');
+          if (localStorage.getItem('sidebarCollapsed') === '1') {
+            sidebar.classList.add('collapsed');
+            appLayout.classList.add('sidebar-collapsed');
+            header.classList.add('sidebar-collapsed');
+          }
         }
       }
-    }
 
-    function mobileOpen() { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); }
-    function mobileClose() { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); }
+      function mobileOpen() { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); }
+      function mobileClose() { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); }
 
-    function toggleCollapse() {
-      if (isMobile) return overlay.classList.contains('hidden') ? mobileOpen() : mobileClose();
-      const isCollapsed = sidebar.classList.toggle('collapsed');
-      appLayout.classList.toggle('sidebar-collapsed', isCollapsed);
-      header.classList.toggle('sidebar-collapsed', isCollapsed);
-      localStorage.setItem('sidebarCollapsed', isCollapsed ? '1' : '0');
-    }
+      function toggleCollapse() {
+        if (isMobile) return overlay.classList.contains('hidden') ? mobileOpen() : mobileClose();
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        appLayout.classList.toggle('sidebar-collapsed', isCollapsed);
+        header.classList.toggle('sidebar-collapsed', isCollapsed);
+        localStorage.setItem('sidebarCollapsed', isCollapsed ? '1' : '0');
+      }
 
-    logoToggle.addEventListener('click', toggleCollapse);
-    collapseBtn.addEventListener('click', toggleCollapse);
-    overlay.addEventListener('click', mobileClose);
+      logoToggle.addEventListener('click', toggleCollapse);
+      collapseBtn.addEventListener('click', toggleCollapse);
+      overlay.addEventListener('click', mobileClose);
 
-    updateLayout();
-    window.addEventListener('resize', updateLayout);
+      updateLayout();
+      window.addEventListener('resize', updateLayout);
 
-    // AJAX loader navigation
-    const loader = document.getElementById('loader');
-    const pageContent = document.getElementById('pageContent');
+      // AJAX loader
+      const loader = document.getElementById('loader');
+      const pageContent = document.getElementById('pageContent');
 
-    document.querySelectorAll('.sidebar-link').forEach(link => {
-      link.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const url = e.currentTarget.getAttribute('href');
-        if (isMobile) mobileClose();
+      document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.addEventListener('click', async (e) => {
+          const url = e.currentTarget.getAttribute('href');
+          if (url.includes('/dashboard')) return;
 
-        loader.style.display = 'flex';
-        pageContent.style.opacity = '0.4';
+          e.preventDefault();
+          if (isMobile) mobileClose();
 
-        try {
-          const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
-          const html = await res.text();
-          const doc = new DOMParser().parseFromString(html, 'text/html');
-          const newContent = doc.querySelector('#pageContent')?.innerHTML || html;
+          loader.style.display = 'flex';
+          pageContent.style.opacity = '0.4';
 
-          setTimeout(() => {
-            pageContent.innerHTML = newContent;
-            pageContent.style.opacity = '1';
+          try {
+            const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const newContent = doc.querySelector('#pageContent')?.innerHTML || html;
+
+            setTimeout(() => {
+              pageContent.innerHTML = newContent;
+              pageContent.style.opacity = '1';
+              loader.style.display = 'none';
+              history.pushState({}, '', url);
+            }, 350);
+          } catch {
             loader.style.display = 'none';
-            history.pushState({}, '', url);
-          }, 350);
-        } catch {
-          loader.style.display = 'none';
-        }
+          }
+        });
       });
     });
-  });
   </script>
 
   @stack('scripts')
 </body>
-</html>
+</html>       
