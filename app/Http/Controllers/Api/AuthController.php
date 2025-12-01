@@ -78,7 +78,7 @@ class AuthController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:6|confirmed', // 🔹 'confirmed' otomatis cek password_confirmation
         ]);
 
         $user = User::create([
@@ -88,12 +88,11 @@ class AuthController extends Controller
             'role' => 'pelanggan',
         ]);
 
-        // Buat token login otomatis setelah register
         $token = JWTAuth::fromUser($user);
 
         return response()->json([
             'message' => 'Registrasi pelanggan berhasil.',
-            'access_token' => $token, // 🔹 sama kayak login
+            'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => JWTAuth::factory()->getTTL() * 60,
             'user' => $user

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
+use App\Http\Controllers\TransaksiController;
 
 // =====================
 // 🔹 ROUTE API KELAS (PUBLIC)
@@ -34,11 +35,11 @@ Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
 
-// 🔹 REFRESH TOKEN (AGAR USER TETAP LOGIN)
+// 🔹 REFRESH TOKEN
 Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refresh']);
 
 // =====================
-// 🔹 AMBIL DATA USER LOGIN (JWT PROTECTED)
+// 🔹 USER LOGIN DATA (JWT PROTECTED)
 // =====================
 Route::middleware(['jwt.auth', 'role:pelanggan'])->get('/user', function () {
     return auth()->user();
@@ -47,7 +48,7 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->get('/user', function () {
 // =====================
 // 🔹 ROUTE TRAINER (PUBLIC)
 // =====================
-Route::get('/users/trainer', [UserController::class, 'getTrainers']);  // <-- INI DIA
+Route::get('/users/trainer', [UserController::class, 'getTrainers']);
 
 // =====================
 // 🔹 KUPON FREECLASS
@@ -70,14 +71,28 @@ Route::get('/schedules', [ScheduleApiController::class, 'index']);
 Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
 
 // =====================
-// 🔹 MEMBER (FITUR MEMBERSHIP)
+// 🔹 MEMBER (FITUR MEMBERSHIP) — BUTUH JWT
 // =====================
 Route::prefix('member')->middleware('jwt.auth')->group(function () {
-    Route::post('/store', [MemberController::class, 'store']);       // daftar member
-    Route::get('/kelas', [MemberController::class, 'kelasMember']);  // lihat kelas + token
-    Route::post('/bayar', [MemberController::class, 'bayarDummy']);  // dummy payment
-    Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']); // ikut kelas & token berkurang
+
+    Route::post('/store', [MemberController::class, 'store']);
+    Route::get('/kelas', [MemberController::class, 'kelasMember']);
+    Route::post('/bayar', [MemberController::class, 'bayarDummy']);
+    Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
+    Route::get('/transaksi/sync', [TransaksiController::class, 'sync']);
+
+    // MIDTRANS TOKEN & CREATE ORDER
     Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
     Route::post('/midtrans/token', [MidtransController::class, 'getSnapToken']);
 
+    // TRANSAKSI (PROTECTED)
+    Route::post('/transaksi/create', [TransaksiController::class, 'create']);
+    Route::get('/transaksi', [TransaksiController::class, 'index']);
+    Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
 });
+
+// =====================
+// ❗ MIDTRANS CALLBACK (TANPA AUTH!)
+// =====================
+Route::post('/transaksi/store', [TransaksiController::class, 'store']);
+Route::post('/transaksi/callback', [TransaksiController::class, 'callback']);
