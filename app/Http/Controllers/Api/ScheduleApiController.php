@@ -13,7 +13,10 @@ class ScheduleApiController extends Controller
      */
     public function index()
     {
-        $data = Schedule::with(['kelas', 'trainer'])->get();
+        $data = Schedule::with(['kelas', 'trainer'])
+            ->orderBy('day')
+            ->orderBy('start_time') // gunakan start_time, bukan "time"
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -39,6 +42,34 @@ class ScheduleApiController extends Controller
         return response()->json([
             'status' => true,
             'data' => $schedule
+        ]);
+    }
+
+    /**
+     * Get schedules for a specific trainer
+     */
+    public function byTrainer(Request $request)
+    {
+        $trainerId = $request->trainer_id;
+
+        if (!$trainerId) {
+            return response()->json([
+                'status' => false,
+                'message' => 'trainer_id wajib dikirim'
+            ], 400);
+        }
+
+        $data = Schedule::with(['kelas', 'trainer'])
+            ->where('trainer_id', $trainerId)
+            ->where('is_active', 1)
+            ->orderBy('day')
+            ->orderBy('start_time')
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Data schedule trainer berhasil diambil',
+            'data' => $data
         ]);
     }
 }

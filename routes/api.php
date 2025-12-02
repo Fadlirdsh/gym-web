@@ -67,8 +67,9 @@ Route::apiResource('diskon', DiskonController::class);
 // =====================
 // 🔹 SCHEDULE
 // =====================
-Route::get('/schedules', [ScheduleApiController::class, 'index']);
-Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
+Route::get('/schedule', [ScheduleApiController::class, 'index']);
+Route::get('/schedule/{id}', [ScheduleApiController::class, 'show']);
+Route::get('/trainer/schedule', [ScheduleApiController::class, 'byTrainer']);
 
 // =====================
 // 🔹 MEMBER (FITUR MEMBERSHIP) — BUTUH JWT
