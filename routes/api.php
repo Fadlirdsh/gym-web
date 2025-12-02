@@ -13,79 +13,102 @@ use App\Http\Controllers\Api\ScheduleApiController;
 use App\Http\Controllers\Api\AbsensiController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
+use App\Http\Controllers\TransaksiController;
 
-// =====================
-// 🔹 ROUTE API KELAS (PUBLIC)
-// =====================
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES
+|--------------------------------------------------------------------------
+*/
+
+// Kelas
 Route::apiResource('kelas', KelasController::class);
 
-// =====================
-// 🔹 ROUTE API RESERVASI
-// =====================
-Route::middleware(['jwt.auth', 'role:pelanggan'])
-    ->apiResource('reservasi', ReservasiController::class);
-
+// Harga reservasi
 Route::get('/harga', [ReservasiController::class, 'getHarga']);
 
-// =====================
-// 🔹 AUTH (LOGIN / REGISTER / GOOGLE LOGIN)
-// =====================
+// Trainer public
+Route::get('/users/trainer', [UserController::class, 'getTrainers']);
+
+// Schedule public
+Route::get('/schedules', [ScheduleApiController::class, 'index']);
+Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
+
+/*
+|--------------------------------------------------------------------------
+| AUTH ROUTES
+|--------------------------------------------------------------------------
+*/
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
 
-// 🔹 REFRESH TOKEN
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
 Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refresh']);
 
-// =====================
-// 🔹 GET USER LOGIN DATA
-// =====================
+// Get user login data (customer only)
 Route::middleware(['jwt.auth', 'role:pelanggan'])->get('/user', function () {
     return auth()->user();
 });
 
-// =====================
-// 🔹 ROUTE TRAINER (PUBLIC)
-// =====================
-Route::get('/users/trainer', [UserController::class, 'getTrainers']);
-
-// =====================
-// 🔹 ABSENSI (SANCTUM PROTECTED)
-// =====================
+/*
+|--------------------------------------------------------------------------
+| ABSENSI (SANCTUM)
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/absensi', [AbsensiController::class, 'absen']);
 });
 
-// =====================
-// 🔹 KUPON FREECLASS
-// =====================
+/*
+|--------------------------------------------------------------------------
+| PELANGGAN PROTECTED ROUTES
+|--------------------------------------------------------------------------
+*/
+
+// Reservasi
+Route::middleware(['jwt.auth', 'role:pelanggan'])
+    ->apiResource('reservasi', ReservasiController::class);
+
+// Kupon
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::get('/kupon', [KuponController::class, 'aktif']);
     Route::post('/kupon/claim', [KuponController::class, 'claim']);
     Route::post('/kupon/pakai', [KuponController::class, 'pakai']);
 });
 
-// =====================
-// 🔹 DISKON
-// =====================
+// Diskon
 Route::apiResource('diskon', DiskonController::class);
 
-// =====================
-// 🔹 SCHEDULE
-// =====================
-Route::get('/schedules', [ScheduleApiController::class, 'index']);
-Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
-
-// =====================
-// 🔹 MEMBER
-// =====================
+/*
+|--------------------------------------------------------------------------
+| MEMBER ROUTES (JWT REQUIRED)
+|--------------------------------------------------------------------------
+*/
 Route::prefix('member')->middleware('jwt.auth')->group(function () {
-    Route::post('/store', [MemberController::class, 'store']);       // daftar member
-    Route::get('/kelas', [MemberController::class, 'kelasMember']);  // lihat kelas + token
-    Route::post('/bayar', [MemberController::class, 'bayarDummy']);  // dummy payment
-    Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']); // ikut kelas & token berkurang
+
+    // Membership
+    Route::post('/store', [MemberController::class, 'store']);
+    Route::get('/kelas', [MemberController::class, 'kelasMember']);
+    Route::post('/bayar', [MemberController::class, 'bayarDummy']);
+    Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
+
+    // Transaksi
+    Route::post('/transaksi/create', [TransaksiController::class, 'create']);
+    Route::get('/transaksi', [TransaksiController::class, 'index']);
+    Route::get('/transaksi/sync', [TransaksiController::class, 'sync']);
+    Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
+
+    // Midtrans
     Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
     Route::post('/midtrans/token', [MidtransController::class, 'getSnapToken']);
-
 });
+
+/*
+|--------------------------------------------------------------------------
+| MIDTRANS CALLBACK (NO AUTH)
+|--------------------------------------------------------------------------
+*/
+Route::post('/transaksi/store', [TransaksiController::class, 'store']);
+Route::post('/transaksi/callback', [TransaksiController::class, 'callback']);
