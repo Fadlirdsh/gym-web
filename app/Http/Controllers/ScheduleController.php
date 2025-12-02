@@ -11,95 +11,110 @@ class ScheduleController extends Controller
 {
     public function index(Request $request)
     {
-        // Query dasar untuk schedules
         $query = Schedule::with(['kelas', 'trainer']);
 
-        // Filter berdasarkan nama trainer (opsional)
+        // Filter trainer
         if ($request->filled('trainer')) {
             $query->whereHas('trainer', function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->trainer . '%');
             });
         }
 
-        // Filter berdasarkan hari (opsional)
+        // Filter kelas
+        if ($request->filled('kelas_id')) {
+            $query->where('kelas_id', $request->kelas_id);
+        }
+
+        // Filter hari
         if ($request->filled('day')) {
             $query->where('day', $request->day);
         }
 
-        // Filter berdasarkan jam (opsional)
-        if ($request->filled('time')) {
-            $query->whereTime('time', $request->time);
+        // Filter jam mulai
+        if ($request->filled('start_time')) {
+            $query->where('start_time', $request->start_time);
         }
 
-        $schedules = $query->get();
+        $schedules = $query->orderBy('day')->orderBy('start_time')->get();
 
-        // Ambil data kelas untuk dropdown
         $kelas = Kelas::orderBy('nama_kelas')->get();
-
-        // Ambil data trainer
         $trainers = User::where('role', 'trainer')->orderBy('name')->get();
 
-        return view('admin.schedule', compact('schedules', 'kelas', 'trainers'));
+        // Time options
+        $timeOptions = [
+            "07:00" => "7:00 AM",
+            "07:30" => "7:30 AM",
+            "08:00" => "8:00 AM",
+            "08:30" => "8:30 AM",
+            "09:00" => "9:00 AM",
+            "09:30" => "9:30 AM",
+            "10:00" => "10:00 AM",
+            "10:30" => "10:30 AM",
+            "11:00" => "11:00 AM",
+            "11:30" => "11:30 AM",
+            "12:00" => "12:00 PM",
+            "12:30" => "12:30 PM",
+            "14:00" => "2:00 PM",
+            "14:30" => "2:30 PM",
+            "15:00" => "3:00 PM",
+            "15:30" => "3:30 PM",
+            "16:00" => "4:00 PM",
+            "16:30" => "4:30 PM",
+            "17:00" => "5:00 PM",
+            "18:00" => "6:00 PM",
+            "19:00" => "7:00 PM",
+        ];
+
+        return view('admin.schedule', compact('schedules', 'kelas', 'trainers', 'timeOptions'));
     }
 
-    // ======================================================
-    //        STORE – Menambah Jadwal Baru
-    // ======================================================
+    // STORE WEEKLY ONLY
     public function store(Request $request)
     {
         $request->validate([
-            'day' => 'required',
-            'time' => 'required',
-            'kelas_id' => 'required|exists:kelas,id',
-            'trainer_id' => 'required|exists:users,id',
-            'is_active' => 'required|boolean'
+            'kelas_id'     => 'required|exists:kelas,id',
+            'trainer_id'   => 'required|exists:users,id',
+            'day'          => 'required',   // WAJIB karena weekly schedule
+            'start_time'   => 'required',
+            'end_time'     => 'required|after:start_time',
+            'class_focus'  => 'nullable|string',
+            'is_active'    => 'required|boolean'
         ]);
 
-        Schedule::create([
-            'day' => $request->day,
-            'time' => $request->time,
-            'kelas_id' => $request->kelas_id,
-            'trainer_id' => $request->trainer_id,
-            'is_active' => $request->is_active
-        ]);
+        // Pastikan date selalu NULL (karena weekly schedule)
+        $request->merge(['date' => null]);
 
-        return redirect()->back()->with('success', 'Jadwal berhasil ditambahkan');
+        Schedule::create($request->all());
+
+        return back()->with('success', 'Jadwal mingguan berhasil ditambahkan');
     }
 
-    // ======================================================
-    //        UPDATE – Edit Jadwal
-    // ======================================================
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'day' => 'required',
-            'time' => 'required',
-            'kelas_id' => 'required|exists:kelas,id',
-            'trainer_id' => 'required|exists:users,id',
-            'is_active' => 'required|boolean'
-        ]);
-
         $schedule = Schedule::findOrFail($id);
 
-        $schedule->update([
-            'day' => $request->day,
-            'time' => $request->time,
-            'kelas_id' => $request->kelas_id,
-            'trainer_id' => $request->trainer_id,
-            'is_active' => $request->is_active
+        $request->validate([
+            'kelas_id'     => 'required|exists:kelas,id',
+            'trainer_id'   => 'required|exists:users,id',
+            'day'          => 'required',
+            'start_time'   => 'required',
+            'end_time'     => 'required|after:start_time',
+            'class_focus'  => 'nullable|string',
+            'is_active'    => 'required|boolean'
         ]);
 
-        return redirect()->back()->with('success', 'Jadwal berhasil diperbarui');
+        // Tidak boleh pakai date
+        $request->merge(['date' => null]);
+
+        $schedule->update($request->all());
+
+        return back()->with('success', 'Jadwal mingguan berhasil diperbarui');
     }
 
-    // ======================================================
-    //        DESTROY – Hapus Jadwal
-    // ======================================================
     public function destroy($id)
     {
-        $schedule = Schedule::findOrFail($id);
-        $schedule->delete();
+        Schedule::findOrFail($id)->delete();
 
-        return redirect()->back()->with('success', 'Jadwal berhasil dihapus');
+        return back()->with('success', 'Jadwal berhasil dihapus');
     }
 }
