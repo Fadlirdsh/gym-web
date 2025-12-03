@@ -83,6 +83,15 @@ Route::apiResource('diskon', DiskonController::class);
 
 /*
 |--------------------------------------------------------------------------
+| SCHEDULE (PUBLIC + BY TRAINER)
+|--------------------------------------------------------------------------
+*/
+Route::get('/schedule', [ScheduleApiController::class, 'index']);
+Route::get('/schedule/{id}', [ScheduleApiController::class, 'show']);
+Route::get('/trainer/schedule', [ScheduleApiController::class, 'byTrainer']);
+
+/*
+|--------------------------------------------------------------------------
 | MEMBER ROUTES (JWT REQUIRED)
 |--------------------------------------------------------------------------
 */

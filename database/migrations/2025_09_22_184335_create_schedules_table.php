@@ -10,12 +10,30 @@ return new class extends Migration
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
+
+            // Relasi
             $table->foreignId('kelas_id')->constrained('kelas')->cascadeOnDelete();
-            $table->foreignId('trainer_id')->constrained('users')->onDelete('cascade');
-            $table->string('day');                  // contoh: Monday
-            $table->time('time');                   // jam kelas
-            $table->string('class_focus')->nullable(); // optional
-            $table->boolean('is_active')->default(true); // on/off jadwal
+            $table->foreignId('trainer_id')->constrained('users')->cascadeOnDelete();
+
+            // Bisa jadwal mingguan
+            $table->enum('day', [
+                'Monday', 'Tuesday', 'Wednesday', 
+                'Thursday', 'Friday', 'Saturday', 'Sunday'
+            ])->nullable(); // nullable supaya bisa pakai date
+
+            // Bisa jadwal tanggal tertentu (optional)
+            $table->date('date')->nullable();
+
+            // Waktu mulai & selesai kelas
+            $table->time('start_time');
+            $table->time('end_time');
+
+            // Optional info
+            $table->string('class_focus')->nullable();
+
+            // Status jadwal aktif/tidak
+            $table->boolean('is_active')->default(true);
+
             $table->timestamps();
         });
     }

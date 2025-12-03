@@ -79,6 +79,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:6|confirmed', // 🔹 'confirmed' otomatis cek password_confirmation
+            'phone' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
@@ -86,6 +87,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => bcrypt($request->password),
             'role' => 'pelanggan',
+            'phone' => $request->phone,
         ]);
 
         $token = JWTAuth::fromUser($user);

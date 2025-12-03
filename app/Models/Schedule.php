@@ -13,18 +13,31 @@ class Schedule extends Model
         'kelas_id',
         'trainer_id',
         'day',
-        'time',
+        'date',
+        'start_time',
+        'end_time',
         'class_focus',
         'is_active',
     ];
 
+    // Relasi ke kelas
     public function kelas()
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 
+    // Relasi ke trainer (users)
     public function trainer()
     {
         return $this->belongsTo(User::class, 'trainer_id');
+    }
+
+    // OPTIONAL: Hitung durasi
+    public function getDurationAttribute()
+    {
+        $start = strtotime($this->start_time);
+        $end   = strtotime($this->end_time);
+
+        return ($end - $start) / 60; // durasi dalam menit
     }
 }
