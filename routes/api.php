@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ScheduleApiController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\Api\TokenPackageController;
 
 // =====================
 // 🔹 ROUTE API KELAS (PUBLIC)
@@ -97,3 +98,9 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
 // =====================
 Route::post('/transaksi/store', [TransaksiController::class, 'store']);
 Route::post('/transaksi/callback', [TransaksiController::class, 'callback']);
+
+
+// =====================
+// TOKEN PACKAGES
+// =====================
+Route::apiResource('token-packages', TokenPackageController::class);
