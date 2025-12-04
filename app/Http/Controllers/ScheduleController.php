@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Schedule;
 use App\Models\Kelas;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ScheduleController extends Controller
 {
@@ -71,22 +72,25 @@ class ScheduleController extends Controller
     // STORE WEEKLY ONLY
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'kelas_id'     => 'required|exists:kelas,id',
             'trainer_id'   => 'required|exists:users,id',
-            'day'          => 'required',   // WAJIB karena weekly schedule
+            'day'          => 'required',
             'start_time'   => 'required',
             'end_time'     => 'required|after:start_time',
             'class_focus'  => 'nullable|string',
             'is_active'    => 'required|boolean'
         ]);
 
-        // Pastikan date selalu NULL (karena weekly schedule)
-        $request->merge(['date' => null]);
+        $validated['date'] = null; // karena weekly schedule
 
-        Schedule::create($request->all());
+        $schedule = Schedule::create($validated);
 
-        return back()->with('success', 'Jadwal mingguan berhasil ditambahkan');
+        return response()->json([
+            'success' => true,
+            'message' => 'Jadwal mingguan berhasil ditambahkan',
+            'schedule' => $schedule->load(['kelas', 'trainer']) // optional: return relasi supaya bisa langsung update tabel di JS
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -116,5 +120,27 @@ class ScheduleController extends Controller
         Schedule::findOrFail($id)->delete();
 
         return back()->with('success', 'Jadwal berhasil dihapus');
+    }
+
+    public function edit($id)
+    {
+        $schedule = Schedule::with(['kelas', 'trainer'])->findOrFail($id);
+
+        return response()->json($schedule);
+    }
+
+    public function show($id)
+    {
+        $schedule = Schedule::with(['trainer', 'kelas'])->findOrFail($id);
+        return view('admin.schedule_show', compact('schedule'));
+    }
+
+    public function exportPDF()
+    {
+        $schedules = Schedule::with(['trainer', 'kelas'])->get();
+
+        $pdf = Pdf::loadView('admin.schedule_pdf', compact('schedules'));
+
+        return $pdf->download('jadwal_trainer.pdf');
     }
 }
