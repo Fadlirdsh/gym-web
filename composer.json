@@ -67,6 +67,9 @@
             "pestphp/pest-plugin": true
         }
     },
+    "replace": {
+        "google/apiclient-services": "*"
+    },
     "minimum-stability": "stable",
     "prefer-stable": true
 }

@@ -10,114 +10,97 @@ use App\Http\Controllers\Api\KuponController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
-use App\Http\Controllers\Api\AbsensiController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
 use App\Http\Controllers\TransaksiController;
 
-/*
-|--------------------------------------------------------------------------
-| PUBLIC ROUTES
-|--------------------------------------------------------------------------
-*/
-
-// Kelas
+// =====================
+// 🔹 ROUTE API KELAS (PUBLIC)
+// =====================
 Route::apiResource('kelas', KelasController::class);
 
-// Harga reservasi
+// =====================
+// 🔹 ROUTE API RESERVASI
+// =====================
+Route::middleware(['jwt.auth', 'role:pelanggan'])
+    ->apiResource('reservasi', ReservasiController::class);
+
 Route::get('/harga', [ReservasiController::class, 'getHarga']);
 
-// Trainer public
-Route::get('/users/trainer', [UserController::class, 'getTrainers']);
-
-// Schedule public
-Route::get('/schedules', [ScheduleApiController::class, 'index']);
-Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
-
-/*
-|--------------------------------------------------------------------------
-| AUTH ROUTES
-|--------------------------------------------------------------------------
-*/
-
+// =====================
+// 🔹 AUTH (LOGIN / REGISTER / GOOGLE LOGIN)
+// =====================
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
-
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
+
+// 🔹 REFRESH TOKEN
 Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refresh']);
 
-// Get user login data (customer only)
+// =====================
+// 🔹 USER LOGIN DATA (JWT PROTECTED)
+// =====================
 Route::middleware(['jwt.auth', 'role:pelanggan'])->get('/user', function () {
     return auth()->user();
 });
 
-/*
-|--------------------------------------------------------------------------
-| ABSENSI (SANCTUM)
-|--------------------------------------------------------------------------
-*/
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/absensi', [AbsensiController::class, 'absen']);
-});
+// =====================
+// 🔹 ROUTE TRAINER (PUBLIC)
+// =====================
+Route::get('/users/trainer', [UserController::class, 'getTrainers']);
 
-/*
-|--------------------------------------------------------------------------
-| PELANGGAN PROTECTED ROUTES
-|--------------------------------------------------------------------------
-*/
-
-// Reservasi
-Route::middleware(['jwt.auth', 'role:pelanggan'])
-    ->apiResource('reservasi', ReservasiController::class);
-
-// Kupon
+// =====================
+// 🔹 KUPON FREECLASS (JWT Protected)
+// =====================
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::get('/kupon', [KuponController::class, 'aktif']);
     Route::post('/kupon/claim', [KuponController::class, 'claim']);
     Route::post('/kupon/pakai', [KuponController::class, 'pakai']);
 });
 
-// Diskon
+// =====================
+// 🔹 DISKON
+// =====================
 Route::apiResource('diskon', DiskonController::class);
 
-/*
-|--------------------------------------------------------------------------
-| SCHEDULE (PUBLIC + BY TRAINER)
-|--------------------------------------------------------------------------
-*/
+// =====================
+// 🔹 SCHEDULE (Public + Trainer Schedule)
+// =====================
 Route::get('/schedule', [ScheduleApiController::class, 'index']);
 Route::get('/schedule/{id}', [ScheduleApiController::class, 'show']);
 Route::get('/trainer/schedule', [ScheduleApiController::class, 'byTrainer']);
 
-/*
-|--------------------------------------------------------------------------
-| MEMBER ROUTES (JWT REQUIRED)
-|--------------------------------------------------------------------------
-*/
+// Versi lama (/schedules) juga tetap disertakan supaya tidak breaking change
+Route::get('/schedules', [ScheduleApiController::class, 'index']);
+Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
+
+// =====================
+// 🔹 MEMBER (FITUR MEMBERSHIP) — JWT REQUIRED
+// =====================
 Route::prefix('member')->middleware('jwt.auth')->group(function () {
 
-    // Membership
     Route::post('/store', [MemberController::class, 'store']);
     Route::get('/kelas', [MemberController::class, 'kelasMember']);
     Route::post('/bayar', [MemberController::class, 'bayarDummy']);
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
-
-    // Transaksi
-    Route::post('/transaksi/create', [TransaksiController::class, 'create']);
-    Route::get('/transaksi', [TransaksiController::class, 'index']);
     Route::get('/transaksi/sync', [TransaksiController::class, 'sync']);
-    Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
 
-    // Midtrans
+    // MIDTRANS
     Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
     Route::post('/midtrans/token', [MidtransController::class, 'getSnapToken']);
+
+    // TRANSAKSI
+    Route::post('/transaksi/create', [TransaksiController::class, 'create']);
+    Route::get('/transaksi', [TransaksiController::class, 'index']);
+    Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
+
+    // 🔹 CEK STATUS MEMBERSHIP (PERUBAHAN DITAMBAHKAN DI SINI)
+    Route::get('/status', [MemberController::class, 'checkStatus']);
 });
 
-/*
-|--------------------------------------------------------------------------
-| MIDTRANS CALLBACK (NO AUTH)
-|--------------------------------------------------------------------------
-*/
+// =====================
+// ❗ MIDTRANS CALLBACK (NO AUTH)
+// =====================
 Route::post('/transaksi/store', [TransaksiController::class, 'store']);
 Route::post('/transaksi/callback', [TransaksiController::class, 'callback']);
