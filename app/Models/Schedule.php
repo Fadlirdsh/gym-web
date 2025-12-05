@@ -40,4 +40,16 @@ class Schedule extends Model
 
         return ($end - $start) / 60; // durasi dalam menit
     }
+
+    public function getClassKeyAttribute()
+    {
+        if (!$this->day || !$this->start_time || !$this->kelas) {
+            return null;
+        }
+
+        return $this->day . '-' .
+            date('h:iA', strtotime($this->start_time)) . '-' .
+            str_replace(' ', '', $this->kelas->nama_kelas) . '-' .
+            str_replace(' ', '', $this->kelas->tipe_kelas);
+    }
 }

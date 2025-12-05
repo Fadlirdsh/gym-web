@@ -19,9 +19,10 @@ class DashboardController extends Controller
         $totalClasses = Kelas::count();
         $totalSchedules = Schedule::where('is_active', 1)->count();
 
+        // Memperbaiki orderBy dari 'time' ke 'start_time'
         $upcomingSchedules = Schedule::where('is_active', 1)
             ->orderBy('day', 'asc')
-            ->orderBy('time', 'asc')
+            ->orderBy('start_time', 'asc')
             ->take(5)
             ->get();
 
@@ -46,9 +47,7 @@ class DashboardController extends Controller
             $reservationsPerMonth[$m] = $reservations[$m] ?? 0;
         }
 
-
         // Grafik data: pengguna baru per bulan
-        // Data pengguna baru trainer per bulan
         $trainerPerMonth = User::where('role', 'trainer')
             ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
             ->groupBy('month')
@@ -56,7 +55,6 @@ class DashboardController extends Controller
             ->pluck('total', 'month')
             ->toArray();
 
-        // Data pengguna baru pelanggan per bulan
         $pelangganPerMonth = User::where('role', 'pelanggan')
             ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
             ->groupBy('month')
@@ -64,7 +62,6 @@ class DashboardController extends Controller
             ->pluck('total', 'month')
             ->toArray();
 
-        // Pastikan setiap bulan punya nilai (0 jika tidak ada)
         for ($i = 1; $i <= 12; $i++) {
             if (!isset($trainerPerMonth[$i])) $trainerPerMonth[$i] = 0;
             if (!isset($pelangganPerMonth[$i])) $pelangganPerMonth[$i] = 0;
@@ -72,7 +69,6 @@ class DashboardController extends Controller
 
         ksort($trainerPerMonth);
         ksort($pelangganPerMonth);
-
 
         return view('admin.dashboard', compact(
             'totalUsers',

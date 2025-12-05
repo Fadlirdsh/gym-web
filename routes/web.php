@@ -10,8 +10,9 @@ use App\Http\Controllers\ReservasiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\VisitLogController;
 use App\Http\Controllers\VoucherController;
-use App\Http\Controllers\ManageDiskonController;
 use App\Http\Controllers\Admin\HomeController;
+use App\Http\Controllers\MemberController;
+use App\Http\Controllers\TokenPackageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,12 +46,11 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     Route::get('/home', [HomeController::class, 'index'])->name('admin.home');
 
     // ===============================
-    // 👥 Manage User & Member
+    // 👥 Manage User (TANPA Member, karena dipindah)
     // ===============================
     Route::prefix('manage')->group(function () {
         Route::get('/', [UserController::class, 'manage'])->name('users.manage');
         Route::post('/', [UserController::class, 'storeWeb'])->name('users.store');
-        Route::post('/member', [UserController::class, 'storeMember'])->name('members.store');
         Route::get('/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('/{id}', [UserController::class, 'updateWeb'])->name('users.update');
         Route::delete('/{id}', [UserController::class, 'destroyWeb'])->name('users.destroy');
@@ -68,10 +68,9 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // ===============================
     // 🕒 Jadwal / Schedule
     // ===============================
-    // gunakan resource, exclude create/edit karena pakai modal
-    Route::resource('schedules', ScheduleController::class)->except(['create', 'edit']);
-
-    // route filter tetap dipertahankan
+    Route::get('/schedules/export-pdf', [ScheduleController::class, 'exportPDF'])->name('schedules.exportPDF');
+    Route::resource('schedules', ScheduleController::class)->except(['create', 'edit', 'show']);
+    Route::get('/schedules/{id}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
     Route::get('/schedules/filter', [ScheduleController::class, 'filter'])->name('schedules.filter');
 
     // ===============================
@@ -100,4 +99,25 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // 👀 VisitLog
     // ===============================
     Route::get('/visitlog', [VisitLogController::class, 'index'])->name('visitlog.index');
+
+    // ===============================
+    // 👥 Manage Member (BENAR)
+    // ===============================
+    Route::prefix('member')->group(function () {
+
+        Route::get('/', [MemberController::class, 'index'])->name('member.index');
+
+        Route::post('/create', [MemberController::class, 'store'])->name('member.store');
+
+        // Route assign user yang BENAR
+        Route::post('/assign-user', [MemberController::class, 'assignUser'])
+            ->name('member.assignUser');
+    });
+
+    // ===============================
+    // Token
+    // ===============================
+    Route::prefix('admin')->group(function () {
+        Route::resource('token-package', TokenPackageController::class);
+    });
 });
