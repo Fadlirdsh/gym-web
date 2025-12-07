@@ -78,7 +78,7 @@ document.querySelectorAll(".btnOpenEdit").forEach((btn) => {
     document.getElementById("tipePaketEdit").value = btn.dataset.paket;
     document.getElementById("editDeskripsi").value = btn.dataset.deskripsi;
     document.getElementById("editKapasitas").value = btn.dataset.kapasitas;
-    document.getElementById('editExpired').value = btn.dataset.expired;
+    document.getElementById("editExpired").value = btn.dataset.expired;
     editTipe.value = btn.dataset.tipe;
   });
 });
@@ -109,5 +109,68 @@ window.addEventListener("click", (e) => {
 });
 
 // ========================
-// Token/Expired REMOVED (karena tidak digunakan di halaman Kelas)
+// Modal QR CODE Absen
 // ========================
+async function openQrModal(id, nama) {
+  const modal = document.getElementById("qrModal");
+  const qrTitle = document.getElementById("qrTitle");
+  const qrContainer = document.getElementById("qrContainer");
+
+  qrTitle.textContent = "QR Absen: " + nama;
+  qrContainer.innerHTML = `<p class="text-gray-600 text-sm">Loading...</p>`;
+
+  modal.style.display = "flex";
+  modal.style.alignItems = "center";
+  modal.style.justifyContent = "center";
+  modal.style.opacity = "0";
+  modal.style.transition = "opacity 0.3s ease";
+  modal.style.position = "fixed";
+  modal.style.top = "0";
+  modal.style.left = "0";
+  modal.style.width = "100%";
+  modal.style.height = "100%";
+  modal.style.backgroundColor = "rgba(0,0,0,0.5)";
+  modal.style.zIndex = "9999";
+
+  setTimeout(() => { modal.style.opacity = "1"; }, 10);
+
+  try {
+    const response = await fetch(`/admin/kelas/${id}/qr`);
+    if (!response.ok) throw new Error("Network response was not ok");
+
+    // const result = await response.json();
+    const result = await response.json();
+console.log(result); // Lihat struktur yang diterima
+qrContainer.innerHTML = result.qr_svg;
+
+
+    if (!result.success || !result.qr_svg) {
+      qrContainer.innerHTML = `<p class="text-red-600 text-sm">QR tidak tersedia!</p>`;
+      return;
+    }
+
+    // Masukkan QR SVG langsung
+    qrContainer.innerHTML = result.qr_svg;
+
+  } catch (error) {
+    console.error("QR Fetch Error:", error);
+    qrContainer.innerHTML = `<p class="text-red-600 text-sm">Gagal memuat QR!</p>`;
+  }
+}
+
+function closeQrModal() {
+  const modal = document.getElementById("qrModal");
+  modal.style.opacity = "0";
+  setTimeout(() => { modal.style.display = "none"; }, 300);
+}
+
+// Klik di luar modal
+window.addEventListener("click", (e) => {
+  const modal = document.getElementById("qrModal");
+  if (e.target === modal) {
+    closeQrModal();
+  }
+});
+
+window.openQrModal = openQrModal;
+window.closeQrModal = closeQrModal;

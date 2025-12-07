@@ -56,7 +56,7 @@
                             </p>
 
                             {{-- ❌ Paket & Token Dihapus --}}
-                            
+
                             <p><i class="fa-solid fa-hourglass-end mr-1 text-red-400"></i> Expired:
                                 {{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('d-m-Y') : '-' }}
                             </p>
@@ -68,10 +68,8 @@
                         <div class="flex flex-col sm:flex-row gap-2 mt-5">
                             <button
                                 class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium btnOpenEdit transition"
-                                data-id="{{ $k->id }}"
-                                data-nama="{{ $k->nama_kelas }}"
-                                data-tipe="{{ $k->tipe_kelas }}"
-                                data-harga="{{ $k->harga }}"
+                                data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}"
+                                data-tipe="{{ $k->tipe_kelas }}" data-harga="{{ $k->harga }}"
                                 data-deskripsi="{{ $k->deskripsi }}"
                                 data-expired="{{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('Y-m-d') : '' }}"
                                 data-kapasitas="{{ $k->kapasitas }}">
@@ -86,6 +84,11 @@
                                     class="w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition">
                                     <i class="fa-solid fa-trash-can mr-1"></i> Hapus
                                 </button>
+                                <button type="button"
+                                    class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition"
+                                    onclick="openQrModal({{ $k->id }}, '{{ $k->nama_kelas }}')">
+                                    <i class="fa-solid fa-qrcode mr-1"></i> QR
+                                </button>
                             </form>
                         </div>
                     </div>
@@ -98,6 +101,30 @@
             @endforelse
         </div>
     </div>
+
+    {{-- Modal QR Absen Perkelas --}}
+
+{{-- Modal QR Absen Perkelas --}}
+<div id="qrModal" 
+    class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm text-center relative animate-fadeIn">
+
+        <!-- Title -->
+        <h2 id="qrTitle" class="text-xl font-bold text-gray-800 mb-4"></h2>
+
+        <!-- QR Code -->
+        <div id="qrContainer" class="flex justify-center mb-4"></div>
+
+        <!-- Close Button -->
+        <button 
+            onclick="closeQrModal()" 
+            class="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+            Tutup
+        </button>
+
+    </div>
+</div>
 
     {{--  Modal Create & Edit --}}
     @foreach (['Create' => 'Tambah Kelas', 'Edit' => 'Edit Kelas'] as $modalId => $modalTitle)
