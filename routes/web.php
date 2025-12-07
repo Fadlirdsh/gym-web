@@ -13,6 +13,7 @@ use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TokenPackageController;
+use App\Http\Controllers\QrCodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,12 +60,10 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // ===============================
     // 📘 Resource Kelas
     // ===============================
-    Route::prefix('users')->group(function () {
-        Route::resource('kelas', KelasController::class)->parameters([
-            'kelas' => 'kelas',
-        ]);
-    });
-
+    Route::resource('kelas', KelasController::class)->parameters([
+        'kelas' => 'kelas',
+    ]);    
+    
     // ===============================
     // 🕒 Jadwal / Schedule
     // ===============================
@@ -72,52 +71,64 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     Route::resource('schedules', ScheduleController::class)->except(['create', 'edit', 'show']);
     Route::get('/schedules/{id}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
     Route::get('/schedules/filter', [ScheduleController::class, 'filter'])->name('schedules.filter');
-
+    
     // ===============================
     // 💸 Diskon CRUD
     // ===============================
     Route::resource('diskon', DiskonController::class)->except(['create', 'edit']);
-
+    
     // ===============================
     // 🎟️ Voucher CRUD
     // ===============================
     Route::resource('voucher', VoucherController::class)->except(['create', 'edit']);
-
+    
     // ===============================
     // 📊 Dashboard
     // ===============================
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
-
+    
     // ===============================
     // 📅 Reservasi
     // ===============================
     Route::resource('reservasi', ReservasiController::class);
     Route::patch('/reservasi/{id}/status', [ReservasiController::class, 'updateStatus'])
         ->name('reservasi.updateStatus');
-
-    // ===============================
-    // 👀 VisitLog
-    // ===============================
-    Route::get('/visitlog', [VisitLogController::class, 'index'])->name('visitlog.index');
-
-    // ===============================
-    // 👥 Manage Member (BENAR)
-    // ===============================
-    Route::prefix('member')->group(function () {
-
-        Route::get('/', [MemberController::class, 'index'])->name('member.index');
-
-        Route::post('/create', [MemberController::class, 'store'])->name('member.store');
-
-        // Route assign user yang BENAR
-        Route::post('/assign-user', [MemberController::class, 'assignUser'])
+        
+        // ===============================
+        // 👀 VisitLog
+        // ===============================
+        Route::get('/visitlog', [VisitLogController::class, 'index'])->name('visitlog.index');
+        Route::get('/checkin', [VisitLogController::class, 'store']);
+        
+        
+        // ===============================
+        // 👥 Manage Member (BENAR)
+        // ===============================
+        Route::prefix('member')->group(function () {
+            
+            Route::get('/', [MemberController::class, 'index'])->name('member.index');
+            
+            Route::post('/create', [MemberController::class, 'store'])->name('member.store');
+            
+            // Route assign user yang BENAR
+            Route::post('/assign-user', [MemberController::class, 'assignUser'])
             ->name('member.assignUser');
+        });
+        
+        // ===============================
+        // Token
+        // ===============================
+        Route::prefix('admin')->group(function () {
+            Route::resource('token-package', TokenPackageController::class);
+        });
+        
+        // ===============================
+        // Qr Code
+        // ===============================
+        Route::get('/kelas/{kelas_id}/qr', [QrCodeController::class, 'show'])
+        ->name('kelas.qr.modal')
+        ->middleware('auth');
+        Route::get('/kelas/{kelas_id}/qr', [QrCodeController::class, 'show']);
+        
     });
-
-    // ===============================
-    // Token
-    // ===============================
-    Route::prefix('admin')->group(function () {
-        Route::resource('token-package', TokenPackageController::class);
-    });
-});
+    

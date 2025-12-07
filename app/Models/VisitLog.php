@@ -12,6 +12,7 @@ class VisitLog extends Model
     protected $fillable = [
         'reservasi_id',
         'user_id',
+        'kelas_id',   // <-- WAJIB TAMBAH INI
         'status',
         'catatan'
     ];
@@ -25,7 +26,13 @@ class VisitLog extends Model
     {
         return $this->belongsTo(User::class, 'user_id')->where('role', 'pelanggan');
     }
-    // VisitLog.php
+
+    // 🔥 Tambah relasi kelas
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class, 'kelas_id');
+    }
+
     public function scopeApprovedOnDate($query, $date)
     {
         return $query->whereHas('reservasi', function ($q) {

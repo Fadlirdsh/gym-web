@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kelas;
+use App\Models\QrCode;
 use Illuminate\Http\Request;
+use SimpleSoftwareIO\QrCode\Facades\QrCode as SimpleQrCode;
 
 class KelasController extends Controller
 {
@@ -24,28 +26,32 @@ class KelasController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi input tanpa tipe_paket & jumlah_token
-        $validatedData = $request->validate([
-            'nama_kelas' => 'required|string|max:100',
-            'tipe_kelas' => 'required|string|max:50',
-            'harga'      => 'required|numeric',
-            'deskripsi'  => 'nullable|string',
-            'expired_at' => 'nullable|date',
-            'kapasitas'  => 'required|integer|min:1',
-            'gambar'     => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        // Validasi request dsb...
+
+        $kelas = Kelas::create([
+            'nama_kelas' => $request->nama_kelas,
+            'tipe_kelas' => $request->tipe_kelas,
+            'harga' => $request->harga,
+            'kapasitas' => $request->kapasitas,
+            'deskripsi' => $request->deskripsi,
+            'expired_at' => $request->expired_at,
         ]);
 
-        // Upload gambar jika ada
-        if ($request->hasFile('gambar')) {
-            $file = $request->file('gambar');
-            $namaFile = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads/kelas'), $namaFile);
-            $validatedData['gambar'] = 'uploads/kelas/' . $namaFile;
-        }
+        // Generate QR sebagai gambar
+        $qrImage = SimpleQrCode::format('png')->size(300)
+            ->generate(url("/absensi/{$kelas->id}"));
 
-        Kelas::create($validatedData);
+        // Simpan file QR di storage
+        $path = "qr/kelas_{$kelas->id}.png";
+        \Illuminate\Support\Facades\Storage::disk('public')->put($path, $qrImage);
 
-        return redirect()->route('kelas.index')->with('success', 'Kelas berhasil ditambahkan');
+        // Simpan ke DB
+        QrCode::create([
+            'kelas_id' => $kelas->id,
+            'qr_url' => "/storage/{$path}",
+        ]);
+
+        return redirect()->route('kelas.index')->with('success', 'Kelas berhasil dibuat!');
     }
 
     public function update(Request $request, Kelas $kelas)
@@ -115,5 +121,18 @@ class KelasController extends Controller
         });
 
         return response()->json($data);
+    }
+    public function getQr($id)
+    {
+        $qr = QrCode::where('kelas_id', $id)->first();
+
+        if (!$qr) {
+            return response()->json(['error' => 'QR tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'kelas' => Kelas::find($id)->nama_kelas,
+            'qr_url' => asset($qr->qr_url),
+        ]);
     }
 }
