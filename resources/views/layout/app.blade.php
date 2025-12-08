@@ -1,328 +1,261 @@
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
-
 <head>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Dashboard')</title>
 
+    <!-- Tailwind -->
     <link href="{{ asset('css/output.css') }}" rel="stylesheet">
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 
-    <!-- 🔥 Font Awesome -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     @vite('resources/js/app.js')
     @stack('styles')
 
-    <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.06);
-            backdrop-filter: blur(10px) saturate(130%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
+<style>
+/* ======================= */
+/* GLOBAL BACKGROUND       */
+/* ======================= */
+body {
+  background: #f5f7fd;
+}
+@media (prefers-color-scheme: dark) {
+  body { background: #0f172a; }
+}
 
-        .sidebar {
-            transition: width 0.3s cubic-bezier(.2, .9, .2, 1);
-        }
+/* ======================= */
+/* SIDEBAR BASE            */
+/* ======================= */
+.sidebar {
+  transition: width .3s ease, transform .35s ease;
+}
 
-        .sidebar.collapsed {
-            width: 4.5rem;
-        }
+.sidebar-light {
+  background: #ffffff;
+  border-right: 1px solid rgba(0,0,0,0.08);
+}
+@media (prefers-color-scheme: dark) {
+  .sidebar-light {
+    background: rgba(17,24,39,0.85);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+  }
+}
 
-        .sidebar.collapsed .sidebar-label,
-        .sidebar.collapsed .sidebar-logo-text {
-            opacity: 0;
-            pointer-events: none;
-        }
+/* Sidebar collapse */
+.sidebar-collapsed {
+  width: 4.5rem !important;
+}
+.sidebar-collapsed .sidebar-label {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-10px);
+}
 
-        #appLayout {
-            transition: all 0.3s ease;
-            margin-left: 16rem;
-        }
+/* Hide on mobile */
+.sidebar-hidden {
+  transform: translateX(-100%) !important;
+}
 
-        #appLayout.sidebar-collapsed {
-            margin-left: 4.5rem !important;
-        }
+/* ======================= */
+/* MAIN CONTENT SHIFT      */
+/* ======================= */
+#appLayout {
+  margin-left: 16rem;
+  transition: all .3s ease;
+}
 
-        header {
-            transition: all 0.3s ease;
-            left: 16rem;
-        }
+header {
+  left: 16rem;
+  transition: all .3s ease;
+}
 
-        header.sidebar-collapsed {
-            left: 4.5rem !important;
-        }
-    </style>
+#appLayout.sidebar-collapsed {
+  margin-left: 4.5rem !important;
+}
+header.sidebar-collapsed {
+  left: 4.5rem !important;
+}
+
+/* ======================= */
+/* ACTIVE MENU             */
+/* ======================= */
+.menu-active {
+  background: #e0e7ff !important;
+  color: #4338ca !important;
+}
+@media (prefers-color-scheme: dark) {
+  .menu-active {
+    background: rgba(99,102,241,0.25) !important;
+    color: #c7d2fe !important;
+  }
+}
+
+/* NORMAL MENU */
+.menu-normal { 
+  color: #475569 !important; 
+}
+@media (prefers-color-scheme: dark) {
+  .menu-normal { color: #cbd5e1 !important; }
+}
+
+/* ======================= */
+/* RESPONSIVE MEDIA QUERY  */
+/* ======================= */
+
+/* MOBILE ≤ 768px */
+@media (max-width: 768px) {
+  #appLayout,
+  header {
+    margin-left: 0 !important;
+    left: 0 !important;
+  }
+
+  #sidebar {
+    transform: translateX(-100%);
+    width: 16rem !important;
+  }
+}
+
+/* TABLET 769–1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  #sidebar {
+    width: 4.5rem !important;
+  }
+  .sidebar-label { opacity: 0; }
+  #appLayout { margin-left: 4.5rem !important; }
+  header { left: 4.5rem !important; }
+}
+
+</style>
 </head>
 
-<body class="min-h-screen flex overflow-x-hidden font-inter bg-gray-50 dark:bg-gray-900">
+<body class="min-h-screen flex font-inter overflow-x-hidden">
 
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-40 hidden md:hidden"></div>
+<!-- OVERLAY MOBILE -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/40 hidden z-40 md:hidden"></div>
 
-    <!-- SIDEBAR -->
-    <aside id="sidebar"
-        class="sidebar fixed inset-y-0 left-0 z-50 w-64 transform -translate-x-full md:translate-x-0 flex flex-col
-    bg-gray-900/80 backdrop-blur-lg rounded-tr-3xl shadow-xl">
+<!-- SIDEBAR -->
+<aside id="sidebar"
+  class="sidebar sidebar-light fixed inset-y-0 left-0 z-50 w-64 
+         transform md:translate-x-0 -translate-x-full flex flex-col rounded-tr-3xl">
 
-        <!-- HEADER -->
-        <div class="h-16 flex items-center px-6 border-b border-white/10">
-            <div class="flex items-center gap-3 w-full">
-                <img src="{{ asset('uploads/logo-paradise.png') }}" class="h-10">
-                <div id="logoSidebarToggle" class="font-semibold text-white text-lg cursor-pointer sidebar-logo-text">
-                    Paradise Gym
-                </div>
-            </div>
-        </div>
-
-        <!-- MENU -->
-        <nav class="flex-1 overflow-y-auto py-4 px-3 text-sm space-y-1">
-
-            @php
-                $menu = [
-                    ['url' => url('/admin/home'), 'label' => 'Home', 'icon' => 'fa-house', 'pattern' => 'admin/home'],
-                    [
-                        'url' => url('/admin/manage'),
-                        'label' => 'Manage Users',
-                        'icon' => 'fa-user',
-                        'pattern' => 'admin/manage',
-                    ],
-                    [
-                        'url' => route('kelas.index'),
-                        'label' => 'Manage Kelas',
-                        'icon' => 'fa-bars-progress',
-                        'pattern' => 'kelas*',
-                    ],
-                    [
-                        'url' => route('schedules.index'),
-                        'label' => 'Manage Schedule',
-                        'icon' => 'fa-calendar',
-                        'pattern' => 'schedules*',
-                    ],
-                    [
-                        'url' => route('dashboard.index'),
-                        'label' => 'Dashboard Data',
-                        'icon' => 'fa-chart-line',
-                        'pattern' => 'dashboard*',
-                    ],
-                    [
-                        'url' => route('visitlog.index'),
-                        'label' => 'Visit Log',
-                        'icon' => 'fa-eye',
-                        'pattern' => 'visitlog*',
-                    ],
-                ];
-            @endphp
-
-            @foreach ($menu as $item)
-                <a href="{{ $item['url'] }}"
-                    class="flex items-center gap-3 px-4 py-2 rounded-lg nav-item-transition
-                {{ request()->is($item['pattern'])
-                    ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-indigo-600/30'
-                    : 'text-gray-300 hover:bg-indigo-500/10 hover:text-indigo-100' }}">
-
-                    <i class="fa-solid {{ $item['icon'] }} w-5 h-5 text-current"></i>
-                    <span class="sidebar-label">{{ $item['label'] }}</span>
-                </a>
-            @endforeach
-
-            <!-- MANAGE MEMBER (dibuat sejajar seperti menu di atas) -->
-            <a href="{{ route('member.index') }}"
-                class="flex items-center gap-3 px-4 py-2 rounded-lg nav-item-transition
-            {{ request()->is('member*')
-                ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-indigo-600/30'
-                : 'text-gray-300 hover:bg-indigo-500/10 hover:text-indigo-100' }}">
-
-                <i class="fa-solid fa-users w-5 h-5 text-current"></i>
-                <span class="sidebar-label">Manage Member</span>
-            </a>
-
-            <!-- DROPDOWN PROMO CENTER -->
-            @php $isDiskonActive = request()->is('diskon*') || request()->is('voucher*'); @endphp
-
-            <div x-data="{ open: {{ $isDiskonActive ? 'true' : 'false' }} }" class="space-y-1">
-                <button @click="open = !open"
-                    class="flex items-center w-full gap-3 px-4 py-2 rounded-lg nav-item-transition
-                {{ $isDiskonActive
-                    ? 'bg-indigo-600/20 text-indigo-200 ring-1 ring-indigo-600/30'
-                    : 'text-gray-300 hover:bg-indigo-500/10 hover:text-indigo-100' }}">
-
-                    <i class="fa-solid fa-tags w-5 h-5"></i>
-                    <span class="sidebar-label">Promo Center</span>
-
-                    <svg :class="{ 'rotate-180': open }"
-                        class="ml-auto h-4 w-4 transition-transform duration-200 text-gray-300" fill="none"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-
-                <div x-show="open" x-collapse class="pl-10 space-y-1">
-
-                    <a href="{{ route('diskon.index') }}"
-                        class="flex items-center gap-3 px-3 py-2 rounded-md text-sm
-                    {{ request()->is('diskon*')
-                        ? 'bg-indigo-600/20 text-indigo-100'
-                        : 'text-gray-400 hover:text-indigo-100 hover:bg-indigo-500/10' }}">
-                        <i class="fa-solid fa-dollar-sign w-5"></i>
-                        Diskon Kelas
-                    </a>
-
-                    <a href="{{ route('voucher.index') }}"
-                        class="flex items-center gap-3 px-3 py-2 rounded-md text-sm
-                    {{ request()->is('voucher*')
-                        ? 'bg-indigo-600/20 text-indigo-100'
-                        : 'text-gray-400 hover:text-indigo-100 hover:bg-indigo-500/10' }}">
-                        <i class="fa-solid fa-ticket w-5"></i>
-                        Voucher (User)
-                    </a>
-
-                </div>
-            </div>
-
-        </nav>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <div id="appLayout" class="flex flex-col flex-1">
-
-        <header class="fixed top-0 left-64 right-0 z-50 glass backdrop-blur-lg border-b border-white/6 shadow-sm">
-            <div class="flex items-center justify-between px-6 h-16">
-                <div class="flex items-center gap-3">
-                    <button id="collapseSidebar"
-                        class="hidden md:inline-flex text-gray-200 px-2 py-1 rounded hover:bg-gray-700/30">⇤</button>
-                </div>
-
-                <!-- Account -->
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open"
-                        class="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-700/30">
-                        <img src="https://i.pravatar.cc/100" class="h-8 w-8 rounded-full border border-gray-600/40">
-                        <span class="hidden sm:block text-gray-200 text-sm font-medium">Admin</span>
-                    </button>
-
-                    <div x-show="open" @click.away="open = false"
-                        class="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/6 rounded-lg shadow-lg z-50">
-                        <div class="px-4 py-2 border-b border-white/6 text-sm text-gray-200">John Doe</div>
-                        <button onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
-                            class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10">
-                            Logout
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <main id="mainContent" class="pt-20 p-6 flex-1 w-full min-h-screen">
-            <div id="loader">
-                <div class="spinner"></div>
-            </div>
-            <div id="pageContent">@yield('content')</div>
-        </main>
-
-        <footer class="border-t border-white/6 bg-transparent py-4 text-center text-gray-500 text-sm">
-            &copy; {{ date('Y') }} Paradise Gym.
-        </footer>
+  <div class="h-16 flex items-center px-6 border-b">
+    <img src="{{ asset('uploads/logo-paradise.png') }}" class="h-10">
+    <div id="logoSidebarToggle" class="ml-3 font-semibold text-gray-800 dark:text-white cursor-pointer sidebar-label">
+      Paradise Gym
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1 text-sm">
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            const collapseBtn = document.getElementById('collapseSidebar');
-            const appLayout = document.getElementById('appLayout');
-            const header = document.querySelector('header');
-            const logoToggle = document.getElementById('logoSidebarToggle');
+    @php
+      $menu = [
+        ['url'=>route('dashboard.index'),'label'=>'Dashboard Data','pattern'=>'dashboard*','icon'=>'fa-chart-line'],
+        ['url'=>url('/admin/home'),'label'=>'Home','pattern'=>'admin/home','icon'=>'fa-house'],
+        ['url'=>url('/admin/manage'),'label'=>'Manage Users','pattern'=>'admin/manage','icon'=>'fa-user'],
+        ['url'=>route('kelas.index'),'label'=>'Manage Kelas','pattern'=>'kelas*','icon'=>'fa-bars-progress'],
+        ['url'=>route('schedules.index'),'label'=>'Manage Schedule','pattern'=>'schedules*','icon'=>'fa-calendar'],
+        ['url'=>route('visitlog.index'),'label'=>'Visit Log','pattern'=>'visitlog*','icon'=>'fa-eye'],
+      ];
+    @endphp
 
-            let isMobile = window.innerWidth < 768;
+    @foreach ($menu as $item)
+      <a href="{{ $item['url'] }}"
+        class="flex items-center gap-3 px-4 py-2 rounded-lg
+        {{ request()->is($item['pattern']) ? 'menu-active' : 'menu-normal' }}">
+        <i class="fa-solid {{ $item['icon'] }}"></i>
+        <span class="sidebar-label">{{ $item['label'] }}</span>
+      </a>
+    @endforeach
 
-            function updateLayout() {
-                isMobile = window.innerWidth < 768;
-                if (isMobile) {
-                    sidebar.classList.remove('collapsed');
-                    appLayout.classList.remove('sidebar-collapsed');
-                    header.classList.remove('sidebar-collapsed');
-                    sidebar.classList.add('-translate-x-full');
-                    overlay.classList.add('hidden');
-                } else {
-                    sidebar.classList.remove('-translate-x-full');
-                    overlay.classList.add('hidden');
-                    if (localStorage.getItem('sidebarCollapsed') === '1') {
-                        sidebar.classList.add('collapsed');
-                        appLayout.classList.add('sidebar-collapsed');
-                        header.classList.add('sidebar-collapsed');
-                    }
-                }
-            }
+  </nav>
+</aside>
 
-            function mobileOpen() {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-            }
+<!-- MAIN WRAPPER -->
+<div id="appLayout" class="flex flex-col flex-1">
 
-            function mobileClose() {
-                sidebar.classList.add('-translate-x-full');
-                overlay.classList.add('hidden');
-            }
+  <!-- HEADER -->
+  <header class="fixed top-0 right-0 z-50 h-16 bg-white dark:bg-gray-900 shadow-md flex items-center px-6">
+    <button id="toggleSidebar" class="hidden md:inline-flex text-xl dark:text-white">
+      <i class="fa-solid fa-bars"></i>
+    </button>
 
-            function toggleCollapse() {
-                if (isMobile) return overlay.classList.contains('hidden') ? mobileOpen() : mobileClose();
-                const isCollapsed = sidebar.classList.toggle('collapsed');
-                appLayout.classList.toggle('sidebar-collapsed', isCollapsed);
-                header.classList.toggle('sidebar-collapsed', isCollapsed);
-                localStorage.setItem('sidebarCollapsed', isCollapsed ? '1' : '0');
-            }
+    <div class="ml-auto relative" x-data="{open:false}">
+      <button @click="open=!open" class="flex items-center gap-3 px-3 py-2">
+        <img src="https://i.pravatar.cc/100" class="h-8 w-8 rounded-full shadow">
+        <span class="hidden sm:inline text-sm dark:text-gray-200">Admin</span>
+      </button>
 
-            logoToggle.addEventListener('click', toggleCollapse);
-            collapseBtn.addEventListener('click', toggleCollapse);
-            overlay.addEventListener('click', mobileClose);
+      <div x-show="open" @click.away="open=false"
+        class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 shadow-xl rounded-lg">
+        <div class="px-4 py-2 border-b dark:border-gray-700">
+          John Doe
+        </div>
+        <button onclick="document.getElementById('logout-form').submit();"
+          class="flex items-center gap-2 w-full px-4 py-2 text-red-600 hover:bg-red-100 dark:text-red-400">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+      </div>
+    </div>
+  </header>
 
-            updateLayout();
-            window.addEventListener('resize', updateLayout);
+  <!-- PAGE CONTENT -->
+  <main id="mainContent" class="pt-20 p-6 flex-1">
+    @yield('content')
+  </main>
 
-            // AJAX loader
-            const loader = document.getElementById('loader');
-            const pageContent = document.getElementById('pageContent');
+  <footer class="py-4 text-center text-gray-500">
+    © {{ date('Y') }} Paradise Gym.
+  </footer>
 
-            document.querySelectorAll('.sidebar-link').forEach(link => {
-                link.addEventListener('click', async (e) => {
-                    const url = e.currentTarget.getAttribute('href');
-                    if (url.includes('/dashboard')) return;
+</div>
 
-                    e.preventDefault();
-                    if (isMobile) mobileClose();
+<script>
+document.addEventListener("DOMContentLoaded", () => {
 
-                    loader.style.display = 'flex';
-                    pageContent.style.opacity = '0.4';
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebarOverlay");
+  const toggleSidebar = document.getElementById("toggleSidebar");
+  const logoToggle = document.getElementById("logoSidebarToggle");
+  const appLayout = document.getElementById("appLayout");
+  const header = document.querySelector("header");
 
-                    try {
-                        const res = await fetch(url, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        });
-                        const html = await res.text();
-                        const doc = new DOMParser().parseFromString(html, 'text/html');
-                        const newContent = doc.querySelector('#pageContent')?.innerHTML || html;
+  /* DESKTOP TOGGLE */
+  toggleSidebar.addEventListener("click", () => {
+    if (window.innerWidth <= 768) return;
 
-                        setTimeout(() => {
-                            pageContent.innerHTML = newContent;
-                            pageContent.style.opacity = '1';
-                            loader.style.display = 'none';
-                            history.pushState({}, '', url);
-                        }, 350);
-                    } catch {
-                        loader.style.display = 'none';
-                    }
-                });
-            });
-        });
-    </script>
+    const isCollapsed = sidebar.classList.toggle("sidebar-collapsed");
+    appLayout.classList.toggle("sidebar-collapsed", isCollapsed);
+    header.classList.toggle("sidebar-collapsed", isCollapsed);
+  });
 
-    @stack('scripts')
+  /* MOBILE SHOW */
+  logoToggle.addEventListener("click", () => {
+    if (window.innerWidth > 768) return;
+    sidebar.classList.remove("sidebar-hidden");
+    sidebar.style.transform = "translateX(0)";
+    overlay.classList.remove("hidden");
+  });
+
+  /* MOBILE HIDE */
+  overlay.addEventListener("click", () => {
+    sidebar.classList.add("sidebar-hidden");
+    sidebar.style.transform = "translateX(-100%)";
+    overlay.classList.add("hidden");
+  });
+
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+@stack('scripts')
+
 </body>
-
 </html>
