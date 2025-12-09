@@ -4,13 +4,98 @@
     <div class="min-h-screen bg-gray-100 text-gray-900 px-6 py-8">
 
         {{-- HEADER --}}
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex justify-between items-center mb-4">
             <h1 class="text-3xl font-bold">Manajemen Jadwal Trainer</h1>
+
+
+            <a href="{{ route('schedules.exportPDF', request()->all()) }}" class="px-4 py-2 bg-red-600 text-white rounded">
+                Export PDF
+            </a>
+
 
             <button onclick="openModalTambah()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
                 + Tambah Jadwal
             </button>
         </div>
+
+        {{-- FILTER --}}
+        <form method="GET" class="mb-4 flex gap-3 items-end">
+            <div>
+                <label>Hari</label>
+                <select name="day" class="border p-2 rounded">
+                    <option value="">Semua</option>
+                    @foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as $d)
+                        <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>
+                            {{ ucfirst($d) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label>Trainer</label>
+                <select name="trainer_id" class="border p-2 rounded">
+                    <option value="">Semua</option>
+                    @foreach ($trainers as $t)
+                        <option value="{{ $t->id }}" {{ request('trainer_id') == $t->id ? 'selected' : '' }}>
+                            {{ $t->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label>Jam Mulai</label>
+                <select name="start_time" class="border p-2 rounded">
+                    <option value="">Pilih jam mulai</option>
+                    <option value="07:00:00" {{ request('start_time') == '07:00:00' ? 'selected' : '' }}>7:00 AM
+                    </option>
+                    <option value="07:30:00" {{ request('start_time') == '07:30:00' ? 'selected' : '' }}>7:30 AM
+                    </option>
+                    <option value="08:00:00" {{ request('start_time') == '08:00:00' ? 'selected' : '' }}>8:00 AM
+                    </option>
+                    <option value="08:30:00" {{ request('start_time') == '08:30:00' ? 'selected' : '' }}>8:30 AM
+                    </option>
+                    <option value="09:00:00" {{ request('start_time') == '09:00:00' ? 'selected' : '' }}>9:00 AM
+                    </option>
+                    <option value="09:30:00" {{ request('start_time') == '09:30:00' ? 'selected' : '' }}>9:30 AM
+                    </option>
+                    <option value="10:00:00" {{ request('start_time') == '10:00:00' ? 'selected' : '' }}>10:00 AM
+                    </option>
+                    <option value="10:30:00" {{ request('start_time') == '10:30:00' ? 'selected' : '' }}>10:30 AM
+                    </option>
+                    <option value="11:00:00" {{ request('start_time') == '11:00:00' ? 'selected' : '' }}>11:00 AM
+                    </option>
+                    <option value="11:30:00" {{ request('start_time') == '11:30:00' ? 'selected' : '' }}>11:30 AM
+                    </option>
+                    <option value="12:00:00" {{ request('start_time') == '12:00:00' ? 'selected' : '' }}>12:00 PM
+                    </option>
+                    <option value="12:30:00" {{ request('start_time') == '12:30:00' ? 'selected' : '' }}>12:30 PM
+                    </option>
+                    <option value="14:00:00" {{ request('start_time') == '14:00:00' ? 'selected' : '' }}>2:00 PM
+                    </option>
+                    <option value="14:30:00" {{ request('start_time') == '14:30:00' ? 'selected' : '' }}>2:30 PM
+                    </option>
+                    <option value="15:00:00" {{ request('start_time') == '15:00:00' ? 'selected' : '' }}>3:00 PM
+                    </option>
+                    <option value="15:30:00" {{ request('start_time') == '15:30:00' ? 'selected' : '' }}>3:30 PM
+                    </option>
+                    <option value="16:00:00" {{ request('start_time') == '16:00:00' ? 'selected' : '' }}>4:00 PM
+                    </option>
+                    <option value="16:30:00" {{ request('start_time') == '16:30:00' ? 'selected' : '' }}>4:30 PM
+                    </option>
+                    <option value="17:00:00" {{ request('start_time') == '17:00:00' ? 'selected' : '' }}>5:00 PM
+                    </option>
+                    <option value="18:00:00" {{ request('start_time') == '18:00:00' ? 'selected' : '' }}>6:00 PM
+                    </option>
+                    <option value="19:00:00" {{ request('start_time') == '19:00:00' ? 'selected' : '' }}>7:00 PM
+                    </option>
+                </select>
+            </div>
+
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Filter</button>
+            <a href="{{ route('schedules.index') }}" class="px-4 py-2 bg-gray-500 text-white rounded">Reset</a>
+        </form>
 
         {{-- TABLE --}}
         <div class="bg-white p-5 rounded-lg shadow overflow-x-auto">
@@ -43,13 +128,9 @@
                             </td>
                             <td class="p-3 flex gap-2">
                                 <button onclick="editSchedule({{ $s->id }})"
-                                    class="px-3 py-1 bg-yellow-500 text-white rounded">
-                                    Edit
-                                </button>
-
+                                    class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</button>
                                 <button onclick="deleteSchedule({{ $s->id }})" data-id="{{ $s->id }}"
-                                    class="px-3 py-1 bg-red-500 text-white rounded">Hapus
-                                </button>
+                                    class="px-3 py-1 bg-red-500 text-white rounded">Hapus</button>
                             </td>
                         </tr>
                     @endforeach
@@ -57,7 +138,6 @@
             </table>
         </div>
     </div>
-
 
     {{-- =========================
       MODAL FORM JADWAL

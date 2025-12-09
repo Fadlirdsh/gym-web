@@ -68,7 +68,6 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
         ->name('kelas.qr');
 
 
-
     // ===============================
     // 🕒 Jadwal / Schedule
     // ===============================
