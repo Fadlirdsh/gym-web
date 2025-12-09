@@ -1,6 +1,6 @@
 /* ==========================
-   Custom CSS untuk Switch/Toggler
-   ========================== */
+    Custom CSS untuk Switch/Toggler
+    ========================== */
 
 .switch {
   position: relative;
@@ -46,3 +46,124 @@ input:checked + .slider {
 input:checked + .slider:before {
   transform: translateX(24px);
 }
+
+/* ==============================================
+    ✅ SIDEBAR COLLAPSED FIX
+    ============================================== */
+
+/* Ini adalah kelas yang menangani penyembunyian label
+    ketika kelas .collapsed diterapkan pada <aside id="sidebar"> */
+.sidebar.collapsed .sidebar-label,
+.sidebar.collapsed .sidebar-logo-text {
+    opacity: 0;
+    pointer-events: none;
+}
+/* Sembunyikan panah dropdown Promo Center saat collapsed */
+.sidebar.collapsed .promo-dropdown-arrow {
+    opacity: 0;
+}
+
+/* ==============================================
+    ✅ LIGHT MODE FIX (Dengan prefers-color-scheme)
+    ============================================== */
+
+@media (prefers-color-scheme: light) {
+    /* --- BODY/BACKGROUND --- */
+    body {
+        background: #f3f4f6 !important;
+        color: #111827 !important;
+    }
+
+    /* --- SIDEBAR --- */
+    #sidebar {
+        background: #ffffff !important;
+        color: #111827 !important;
+        box-shadow: 2px 0 20px rgba(0,0,0,0.06);
+        border-right: 1px solid #e5e7eb;
+    }
+
+    #sidebar .sidebar-logo-text {
+        color: #111827 !important;
+        font-weight: 700;
+    }
+
+    /* Link Default (nav-item-transition) */
+    #sidebar .nav-item-transition {
+        color: #4b5563 !important;
+    }
+
+    /* Link Hover */
+    #sidebar a:hover {
+        background: #eef2ff !important; /* Indigo/50 */
+        color: #4338ca !important; /* Indigo/700 */
+    }
+
+    /* Link Active (bg-indigo-600/20) */
+    #sidebar a.bg-indigo-600\/20 {
+        background: #e0e7ff !important; /* Indigo/100 */
+        color: #4338ca !important; /* Indigo/700 */
+        font-weight: 600;
+        /* Perbaiki ring light mode */
+        box-shadow: 0 0 0 1px rgba(67, 56, 202, 0.3) inset; 
+        ring: none !important; /* Hapus ring default Tailwind */
+    }
+    
+    /* --- HEADER / NAVBAR --- */
+    header {
+        background: white !important;
+        border-bottom: 1px solid #e5e7eb;
+        color: #111827 !important;
+        /* Menghapus atau menimpa efek glass */
+        backdrop-filter: none !important;
+    }
+
+    header span,
+    header button {
+        color: #111827 !important;
+    }
+    
+    /* Tombol collapse sidebar di header */
+    #collapseSidebar {
+        color: #6b7280 !important; /* Warna ikon yang lebih lembut */
+    }
+
+    /* --- MAIN AREA --- */
+    #mainContent {
+        background: #f9fafb !important;
+    }
+
+    /* --- CARD / BOX / STAT --- */
+    .dashboard-card,
+    .stat-card,
+    .ion-card,
+    .card,
+    /* Menargetkan semua elemen yang menggunakan bg-gray-800, termasuk dropdown menu */
+    .bg-gray-800 { 
+        background: #ffffff !important;
+        color: #111827 !important;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    }
+    
+    /* Khusus untuk dropdown account: tambahkan hover state yang sesuai */
+    .bg-gray-800 a:hover {
+        background: #f3f4f6 !important; /* Gray/100 */
+    }
+    
+    /* --- ANGKA WARNA (Contoh) --- */
+    .text-green-400 { color: #16a34a !important; }
+    .text-yellow-400 { color: #eab308 !important; }
+    .text-blue-400 { color: #2563eb !important; }
+
+    /* --- FOOTER --- */
+    footer {
+        background: #ffffff !important;
+        border-top: 1px solid #e5e7eb;
+        color: #6b7280 !important;
+    }
+}
+
+/*
+    Catatan: Semua media query responsive (max-width: 1024px, 768px, 480px)
+    telah dihapus untuk mencegah konflik dengan logika JS/Tailwind yang ada di app.blade.php.
+*/

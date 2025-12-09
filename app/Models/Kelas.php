@@ -101,4 +101,8 @@ class Kelas extends Model
     {
         return $query->where('expired_at', '>=', now()->toDateString());
     }
+    public function qr()
+    {
+        return $this->hasOne(QrCode::class);
+    }
 }
