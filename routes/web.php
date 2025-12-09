@@ -82,7 +82,7 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     Route::resource('diskon', DiskonController::class)->except(['create', 'edit']);
 
     // ===============================
-    // 🎟️ Voucher CRUD
+    // 🎟 Voucher CRUD
     // ===============================
     Route::resource('voucher', VoucherController::class)->except(['create', 'edit']);
 
