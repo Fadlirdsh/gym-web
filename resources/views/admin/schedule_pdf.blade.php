@@ -1,14 +1,32 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Jadwal Trainer</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #000; padding: 5px; text-align: center; }
-        th { background-color: #eee; }
+        body {
+            font-family: sans-serif;
+            font-size: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #eee;
+        }
     </style>
 </head>
+
 <body>
     <h2 style="text-align: center;">Jadwal Trainer</h2>
     <table>
@@ -28,7 +46,8 @@
                 <tr>
                     <td>{{ $key + 1 }}</td>
                     <td>{{ $schedule->day }}</td>
-                    <td>{{ $schedule->start_time }} - {{ $schedule->end_time }}</td>
+                    <td>{{ \Carbon\Carbon::parse($schedule->start_time)->format('h:i A') }} -
+                        {{ \Carbon\Carbon::parse($schedule->end_time)->format('h:i A') }}</td>
                     <td>{{ $schedule->kelas->nama_kelas }}</td>
                     <td>{{ $schedule->trainer->name }}</td>
                     <td>{{ $schedule->class_focus ?? '-' }}</td>
@@ -38,4 +57,5 @@
         </tbody>
     </table>
 </body>
+
 </html>

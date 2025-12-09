@@ -20,6 +20,10 @@ class ScheduleController extends Controller
                 $q->where('name', 'like', '%' . $request->trainer . '%');
             });
         }
+        if ($request->filled('trainer_id')) {
+            $query->where('trainer_id', $request->trainer_id);
+        }
+
 
         // Filter kelas
         if ($request->filled('kelas_id')) {
@@ -129,16 +133,15 @@ class ScheduleController extends Controller
         return back()->with('success', 'Jadwal mingguan berhasil diperbarui');
     }
 
-public function destroy($id)
-{
-    Schedule::findOrFail($id)->delete();
+    public function destroy($id)
+    {
+        Schedule::findOrFail($id)->delete();
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Jadwal berhasil dihapus'
-    ]);
-}
-
+        return response()->json([
+            'success' => true,
+            'message' => 'Jadwal berhasil dihapus'
+        ]);
+    }
 
     public function edit($id)
     {
@@ -153,12 +156,32 @@ public function destroy($id)
         return view('admin.schedule_show', compact('schedule'));
     }
 
-    public function exportPDF()
-    {
-        $schedules = Schedule::with(['trainer', 'kelas'])->get();
+public function exportPDF(Request $request)
+{
+    $query = Schedule::with(['trainer', 'kelas']);
 
-        $pdf = Pdf::loadView('admin.schedule_pdf', compact('schedules'));
-
-        return $pdf->download('jadwal_trainer.pdf');
+    // Filter berdasarkan request, kalau ada
+    if ($request->filled('day')) {
+        $query->where('day', $request->day);
     }
+
+    if ($request->filled('trainer_id')) {
+        $query->where('trainer_id', $request->trainer_id);
+    }
+
+    if ($request->filled('start_time')) {
+        $query->where('start_time', $request->start_time);
+    }
+
+    if ($request->filled('end_time')) {
+        $query->where('end_time', $request->end_time);
+    }
+
+    $schedules = $query->orderBy('day')->orderBy('start_time')->get();
+
+    $pdf = Pdf::loadView('admin.schedule_pdf', compact('schedules'));
+
+    return $pdf->download('jadwal_trainer.pdf');
+}
+
 }
