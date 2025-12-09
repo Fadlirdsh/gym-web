@@ -72,6 +72,38 @@ class ScheduleController extends Controller
     // STORE WEEKLY ONLY
     public function store(Request $request)
     {
+        try {
+            $validated = $request->validate([
+                'kelas_id'     => 'required|exists:kelas,id',
+                'trainer_id'   => 'required|exists:users,id',
+                'day'          => 'required',
+                'start_time'   => 'required',
+                'end_time'     => 'required|after:start_time',
+                'class_focus'  => 'nullable|string',
+                'is_active'    => 'required|boolean'
+            ]);
+
+            $validated['date'] = null;
+
+            $schedule = Schedule::create($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Jadwal mingguan berhasil ditambahkan',
+                'schedule' => $schedule->load(['kelas', 'trainer'])
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $schedule = Schedule::findOrFail($id);
+
         $validated = $request->validate([
             'kelas_id'     => 'required|exists:kelas,id',
             'trainer_id'   => 'required|exists:users,id',
@@ -82,45 +114,31 @@ class ScheduleController extends Controller
             'is_active'    => 'required|boolean'
         ]);
 
-        $validated['date'] = null; // karena weekly schedule
+        $validated['date'] = null;
 
-        $schedule = Schedule::create($validated);
+        $schedule->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Jadwal mingguan berhasil ditambahkan',
-            'schedule' => $schedule->load(['kelas', 'trainer']) // optional: return relasi supaya bisa langsung update tabel di JS
-        ]);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $schedule = Schedule::findOrFail($id);
-
-        $request->validate([
-            'kelas_id'     => 'required|exists:kelas,id',
-            'trainer_id'   => 'required|exists:users,id',
-            'day'          => 'required',
-            'start_time'   => 'required',
-            'end_time'     => 'required|after:start_time',
-            'class_focus'  => 'nullable|string',
-            'is_active'    => 'required|boolean'
-        ]);
-
-        // Tidak boleh pakai date
-        $request->merge(['date' => null]);
-
-        $schedule->update($request->all());
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Jadwal mingguan berhasil diperbarui',
+                'schedule' => $schedule->load(['kelas', 'trainer'])
+            ]);
+        }
 
         return back()->with('success', 'Jadwal mingguan berhasil diperbarui');
     }
 
-    public function destroy($id)
-    {
-        Schedule::findOrFail($id)->delete();
+public function destroy($id)
+{
+    Schedule::findOrFail($id)->delete();
 
-        return back()->with('success', 'Jadwal berhasil dihapus');
-    }
+    return response()->json([
+        'success' => true,
+        'message' => 'Jadwal berhasil dihapus'
+    ]);
+}
+
 
     public function edit($id)
     {

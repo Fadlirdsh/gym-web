@@ -199,7 +199,7 @@ header.sidebar-collapsed {
                         class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform"></i>
                 </button>
 
-                <div x-show="open" @click.away="open = false"
+                {{-- <div x-show="open" @click.away="open = false"
                     class="absolute right-0 mt-2 w-48 bg-gray-800 border border-white/6 rounded-lg shadow-xl z-50">
                     <div class="px-4 py-2 border-b border-white/6 text-sm text-gray-200 truncate">
                         John Doe
@@ -217,7 +217,7 @@ header.sidebar-collapsed {
                         class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 border-t border-white/6">
                         <i class="fa-solid fa-right-from-bracket"></i> Logout
                     </button>
-                </div>
+                </div> --}}
             </div>
         </div>
     </header>
