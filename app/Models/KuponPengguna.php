@@ -14,14 +14,14 @@ class KuponPengguna extends Model
 
     protected $fillable = [
         'user_id',
-        'kode_kupon',
-        'sudah_dipakai',
-        'berlaku_hingga',
+        'status',          // pending, claimed, used, expired
+        'sudah_dipakai',   // boolean
+        'berlaku_hingga',  // datetime
     ];
 
     protected $casts = [
         'sudah_dipakai' => 'boolean',
-        'berlaku_hingga' => 'date',
+        'berlaku_hingga' => 'datetime',
     ];
 
     /**
@@ -37,6 +37,7 @@ class KuponPengguna extends Model
      */
     public function getMasihBerlakuAttribute()
     {
-        return !$this->sudah_dipakai && Carbon::now()->lte($this->berlaku_hingga);
+        return in_array($this->status, ['pending', 'claimed']) 
+            && Carbon::now()->lte($this->berlaku_hingga);
     }
 }

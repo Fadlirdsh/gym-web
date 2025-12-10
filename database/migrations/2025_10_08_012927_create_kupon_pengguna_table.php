@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('kupon_pengguna', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); // pelanggan
-            $table->string('kode_kupon')->default('FREECLASS');
-            $table->boolean('sudah_dipakai')->default(false);
-            $table->date('berlaku_hingga')->nullable(); // berlaku 1 bulan
+            $table->unsignedBigInteger('user_id');
+            $table->enum('status', ['pending', 'claimed', 'used', 'expired'])->default('pending');
+            $table->boolean('sudah_dipakai')->default(false); // opsional
+            $table->timestamp('berlaku_hingga'); // 7 hari sejak register
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
