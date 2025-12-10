@@ -134,7 +134,7 @@
     </div>
 
     {{-- MODAL QR --}}
-    <div id="qrModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div id="qrModal" class="hidden fixed inset-0 z-50 bg-black/60 items-center justify-center p-4">
         <div
             class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6
                 w-full max-w-sm text-center relative">
@@ -264,15 +264,5 @@
 
     {{-- JS --}}
     @vite('resources/js/kelas.js')
-    <script>
-        function openQrModal(nama, url) {
-            document.getElementById('qrTitle').innerText = nama;
-            document.getElementById('qrImage').src = url;
-            document.getElementById('qrModal').classList.remove('hidden');
-        }
 
-        function closeQrModal() {
-            document.getElementById('qrModal').classList.add('hidden');
-        }
-    </script>
 @endsection
