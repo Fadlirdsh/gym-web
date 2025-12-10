@@ -23,6 +23,7 @@ class Kelas extends Model
 
     protected $casts = [
         'harga' => 'decimal:2',
+        'expired_at' => 'datetime',
     ];
 
     protected $appends = ['harga_diskon', 'diskon_persen', 'sisa_kursi'];
