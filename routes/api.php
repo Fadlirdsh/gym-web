@@ -14,6 +14,12 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\Api\TokenPackageController;
+use App\Http\Controllers\VoucherController;
+
+// =====================
+// 🔹 VOUCHER
+// =====================
+Route::get('/vouchers', [VoucherController::class, 'index']);
 
 // =====================
 // 🔹 ROUTE API KELAS (PUBLIC)
@@ -96,7 +102,7 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::get('/transaksi', [TransaksiController::class, 'index']);
     Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
 
-    // 🔹 CEK STATUS MEMBERSHIP (PERUBAHAN DITAMBAHKAN DI SINI)
+    // 🔹 CEK STATUS MEMBERSHIP
     Route::get('/status', [MemberController::class, 'checkStatus']);
 });
 
@@ -105,7 +111,6 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
 // =====================
 Route::post('/transaksi/store', [TransaksiController::class, 'store']);
 Route::post('/transaksi/callback', [TransaksiController::class, 'callback']);
-
 
 // =====================
 // TOKEN PACKAGES
