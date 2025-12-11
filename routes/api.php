@@ -55,7 +55,7 @@ Route::get('/users/trainer', [UserController::class, 'getTrainers']);
 // 🔹 KUPON FREECLASS (JWT Protected)
 // =====================
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
-    Route::get('/kupon', [KuponController::class, 'aktif']);
+    Route::get('/kupon', [KuponController::class, 'index']);
     Route::post('/kupon/claim', [KuponController::class, 'claim']);
     Route::post('/kupon/pakai', [KuponController::class, 'pakai']);
 });

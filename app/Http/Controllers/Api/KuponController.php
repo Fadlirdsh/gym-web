@@ -10,99 +10,83 @@ use Carbon\Carbon;
 
 class KuponController extends Controller
 {
-    // Klaim kupon FREECLASS untuk akun pelanggan baru
-    public function claim(Request $request) // sebelumnya claimKupon
+    /**
+     * Lihat kupon user
+     */
+    public function index()
     {
         $user = Auth::guard('api')->user();
 
-        if ($user->created_at->lt(Carbon::now()->subDays(7))) {
-            return response()->json([
-                'message' => 'Kupon FREECLASS hanya untuk akun baru.'
-            ], 403);
+        $kupon = KuponPengguna::where('user_id', $user->id)->first();
+
+        if (!$kupon) {
+            return response()->json(['message' => 'Tidak ada kupon', 'kupon' => null], 200);
         }
 
-        $sudahPunyaKupon = KuponPengguna::where('user_id', $user->id)
-            ->where('kode_kupon', 'FREECLASS')
-            ->exists();
-
-        if ($sudahPunyaKupon) {
-            return response()->json([
-                'message' => 'Kamu sudah pernah klaim kupon FREECLASS.'
-            ], 400);
+        // cek expired
+        if (Carbon::now()->gt($kupon->berlaku_hingga) && $kupon->status != 'used') {
+            $kupon->status = 'expired';
+            $kupon->save();
         }
 
-        $kupon = KuponPengguna::create([
-            'user_id' => $user->id,
-            'kode_kupon' => 'FREECLASS',
-            'sudah_dipakai' => false,
-            'berlaku_hingga' => now()->addDays(7),
-        ]);
-
-        return response()->json([
-            'message' => 'Selamat! Kamu berhasil klaim kupon FREECLASS.',
-            'kupon' => $kupon
-        ], 201);
+        return response()->json(['kupon' => $kupon], 200);
     }
 
-    public function aktif(Request $request) // sebelumnya kupon
+    /**
+     * Klaim kupon user
+     */
+    public function claim()
+    {
+        $user = Auth::guard('api')->user();
+
+        $kupon = KuponPengguna::where('user_id', $user->id)->first();
+
+        if (!$kupon) {
+            return response()->json(['message' => 'Kupon tidak tersedia'], 404);
+        }
+
+        // cek expired
+        if (Carbon::now()->gt($kupon->berlaku_hingga)) {
+            $kupon->status = 'expired';
+            $kupon->save();
+            return response()->json(['message' => 'Kupon sudah kadaluarsa'], 400);
+        }
+
+        if ($kupon->status != 'pending') {
+            return response()->json(['message' => 'Kupon sudah diklaim atau tidak tersedia'], 400);
+        }
+
+        $kupon->status = 'claimed';
+        $kupon->save();
+
+        return response()->json(['message' => 'Kupon berhasil diklaim', 'kupon' => $kupon], 200);
+    }
+
+    /**
+     * Pakai kupon
+     */
+    public function pakai()
     {
         $user = Auth::guard('api')->user();
 
         $kupon = KuponPengguna::where('user_id', $user->id)
-            ->orderBy('berlaku_hingga', 'desc')
+            ->where('status', 'claimed')
             ->first();
 
         if (!$kupon) {
-            return response()->json(['message' => 'Tidak ada kupon aktif', 'kupon' => null], 200);
+            return response()->json(['message' => 'Kupon tidak ditemukan atau belum diklaim'], 404);
         }
 
-        if ($kupon->sudah_dipakai) {
-            return response()->json([
-                'message' => 'Kupon sudah dipakai',
-                'kupon' => $kupon
-            ], 200);
+        if (Carbon::now()->gt($kupon->berlaku_hingga)) {
+            $kupon->status = 'expired';
+            $kupon->save();
+            return response()->json(['message' => 'Kupon sudah kadaluarsa'], 400);
         }
 
-        if ($kupon->berlaku_hingga < now()) {
-            return response()->json([
-                'message' => 'Kupon sudah kadaluarsa',
-                'kupon' => null
-            ], 200);
-        }
-
-        return response()->json([
-            'message' => 'Kupon aktif ditemukan',
-            'kupon' => $kupon
-        ], 200);
-    }
-
-    public function pakai(Request $request)
-    {
-        $user = Auth::guard('api')->user();
-
-        $kupon = KuponPengguna::where('user_id', $user->id)
-            ->where('kode_kupon', 'FREECLASS')
-            ->first();
-
-        if (!$kupon) {
-            return response()->json([
-                'message' => 'Kupon tidak ditemukan.'
-            ], 404);
-        }
-
-        if ($kupon->sudah_dipakai) {
-            return response()->json([
-                'message' => 'Kupon sudah dipakai.',
-                'kupon' => $kupon
-            ], 200);
-        }
-
+        $kupon->status = 'used';
         $kupon->sudah_dipakai = true;
         $kupon->save();
 
-        return response()->json([
-            'message' => 'Kupon berhasil diklaim.',
-            'kupon' => $kupon
-        ], 200);
+        return response()->json(['message' => 'Kupon berhasil dipakai', 'kupon' => $kupon], 200);
     }
 }
