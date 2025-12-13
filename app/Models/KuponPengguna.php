@@ -14,30 +14,32 @@ class KuponPengguna extends Model
 
     protected $fillable = [
         'user_id',
-        'status',          // pending, claimed, used, expired
-        'sudah_dipakai',   // boolean
-        'berlaku_hingga',  // datetime
+        'status',
+        'berlaku_hingga',
+        'persentase_diskon',
+        'harga_setelah_diskon',
     ];
 
     protected $casts = [
-        'sudah_dipakai' => 'boolean',
         'berlaku_hingga' => 'datetime',
+        'persentase_diskon' => 'decimal:2',
+        'harga_setelah_diskon' => 'decimal:2',
     ];
 
     /**
-     * Relasi ke tabel users
+     * Relasi ke user
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
     /**
-     * Akses properti tambahan: apakah kupon masih berlaku?
+     * Properti apakah kupon masih valid
      */
     public function getMasihBerlakuAttribute()
     {
-        return in_array($this->status, ['pending', 'claimed']) 
+        return in_array($this->status, ['pending', 'claimed'])
             && Carbon::now()->lte($this->berlaku_hingga);
     }
 }
