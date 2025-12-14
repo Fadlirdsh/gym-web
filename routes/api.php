@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\Api\TokenPackageController;
+use App\Http\Controllers\Api\CheckoutController;
 
 // =====================
 // 🔹 ROUTE API KELAS (PUBLIC)
@@ -104,3 +105,7 @@ Route::post('/transaksi/callback', [TransaksiController::class, 'callback']);
 // TOKEN PACKAGES
 // =====================
 Route::apiResource('token-packages', TokenPackageController::class);
+
+
+// Checkout 
+Route::post('/checkout', [CheckoutController::class, 'checkout']);

@@ -10,13 +10,31 @@ return new class extends Migration
     {
         Schema::create('kupon_pengguna', function (Blueprint $table) {
             $table->id();
+
+            // User pemilik kupon (1 user = 1 kupon first time)
             $table->unsignedBigInteger('user_id');
-            $table->enum('status', ['pending', 'claimed', 'used', 'expired'])->default('pending');
-            $table->boolean('sudah_dipakai')->default(false); // opsional
-            $table->timestamp('berlaku_hingga'); // 7 hari sejak register
+
+            // Status kupon
+            $table->enum('status', ['pending', 'claimed', 'used', 'expired'])
+                  ->default('pending');
+
+            // Penanda kupon sudah dipakai
+            $table->boolean('sudah_dipakai')->default(false);
+
+            // Masa berlaku kupon (7 hari dari register)
+            $table->timestamp('berlaku_hingga');
+
+            // Diskon (diisi saat checkout)
+            $table->decimal('persentase_diskon', 5, 2)->nullable();
+            $table->decimal('harga_setelah_diskon', 10, 2)->nullable();
+
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // FK
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
         });
     }
 

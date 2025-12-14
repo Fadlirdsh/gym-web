@@ -17,8 +17,16 @@ class Transaksi extends Model
         'jenis',
         'source_id',
         'jumlah',
+        'diskon_persen',           // 🔥 baru
+        'total_setelah_diskon',    // 🔥 baru
         'metode',
         'status',
+    ];
+
+    protected $casts = [
+        'jumlah' => 'integer',
+        'diskon_persen' => 'integer',        // 🔥 baru
+        'total_setelah_diskon' => 'integer', // 🔥 baru
     ];
 
     /*
@@ -49,11 +57,23 @@ class Transaksi extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | ACCESSOR (otomatis format jumlah ke rupiah)
+    | ACCESSOR
     |--------------------------------------------------------------------------
     */
+
+    // Format jumlah
     public function getJumlahFormatAttribute()
     {
         return 'Rp ' . number_format($this->jumlah, 0, ',', '.');
+    }
+
+    // 🔥 Format total setelah diskon (kalau ada)
+    public function getTotalSetelahDiskonFormatAttribute()
+    {
+        if (!$this->total_setelah_diskon) {
+            return $this->jumlah_format; // fallback
+        }
+
+        return 'Rp ' . number_format($this->total_setelah_diskon, 0, ',', '.');
     }
 }

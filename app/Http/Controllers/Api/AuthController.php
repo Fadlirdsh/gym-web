@@ -95,6 +95,7 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'status' => 'pending',
             'berlaku_hingga' => now()->addDays(7),
+            'persentase_diskon' => 40, // FIRST TIME DISCOUNT
         ]);
 
         $token = JWTAuth::fromUser($user);
