@@ -91,6 +91,10 @@ Route::get('/schedule', [ScheduleApiController::class, 'index']);
 Route::get('/schedule/{id}', [ScheduleApiController::class, 'show']);
 Route::get('/trainer/schedule', [ScheduleApiController::class, 'byTrainer']);
 
+// backward compatibility
+Route::get('/schedules', [ScheduleApiController::class, 'index']);
+Route::get('/schedules/{id}', [ScheduleApiController::class, 'show']);
+
 
 // =====================
 // 🔹 MEMBER (JWT REQUIRED)
@@ -101,6 +105,9 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::get('/kelas', [MemberController::class, 'kelasMember']);
     Route::post('/bayar', [MemberController::class, 'bayarDummy']);
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
+
+    // 🔹 CEK STATUS MEMBERSHIP
+    Route::get('/status', [MemberController::class, 'checkStatus']);
 
     // TRANSAKSI
     Route::post('/transaksi/create', [TransaksiController::class, 'create']);
