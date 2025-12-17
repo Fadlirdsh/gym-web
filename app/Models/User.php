@@ -64,14 +64,6 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Relasi kupon pengguna (legacy / lama)
-     */
-    public function kupon()
-    {
-        return $this->hasOne(KuponPengguna::class, 'user_id');
-    }
-
-    /**
      * 🔥 Relasi voucher milik user (pivot: user_vouchers)
      */
     public function vouchers()
@@ -104,5 +96,10 @@ class User extends Authenticatable implements JWTSubject
     public function hasActiveMember()
     {
         return $this->member && $this->member->status === 'aktif';
+    }
+
+    public function trainerProfile()
+    {
+        return $this->hasOne(\App\Models\TrainerProfile::class);
     }
 }

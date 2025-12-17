@@ -35,7 +35,7 @@ return new class extends Migration
             $table->integer('total_bayar');
 
             // Kupon yang dipakai (optional)
-            $table->unsignedBigInteger('kupon_pengguna_id')->nullable();
+            // $table->unsignedBigInteger('kupon_pengguna_id')->nullable();
 
             // Metode pembayaran (midtrans, manual, transfer, dsb)
             $table->string('metode')->nullable();
@@ -47,7 +47,7 @@ return new class extends Migration
 
             // Relasi
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('kupon_pengguna_id')->references('id')->on('kupon_pengguna')->onDelete('set null');
+            // $table->foreign('kupon_pengguna_id')->references('id')->on('kupon_pengguna')->onDelete('set null');
         });
     }
 
