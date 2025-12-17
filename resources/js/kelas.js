@@ -31,33 +31,15 @@ function closeModal(modal) {
 ========================================================= */
 
 const modalCreate = document.getElementById("modalCreate");
-const btnCloseCreate = document.getElementById("btnCloseCreate");
-const btnCloseCreateBottom = document.getElementById("btnCloseCreateBottom");
 
-btnOpenCreate?.addEventListener("click", () => {
-    if (!modalCreate) return;
-    modalCreate.style.display = "flex";
-    modalCreate.style.alignItems = "center";
-    modalCreate.style.justifyContent = "center";
-    modalCreate.style.opacity = "0";
-    modalCreate.style.transition = "opacity 0.3s ease";
 
-    modalCreate.style.position = "fixed";
-    modalCreate.style.top = "0";
-    modalCreate.style.left = "0";
-    modalCreate.style.width = "100%";
-    modalCreate.style.height = "100%";
-    modalCreate.style.backgroundColor = "rgba(0,0,0,0.5)";
-    modalCreate.style.zIndex = "9999";
-
-    setTimeout(() => { modalCreate.style.opacity = "1"; }, 10);
+document.getElementById("btnOpenCreate")?.addEventListener("click", () => {
+    openModal(modalCreate);
 });
 
-[btnCloseCreate, btnCloseCreateBottom].forEach((btn) => {
-    btn?.addEventListener("click", () => {
-        if (!modalCreate) return;
-        modalCreate.style.opacity = "0";
-        setTimeout(() => { modalCreate.style.display = "none"; }, 300);
+["btnCloseCreate", "btnCloseCreateBottom"].forEach(id => {
+    document.getElementById(id)?.addEventListener("click", () => {
+        closeModal(modalCreate);
     });
 });
 
@@ -67,68 +49,42 @@ btnOpenCreate?.addEventListener("click", () => {
 
 const modalEdit = document.getElementById("modalEdit");
 const formEdit = document.getElementById("formEdit");
-const editTipe = document.getElementById("editTipe");
+
+const updateRouteTemplate = "/admin/kelas/:id";
+
 
 document.querySelectorAll(".btnOpenEdit").forEach(btn => {
     btn.addEventListener("click", () => {
-        if (!modalEdit) return;
 
-        modalEdit.style.display = "flex";
-        modalEdit.style.alignItems = "center";
-        modalEdit.style.justifyContent = "center";
-        modalEdit.style.opacity = "0";
-        modalEdit.style.transition = "opacity 0.3s ease";
+        openModal(modalEdit);
 
-        modalEdit.style.position = "fixed";
-        modalEdit.style.top = "0";
-        modalEdit.style.left = "0";
-        modalEdit.style.width = "100%";
-        modalEdit.style.height = "100%";
-        modalEdit.style.backgroundColor = "rgba(0,0,0,0.5)";
-        modalEdit.style.zIndex = "9999";
-
-        setTimeout(() => { modalEdit.style.opacity = "1"; }, 10);
-
-        // Atur route action form edit
+        // set action
         formEdit.action = updateRouteTemplate.replace(":id", btn.dataset.id);
 
-        // Isi data form edit
+        // fill form
         document.getElementById("editNama").value = btn.dataset.nama;
         document.getElementById("editHarga").value = btn.dataset.harga;
-        document.getElementById("tipePaketEdit").value = btn.dataset.paket;
         document.getElementById("editDeskripsi").value = btn.dataset.deskripsi;
         document.getElementById("editKapasitas").value = btn.dataset.kapasitas;
-        document.getElementById("editExpired").value = btn.dataset.expired;
-        editTipe.value = btn.dataset.tipe;
+        document.getElementById("editExpired").value = btn.dataset.expired ?? "";
+        document.getElementById("editTipe").value = btn.dataset.tipe;
     });
 });
 
-[btnCloseEdit, btnCloseEditBottom].forEach((btn) => {
-    btn?.addEventListener("click", () => {
-        if (!modalEdit) return;
-        modalEdit.style.opacity = "0";
-        setTimeout(() => { modalEdit.style.display = "none"; }, 300);
+["btnCloseEdit", "btnCloseEditBottom"].forEach(id => {
+    document.getElementById(id)?.addEventListener("click", () => {
+        closeModal(modalEdit);
     });
 });
 
-// ===============================
-// 📘 Tutup modal kalau klik di luar konten
-// ===============================
-window.addEventListener("click", (e) => {
-    if (e.target === modalCreate) {
-        modalCreate.style.opacity = "0";
-        setTimeout(() => { modalCreate.style.display = "none"; }, 300);
-    }
-    if (e.target === modalEdit) {
-        modalEdit.style.opacity = "0";
-        setTimeout(() => { modalEdit.style.display = "none"; }, 300);
-    }
-});
 
-// ===============================
-// 📘 Modal QR CODE Absen
-// ===============================
-async function openQrModal(id, nama) {
+/* =========================================================
+   MODAL QR — FIXED (NOW CAN OPEN MULTIPLE TIMES)
+========================================================= */
+
+window.openQrModal = async function (id, nama) {
+
+
     const modal = document.getElementById("qrModal");
     const qrTitle = document.getElementById("qrTitle");
     const qrContainer = document.getElementById("qrContainer");
@@ -139,51 +95,73 @@ async function openQrModal(id, nama) {
     `;
 
     qrTitle.textContent = "QR Absen: " + nama;
-    qrContainer.innerHTML = `<p class="text-gray-600 text-sm">Loading...</p>`;
 
-    modal.style.display = "flex";
-    modal.style.alignItems = "center";
-    modal.style.justifyContent = "center";
-    modal.style.opacity = "0";
-    modal.style.transition = "opacity 0.3s ease";
-    modal.style.position = "fixed";
-    modal.style.top = "0";
-    modal.style.left = "0";
-    modal.style.width = "100%";
-    modal.style.height = "100%";
-    modal.style.backgroundColor = "rgba(0,0,0,0.5)";
-    modal.style.zIndex = "9999";
 
-    setTimeout(() => { modal.style.opacity = "1"; }, 10);
+    // OPEN modal
+    openModal(modal);
 
     try {
         const response = await fetch(`/admin/kelas/${id}/qr`);
-        if (!response.ok) throw new Error("Network response was not ok");
 
         const result = await response.json();
 
         if (result.qr_svg) {
             qrContainer.innerHTML = result.qr_svg;
         } else if (result.qr_url) {
-            qrContainer.innerHTML = `<img src="${result.qr_url}" alt="QR Code" class="mx-auto">`;
+
+            qrContainer.innerHTML = `
+                <img src="${result.qr_url}" class="w-48 h-48 rounded-xl shadow-md mx-auto" />
+            `;
+        } else {
+            qrContainer.innerHTML =
+                `<p class="text-red-500 text-sm">QR tidak tersedia.</p>`;
         }
 
     } catch (error) {
-        console.error("QR Fetch Error:", error);
-        qrContainer.innerHTML = `<p class="text-red-600 text-sm">Gagal memuat QR!</p>`;
+        qrContainer.innerHTML =
+            `<p class="text-red-500 text-sm">Gagal memuat QR...</p>`;
+
     }
 };
 
-function closeQrModal() {
-    const modal = document.getElementById("qrModal");
-    modal.style.opacity = "0";
-    setTimeout(() => { modal.style.display = "none"; }, 300);
-}
 
-window.addEventListener("click", (e) => {
+window.closeQrModal = function () {
     const modal = document.getElementById("qrModal");
-    if (e.target === modal) closeQrModal();
+    closeModal(modal);
+};
+
+
+/* =========================================================
+   CLOSE MODAL WHEN CLICK OUTSIDE
+========================================================= */
+
+document.addEventListener("click", (e) => {
+    document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+        if (e.target === overlay) {
+            const modal = overlay.closest(".fixed");
+            closeModal(modal);
+        }
+    });
 });
 
-window.openQrModal = openQrModal;
-window.closeQrModal = closeQrModal;
+/* =========================================================
+   ESC SUPPORT
+========================================================= */
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        ["modalCreate", "modalEdit", "qrModal"].forEach(id => {
+            const modal = document.getElementById(id);
+            if (modal && !modal.classList.contains("hidden")) {
+                closeModal(modal);
+            }
+        });
+    }
+});
+
+/* =========================================================
+   Smooth Theme Transition
+========================================================= */
+
+document.documentElement.classList.add("transition", "duration-300");
+
