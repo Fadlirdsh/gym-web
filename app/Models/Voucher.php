@@ -5,7 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
-use App\Models\Kelas; // ✅ pastikan import Kelas
+use App\Models\Kelas;
+use App\Models\User;
 
 class Voucher extends Model
 {
@@ -30,6 +31,10 @@ class Voucher extends Model
         'tanggal_akhir' => 'date',
     ];
 
+    // =====================
+    // RELASI
+    // =====================
+
     /**
      * Relasi ke tabel kelas
      */
@@ -39,14 +44,32 @@ class Voucher extends Model
     }
 
     /**
+     * 🔥 Relasi ke user melalui pivot user_vouchers
+     */
+    public function users()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_vouchers',
+            'voucher_id',
+            'user_id'
+        )
+        ->withPivot('status')
+        ->withTimestamps();
+    }
+
+    // =====================
+    // HELPER
+    // =====================
+
+    /**
      * Cek apakah voucher masih berlaku
      */
     public function isValid()
     {
-        $today = Carbon::today();
-        return $this->status === 'aktif' &&
-               $today->between($this->tanggal_mulai, $this->tanggal_akhir) &&
-               $this->kuota > 0;
+        return $this->status === 'aktif'
+            && now()->between($this->tanggal_mulai, $this->tanggal_akhir)
+            && $this->kuota > 0;
     }
 
     /**
@@ -55,12 +78,11 @@ class Voucher extends Model
     public function useVoucher()
     {
         if ($this->kuota > 0) {
-            $this->kuota -= 1;
+            $this->decrement('kuota');
+
             if ($this->kuota <= 0) {
-                $this->status = 'nonaktif';
+                $this->update(['status' => 'nonaktif']);
             }
-            $this->save();
         }
     }
 }
-    

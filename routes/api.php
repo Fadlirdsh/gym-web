@@ -20,7 +20,6 @@ use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\TransaksiController;
 
-
 // =====================
 // 🔹 AUTH (LOGIN / REGISTER / GOOGLE)
 // =====================
@@ -48,7 +47,7 @@ Route::apiResource('kelas', KelasController::class);
 
 
 // =====================
-// 🔹 RESERVASI
+// 🔹 RESERVASI (JWT)
 // =====================
 Route::middleware(['jwt.auth', 'role:pelanggan'])
     ->apiResource('reservasi', ReservasiController::class);
@@ -79,9 +78,23 @@ Route::apiResource('diskon', DiskonController::class);
 
 
 // =====================
-// 🔹 VOUCHER (PUBLIC)
+// 🔹 VOUCHER
 // =====================
+
+// tampilkan voucher aktif (PUBLIC)
 Route::get('/vouchers', [VoucherController::class, 'index']);
+
+// klaim voucher (JWT + pelanggan)
+Route::middleware(['jwt.auth', 'role:pelanggan'])->post(
+    '/voucher/claim',
+    [VoucherController::class, 'claim']
+);
+
+// voucher milik user login
+Route::middleware(['jwt.auth', 'role:pelanggan'])->get(
+    '/vouchers/my',
+    [VoucherController::class, 'userVouchers']
+);
 
 
 // =====================
@@ -106,16 +119,16 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::post('/bayar', [MemberController::class, 'bayarDummy']);
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
 
-    // 🔹 CEK STATUS MEMBERSHIP
+    // cek status membership
     Route::get('/status', [MemberController::class, 'checkStatus']);
 
-    // TRANSAKSI
+    // transaksi
     Route::post('/transaksi/create', [TransaksiController::class, 'create']);
     Route::get('/transaksi', [TransaksiController::class, 'index']);
     Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
     Route::get('/transaksi/sync', [TransaksiController::class, 'sync']);
 
-    // MIDTRANS
+    // midtrans
     Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
     Route::post('/midtrans/token', [MidtransController::class, 'getSnapToken']);
 });
