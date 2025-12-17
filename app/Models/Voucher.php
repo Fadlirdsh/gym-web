@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use App\Models\Kelas;
+use App\Models\User;
 
 class Voucher extends Model
 {
@@ -24,8 +26,17 @@ class Voucher extends Model
         'status',
     ];
 
+    protected $casts = [
+        'tanggal_mulai' => 'date',
+        'tanggal_akhir' => 'date',
+    ];
+
+    // =====================
+    // RELASI
+    // =====================
+
     /**
-     * Relasi ke tabel kelas (opsional, jika ada tabel kelas)
+     * Relasi ke tabel kelas
      */
     public function kelas()
     {
@@ -33,27 +44,45 @@ class Voucher extends Model
     }
 
     /**
-     * Cek apakah voucher masih berlaku (aktif dan belum kedaluwarsa)
+     * 🔥 Relasi ke user melalui pivot user_vouchers
+     */
+    public function users()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'user_vouchers',
+            'voucher_id',
+            'user_id'
+        )
+        ->withPivot('status')
+        ->withTimestamps();
+    }
+
+    // =====================
+    // HELPER
+    // =====================
+
+    /**
+     * Cek apakah voucher masih berlaku
      */
     public function isValid()
     {
-        $today = Carbon::today();
-        return $this->status === 'aktif' &&
-               $today->between($this->tanggal_mulai, $this->tanggal_akhir) &&
-               $this->kuota > 0;
+        return $this->status === 'aktif'
+            && now()->between($this->tanggal_mulai, $this->tanggal_akhir)
+            && $this->kuota > 0;
     }
 
     /**
-     * Kurangi kuota setiap kali voucher digunakan
+     * Kurangi kuota saat voucher digunakan
      */
     public function useVoucher()
     {
         if ($this->kuota > 0) {
-            $this->kuota -= 1;
-            if ($this->kuota == 0) {
-                $this->status = 'nonaktif';
+            $this->decrement('kuota');
+
+            if ($this->kuota <= 0) {
+                $this->update(['status' => 'nonaktif']);
             }
-            $this->save();
         }
     }
 }

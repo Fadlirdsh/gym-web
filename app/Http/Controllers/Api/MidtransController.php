@@ -40,9 +40,8 @@ class MidtransController extends Controller
         ]);
     }
 
-
     // ==============================
-    // 2. CONTROLLER UNTUK TESTING (PASTI WORK)
+    // 2. CONTROLLER UNTUK TESTING
     // ==============================
     public function testTransaction()
     {
@@ -60,8 +59,15 @@ class MidtransController extends Controller
         ]);
     }
 
+    // ==============================
+    // 3. TOKEN UNTUK BOOKING KELAS
+    // ==============================
     public function getSnapToken(Request $request)
     {
+        // 🔥 Log setiap request yang masuk dari front-end
+        \Log::info("MIDTRANS REQUEST:", $request->all());
+
+        // Validasi wajib
         $request->validate([
             'paket_id' => 'required|integer',
             'harga' => 'required|integer',
@@ -69,28 +75,43 @@ class MidtransController extends Controller
             'maks_kelas' => 'required|integer',
         ]);
 
-        $params = [
-            'transaction_details' => [
-                'order_id' => uniqid("ORD-"),
-                'gross_amount' => $request->harga,
-            ],
-            'item_details' => [
-                [
-                    'id' => $request->paket_id,
-                    'price' => $request->harga,
-                    'quantity' => 1,
-                    'name' => $request->tipe_kelas,
+        try {
+            $params = [
+                'transaction_details' => [
+                    'order_id' => uniqid("ORD-"),
+                    'gross_amount' => $request->harga,
+                ],
+                'item_details' => [
+                    [
+                        'id' => $request->paket_id,
+                        'price' => $request->harga,
+                        'quantity' => 1,
+                        'name' => $request->tipe_kelas,
+                    ]
+                ],
+                'customer_details' => [
+                    'first_name' => auth()->user()->name ?? "User",
                 ]
-            ],
-            'customer_details' => [
-                'first_name' => auth()->user()->name ?? "User",
-            ]
-        ];
+            ];
 
-        $snapToken = Snap::getSnapToken($params);
+            // 🔥 Log parameter final ke Midtrans
+            \Log::info("MIDTRANS PARAMS:", $params);
 
-        return response()->json([
-            'snapToken' => $snapToken
-        ]);
+            // Ambil snap token dari Midtrans
+            $snapToken = Snap::getSnapToken($params);
+
+            return response()->json([
+                'snapToken' => $snapToken
+            ]);
+
+        } catch (\Exception $e) {
+            // 🔥 Log error detail
+            \Log::error("MIDTRANS ERROR: " . $e->getMessage());
+
+            return response()->json([
+                'error' => true,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
