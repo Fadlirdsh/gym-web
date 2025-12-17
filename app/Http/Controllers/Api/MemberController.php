@@ -11,10 +11,20 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class MemberController extends Controller
 {
-    // 🔄 Auto Expire Member
+    /**
+     * 🔄 Auto expire member:
+     * - Jika tanggal berakhir lewat → nonaktif
+     * - Jika token habis → nonaktif
+     */
     private function autoExpireMember()
     {
+        // 1. Tanggal berakhir lewat
         Member::where('tanggal_berakhir', '<', now())
+            ->where('status', 'aktif')
+            ->update(['status' => 'nonaktif']);
+
+        // 2. Token habis
+        Member::where('token_sisa', '<=', 0)
             ->where('status', 'aktif')
             ->update(['status' => 'nonaktif']);
     }
@@ -50,7 +60,7 @@ class MemberController extends Controller
             'token_sisa' => $request->maks_kelas,
             'tanggal_mulai' => now(),
             'tanggal_berakhir' => now()->addMonth(),
-            'status' => 'pending', // tetap pending sampai bayar
+            'status' => 'pending',
         ]);
 
         return response()->json([
@@ -96,7 +106,7 @@ class MemberController extends Controller
             ]);
         }
 
-        // Ambil kelas yang sesuai tipe member
+        // Ambil kelas sesuai tipe
         $kelasList = Kelas::where('tipe_kelas', $member->tipe_kelas)->get();
 
         return response()->json([
@@ -111,7 +121,7 @@ class MemberController extends Controller
         ]);
     }
 
-    // 4️⃣ Ikut kelas & kurangi token global member
+    // 4️⃣ Ikut kelas & kurangi token → auto nonaktif jika habis
     public function ikutKelas(Request $request)
     {
         $this->autoExpireMember();
@@ -127,14 +137,14 @@ class MemberController extends Controller
             ->where('status', 'aktif')
             ->first();
 
-        // User belum member atau nonaktif → hanya bisa ikut General
+        // Belum member → hanya General
         if (!$member) {
             return response()->json([
                 'message' => 'Anda belum memiliki membership aktif. Hanya bisa ikut paket General.'
             ], 403);
         }
 
-        // Pastikan token hanya untuk tipe kelas yang sama
+        // Cocokkan tipe kelas
         if ($kelas->tipe_kelas !== $member->tipe_kelas) {
             return response()->json([
                 'message' => "Kelas ini tidak termasuk paket membership Anda ({$member->tipe_kelas})."
@@ -143,19 +153,27 @@ class MemberController extends Controller
 
         // Cek token
         if ($member->token_sisa <= 0) {
+            $member->update(['status' => 'nonaktif']);
             return response()->json([
-                'message' => 'Token Anda habis. Silakan perpanjang membership.'
+                'message' => 'Token habis. Membership otomatis nonaktif.'
             ], 403);
         }
 
         // Kurangi token
         $member->token_terpakai += 1;
         $member->token_sisa -= 1;
+
+        // Kalau token habis → langsung nonaktif
+        if ($member->token_sisa <= 0) {
+            $member->status = 'nonaktif';
+        }
+
         $member->save();
 
         return response()->json([
             'message' => 'Berhasil ikut kelas',
-            'token_sisa' => $member->token_sisa
+            'token_sisa' => $member->token_sisa,
+            'status_member' => $member->status
         ]);
     }
 
@@ -174,7 +192,6 @@ class MemberController extends Controller
             return response()->json(['message' => 'Member sudah aktif'], 400);
         }
 
-        // Simulasi pembayaran sukses
         $member->update([
             'status' => 'aktif',
             'tanggal_mulai' => now(),

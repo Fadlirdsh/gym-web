@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -11,6 +10,9 @@ class User extends Authenticatable implements JWTSubject
 {
     use Notifiable;
 
+    /**
+     * Kolom yang bisa diisi mass assignment
+     */
     protected $fillable = [
         'name',
         'email',
@@ -19,6 +21,9 @@ class User extends Authenticatable implements JWTSubject
         'phone',
     ];
 
+    /**
+     * Kolom yang disembunyikan
+     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -27,6 +32,7 @@ class User extends Authenticatable implements JWTSubject
     // =====================
     // JWT
     // =====================
+
     public function getJWTIdentifier()
     {
         return $this->getKey();
@@ -42,8 +48,7 @@ class User extends Authenticatable implements JWTSubject
     // =====================
 
     /**
-     * Setiap user bisa memiliki satu data member.
-     * (user_id di tabel members)
+     * Setiap user memiliki satu data member
      */
     public function member()
     {
@@ -51,8 +56,7 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Jika di masa depan user dikaitkan ke kelas tertentu
-     * misalnya pelanggan tetap punya kelas aktif.
+     * Relasi kelas (opsional)
      */
     public function kelas()
     {
@@ -60,19 +64,34 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Relasi opsional untuk kupon pengguna
+     * Relasi kupon pengguna (legacy / lama)
      */
     public function kupon()
     {
         return $this->hasOne(KuponPengguna::class, 'user_id');
     }
 
+    /**
+     * 🔥 Relasi voucher milik user (pivot: user_vouchers)
+     */
+    public function vouchers()
+    {
+        return $this->belongsToMany(
+            Voucher::class,
+            'user_vouchers',
+            'user_id',
+            'voucher_id'
+        )
+        ->withPivot('status')
+        ->wherePivot('status', 'aktif');
+    }
+
     // =====================
-    // HELPER ATTRIBUTE
+    // HELPER
     // =====================
 
     /**
-     * Cek apakah user ini adalah pelanggan.
+     * Cek apakah user adalah pelanggan
      */
     public function isPelanggan()
     {
@@ -80,7 +99,7 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Cek apakah user punya member aktif.
+     * Cek apakah user punya member aktif
      */
     public function hasActiveMember()
     {
