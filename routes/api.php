@@ -10,9 +10,10 @@ use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\MidtransController;
+use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\Api\TokenPackageController;
 use App\Http\Controllers\Api\CheckoutController;
-use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\Api\TrainerProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,21 +23,23 @@ use App\Http\Controllers\TransaksiController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
-Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('jwt.refresh');
+
+Route::middleware('jwt.auth')->post('/logout', [AuthController::class, 'logout']);
+Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refresh']);
 
 /*
 |--------------------------------------------------------------------------
-| USER LOGIN DATA (JWT)
+| ME (JWT – ALL ROLES)
 |--------------------------------------------------------------------------
+| 👉 SATU-SATUNYA endpoint identitas login
 */
-Route::middleware(['jwt.auth', 'role:pelanggan'])->get('/user', function () {
+Route::middleware('jwt.auth')->get('/me', function () {
     return auth()->user();
 });
 
 /*
 |--------------------------------------------------------------------------
-| KELAS (PUBLIC - READ ONLY)
+| KELAS (PUBLIC)
 |--------------------------------------------------------------------------
 */
 Route::get('/kelas', [KelasController::class, 'index']);
@@ -44,67 +47,78 @@ Route::get('/kelas/{id}', [KelasController::class, 'show']);
 
 /*
 |--------------------------------------------------------------------------
-| TRAINER (PUBLIC)
+| RESERVASI (JWT – PELANGGAN)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['jwt.auth', 'role:pelanggan'])
+    ->apiResource('reservasi', ReservasiController::class);
+
+/*
+|--------------------------------------------------------------------------
+| TRAINER (PUBLIC LIST)
 |--------------------------------------------------------------------------
 */
 Route::get('/users/trainer', [UserController::class, 'getTrainers']);
 
 /*
 |--------------------------------------------------------------------------
-| SCHEDULE (PUBLIC)
+| DISKON (TETAP)
+|--------------------------------------------------------------------------
+*/
+Route::apiResource('diskon', DiskonController::class);
+
+/*
+|--------------------------------------------------------------------------
+| SCHEDULE
 |--------------------------------------------------------------------------
 */
 Route::get('/schedule', [ScheduleApiController::class, 'index']);
 Route::get('/schedule/{id}', [ScheduleApiController::class, 'show']);
-Route::get('/trainer/schedule', [ScheduleApiController::class, 'byTrainer']);
+
+Route::middleware(['jwt.auth', 'role:trainer'])
+    ->get('/trainer/schedule', [ScheduleApiController::class, 'byTrainer']);
 
 /*
 |--------------------------------------------------------------------------
-| DISKON
-|--------------------------------------------------------------------------
-| - Pelanggan: READ ONLY
-| - CRUD: BUKAN PUBLIC (admin saja, kalau ada)
-*/
-Route::get('/diskon', [DiskonController::class, 'index']);
-Route::get('/diskon/{id}', [DiskonController::class, 'show']);
-
-/*
-|--------------------------------------------------------------------------
-| RESERVASI (JWT - PELANGGAN)
+| MEMBER (JWT)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
-    Route::apiResource('reservasi', ReservasiController::class);
-});
+Route::prefix('member')->middleware('jwt.auth')->group(function () {
 
-/*
-|--------------------------------------------------------------------------
-| MEMBER (JWT - PELANGGAN)
-|--------------------------------------------------------------------------
-*/
-Route::prefix('member')->middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
-
-    // membership
-    Route::post('/', [MemberController::class, 'store']);
+    Route::post('/store', [MemberController::class, 'store']);
     Route::get('/kelas', [MemberController::class, 'kelasMember']);
     Route::post('/bayar', [MemberController::class, 'bayarDummy']);
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
-    Route::get('/status', [MemberController::class, 'checkStatus']);
-
-    // transaksi
-    Route::post('/transaksi', [TransaksiController::class, 'create']);
-    Route::get('/transaksi', [TransaksiController::class, 'index']);
-    Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
     Route::get('/transaksi/sync', [TransaksiController::class, 'sync']);
 
-    // midtrans
+    // MIDTRANS
     Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
     Route::post('/midtrans/token', [MidtransController::class, 'getSnapToken']);
+
+    // TRANSAKSI
+    Route::post('/transaksi/create', [TransaksiController::class, 'create']);
+    Route::get('/transaksi', [TransaksiController::class, 'index']);
+    Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
 });
 
 /*
 |--------------------------------------------------------------------------
-| CHECKOUT (JWT - PELANGGAN)
+| MIDTRANS CALLBACK (NO AUTH)
+|--------------------------------------------------------------------------
+*/
+Route::post('/transaksi/store', [TransaksiController::class, 'store']);
+Route::post('/transaksi/callback', [TransaksiController::class, 'callback']);
+
+/*
+|--------------------------------------------------------------------------
+| TOKEN PACKAGES
+|--------------------------------------------------------------------------
+*/
+Route::apiResource('token-packages', TokenPackageController::class);
+
+/*
+|--------------------------------------------------------------------------
+| CHECKOUT (JWT – PELANGGAN)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
@@ -114,17 +128,11 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| TOKEN PACKAGES (PUBLIC READ)
+| TRAINER PROFILE (JWT – TRAINER)
 |--------------------------------------------------------------------------
 */
-Route::get('/token-packages', [TokenPackageController::class, 'index']);
-Route::get('/token-packages/{id}', [TokenPackageController::class, 'show']);
+Route::middleware(['jwt.auth', 'role:trainer'])->group(function () {
 
-/*
-|--------------------------------------------------------------------------
-| MIDTRANS CALLBACK (NO AUTH)
-|--------------------------------------------------------------------------
-| ⚠️ HARUS SATU PINTU
-*/
-Route::post('/transaksi/store', [TransaksiController::class, 'store']);
-Route::post('/transaksi/callback', [TransaksiController::class, 'callback']);
+    Route::get('/trainer/profile', [TrainerProfileController::class, 'show']);
+    Route::post('/trainer/profile', [TrainerProfileController::class, 'store']);
+});
