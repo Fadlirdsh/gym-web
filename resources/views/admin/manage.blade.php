@@ -4,334 +4,292 @@
 
 @section('content')
 
-{{-- ============================ --}}
-{{-- GLOBAL FIX STYLE (LIGHT MODE) --}}
-{{-- ============================ --}}
 <style>
+/* =========================================================
+   UNIVERSAL UI MODERN - Light & Dark - Glassmorphism Style
+   ========================================================= */
 
-  /* Light mode card fix */
-  .card-light {
-    background: #ffffff !important;
-    border: 1px solid rgba(0,0,0,0.08) !important;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06) !important;
-  }
-
-  /* Dark mode card fix */
-  .card-dark {
-    background: rgba(31,41,55,0.9) !important;
-    border: 1px solid rgba(148,163,184,0.2) !important;
+/* Card */
+.card {
+    background-color: #f8fafc;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     backdrop-filter: blur(8px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
-  }
+    transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+}
+@media (prefers-color-scheme: dark) {
+    .card {
+        background-color: rgba(31,41,55,0.8);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        backdrop-filter: blur(12px);
+    }
+}
 
-  /* Input fix */
-  .input-fix {
-    background: #ffffff !important;
-    border: 1px solid rgba(0,0,0,0.15) !important;
-    color: #1e293b !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
+/* Input & Select */
+.input-fix {
+    background-color: rgba(255,255,255,0.85);
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: #1e293b;
+    font-size: 1rem;
+    width: 100%;
+    transition: all 0.3s;
+}
+.input-fix:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.25);
+    outline: none;
+}
+@media (prefers-color-scheme: dark) {
     .input-fix {
-      background: #0f172a !important;
-      border-color: rgba(148,163,184,0.25) !important;
-      color: #e2e8f0 !important;
+        background-color: rgba(255,255,255,0.08);
+        color: #f1f5f9;
+        border: 1px solid rgba(255,255,255,0.25);
     }
-  }
+    .input-fix:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.3);
+    }
+}
 
-  /* Table header fix */
-  .thead-light {
-    background: #f1f5f9 !important;
+/* Button */
+button {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s;
+}
+button:hover {
+    cursor: pointer;
+    transform: translateY(-1px);
+}
+
+/* Table */
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 100%;
+}
+table th, table td {
+    padding: 0.75rem 1rem;
+}
+table tr {
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+table tr:hover {
+    background-color: rgba(0,0,0,0.03);
+}
+@media (prefers-color-scheme: dark) {
+    table tr:hover {
+        background-color: rgba(255,255,255,0.05);
+    }
+}
+
+/* Table Head */
+.thead-light {
+    background: #f8fafc !important;
     color: #1e293b !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
+}
+@media (prefers-color-scheme: dark) {
     .thead-light {
-      background: rgba(51,65,85,0.6) !important;
-      color: #f8fafc !important;
+        background: rgba(51,65,85,0.6) !important;
+        color: #e2e8f0 !important;
     }
-  }
+}
 
-  /* Divider fix */
-  .border-fix {
-    border-color: rgba(0,0,0,0.12) !important;
-  }
+/* Badges */
+.badge-green {
+    background-color: rgba(16,185,129,0.2);
+    color: #10b981;
+    border-radius: 8px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.badge-red {
+    background-color: rgba(239,68,68,0.2);
+    color: #ef4444;
+    border-radius: 8px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
 
-  @media (prefers-color-scheme: dark) {
-    .border-fix {
-      border-color: rgba(148,163,184,0.2) !important;
+/* Mobile Table Responsive */
+@media (max-width: 640px) {
+    .table-wrapper {
+        overflow-x: auto;
     }
-  }
-
-  /* Modal */
-  .modal-white {
-    background: #ffffff !important;
-    border: 1px solid rgba(0,0,0,0.12) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2) !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .modal-white {
-      background: #1e293b !important;
-      border-color: rgba(148,163,184,0.25) !important;
+    table thead {
+        display: none;
     }
-  }
-
-  /* Badge fix */
-  .badge-green {
-    background: #d1fae5 !important;
-    color: #065f46 !important;
-    border: 1px solid #6ee7b7 !important;
-  }
-
-  .badge-red {
-    background: #fee2e2 !important;
-    color: #991b1b !important;
-    border: 1px solid #fca5a5 !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .badge-green {
-      background: rgba(16,185,129,0.2) !important;
-      color: #6ee7b7 !important;
-      border-color: rgba(16,185,129,0.4) !important;
+    table tbody tr {
+        display: block;
+        padding: 14px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        transition: all 0.2s;
     }
-
-    .badge-red {
-      background: rgba(239,68,68,0.2) !important;
-      color: #fca5a5 !important;
-      border-color: rgba(239,68,68,0.4) !important;
+    table tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 14px;
     }
-  }
+    table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #64748b;
+        flex-basis: 45%;
+    }
+}
 
+/* Tooltip */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+.tooltip .tooltip-text {
+    visibility: hidden;
+    width: max-content;
+    max-width: 200px;
+    background-color: rgba(0,0,0,0.75);
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 5px 8px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 0.75rem;
+}
+.tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Body transition */
+body {
+    transition: background 0.3s, color 0.3s;
+}
 </style>
-
 
 <div class="container mx-auto px-4 py-8 space-y-10">
 
-
-    {{-- SUCCESS MESSAGE --}}
+    {{-- SUCCESS ALERT --}}
     @if (session('success'))
-        <div class="mb-6 rounded-lg card-light dark:card-dark
-                    text-green-700 dark:text-green-300 px-4 py-3 text-sm transition">
+        <div class="p-4 rounded-xl card text-green-700 dark:text-green-300 shadow">
             {{ session('success') }}
         </div>
     @endif
 
-
-
-    <!-- ========================== -->
-    <!-- FORM BUAT AKUN -->
-    <!-- ========================== -->
-    <div class="rounded-2xl p-6 card-light dark:card-dark transition">
-
-        <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-            Tambah Akun
+    <!-- FORM TAMBAH AKUN -->
+    <div class="card p-6 space-y-4">
+        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-5">
+            Tambah Akun Baru
         </h2>
-
-        <form action="{{ route('users.store') }}" method="POST" class="space-y-3">
+        <form action="{{ route('users.store') }}" method="POST" class="space-y-4">
             @csrf
-
-            <input type="text" name="name" placeholder="Nama"
-                class="p-3 rounded-lg w-full input-fix dark:input-fix" required>
-
-            <input type="email" name="email" placeholder="Email"
-                class="p-3 rounded-lg w-full input-fix dark:input-fix" required>
-
-            <input type="password" name="password" placeholder="Password"
-                class="p-3 rounded-lg w-full input-fix dark:input-fix" required>
-
-            <input type="password" name="password_confirmation" placeholder="Konfirmasi Password"
-                class="p-3 rounded-lg w-full input-fix dark:input-fix" required>
-
-
-            {{-- PHONE --}}
-            <div class="flex w-full">
-                <span class="p-3 rounded-l-lg input-fix dark:input-fix font-semibold flex items-center border-r-0">
-                    +62
-                </span>
-
-                <input type="text" name="phone" placeholder="81234567890"
-                    class="p-3 rounded-r-lg w-full input-fix dark:input-fix border-l-0"
-                    required pattern="[0-9]{6,15}">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" name="name" placeholder="Nama Lengkap" class="input-fix" required>
+                <input type="email" name="email" placeholder="Email" class="input-fix" required>
             </div>
-
-            {{-- ROLE --}}
-            <select name="role"
-                class="p-3 rounded-lg w-full input-fix dark:input-fix" required>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="password" name="password" placeholder="Password" class="input-fix" required>
+                <input type="password" name="password_confirmation" placeholder="Konfirmasi Password" class="input-fix" required>
+            </div>
+            <div class="flex w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
+                <span class="px-4 py-3 bg-gray-200 dark:bg-gray-700 font-semibold border-r">+62</span>
+                <input type="text" name="phone" placeholder="81234567890" class="input-fix border-none w-full" required>
+            </div>
+            <select name="role" class="input-fix w-full" required>
                 <option value="">-- Pilih Role --</option>
                 <option value="pelanggan">Pelanggan</option>
                 <option value="trainer">Trainer</option>
             </select>
-
-            <button type="submit"
-                class="mt-3 bg-indigo-600 hover:bg-indigo-500 
-                       px-5 py-2.5 rounded-lg font-semibold text-white shadow">
+            <button class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white tooltip">
                 + Buat Akun
+                <span class="tooltip-text">Klik untuk menambahkan akun baru</span>
             </button>
         </form>
     </div>
 
-    <!-- ========================== -->
-    <!-- TABLE USER -->
-    <!-- ========================== -->
-    <div class="rounded-2xl shadow-lg overflow-hidden card-light dark:card-dark">
-
-        <div class="p-4 border-b border-fix flex justify-between items-center">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">
+    <!-- TABEL USER -->
+    <div class="card shadow-lg overflow-hidden">
+        <div class="p-4 border-b border-gray-300 dark:border-gray-600 flex justify-between items-center">
+            <h2 class="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
                 Daftar User & Member
             </h2>
-
             <span class="text-sm text-gray-600 dark:text-gray-400">
                 {{ count($members) }} data ditemukan
             </span>
         </div>
 
-
-        {{-- =========================== --}}
-        {{-- FORM BUAT MEMBER --}}
-        {{-- =========================== --}}
-       
-
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-
+        <div class="table-wrapper overflow-x-auto">
+            <table class="min-w-full text-sm md:text-base">
                 <thead class="thead-light">
                     <tr>
-                        <th class="px-4 py-3">No</th>
-                        <th class="px-4 py-3">Nama</th>
-                        <th class="px-4 py-3">Email</th>
-                        <th class="px-4 py-3">Role</th>
-                        <th class="px-4 py-3">Member Status</th>
-                        <th class="px-4 py-3 text-center">Aksi</th>
+                        <th>No</th>
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status Member</th>
+                        <th class="text-center">Aksi</th>
                     </tr>
                 </thead>
-
                 <tbody>
-                    @forelse ($members as $index => $user)
-                    <tr class="border-b border-fix hover:bg-gray-100 dark:hover:bg-gray-700/30 transition">
-
-                        <td class="px-4 py-3">{{ $index + 1 }}</td>
-
-                        <td class="px-4 py-3 font-semibold text-gray-800 dark:text-white">
-                            {{ $user->name }}
-                        </td>
-
-                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">
-                            {{ $user->email }}
-                        </td>
-
-                        <td class="px-4 py-3 capitalize text-gray-700 dark:text-gray-300">
-                            {{ $user->role }}
-                        </td>
-
-                        <td class="px-4 py-3">
-                            @if ($user->member)
-                                <span class="px-2 py-1 rounded text-xs font-medium
-                                    {{ $user->member->status === 'aktif' ? 'badge-green' : 'badge-red' }}">
-                                    {{ ucfirst($user->member->status) }}
-                                </span>
-                            @else
-                                <span class="text-gray-500 dark:text-gray-400 text-xs italic">
-                                    Belum jadi member
-                                </span>
-                            @endif
-                        </td>
-
-                        <td class="px-4 py-3 text-center space-x-2">
-
-                            {{-- Edit --}}
-                            <button onclick="openEditModal({{ $user->id }}, '{{ $user->name }}', '{{ $user->email }}')"
-                                class="bg-yellow-400 hover:bg-yellow-300 text-black font-semibold 
-                                       px-3 py-1.5 rounded-lg transition">
-                                Edit
-                            </button>
-
-                            {{-- Delete --}}
-                            <form action="{{ route('users.destroy', $user->id) }}" method="POST"
-                                class="inline-block"
-                                onsubmit="return confirm('Yakin ingin menghapus pengguna ini?')">
-
-                                @csrf
-                                @method('DELETE')
-
-                                <button type="submit"
-                                    class="bg-red-500 hover:bg-red-400 text-white font-semibold 
-                                           px-3 py-1.5 rounded-lg transition">
-                                    Hapus
-                                </button>
-                            </form>
-
-                        </td>
-
-                    </tr>
-                    @empty
-
-                    <tr>
-                        <td colspan="6" class="text-center text-gray-600 dark:text-gray-400 py-6">
-                            Belum ada pelanggan terdaftar.
-                        </td>
-                    </tr>
-
-                    @endforelse
+                    @foreach ($members as $index => $user)
+                        <tr>
+                            <td data-label="No">{{ $index + 1 }}</td>
+                            <td data-label="Nama" class="font-semibold text-gray-900 dark:text-white">{{ $user->name }}</td>
+                            <td data-label="Email" class="text-gray-700 dark:text-gray-300">{{ $user->email }}</td>
+                            <td data-label="Role" class="capitalize text-gray-700 dark:text-gray-300">{{ $user->role }}</td>
+                            <td data-label="Status">
+                                @if ($user->member)
+                                    <span class="badge-{{ $user->member->status === 'aktif' ? 'green' : 'red' }}">
+                                        {{ ucfirst($user->member->status) }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-500 dark:text-gray-400 text-xs italic">
+                                        Belum jadi member
+                                    </span>
+                                @endif
+                            </td>
+                            <td data-label="Aksi" class="text-center space-x-2">
+                                <div class="flex justify-center items-center gap-2">
+                                    <a href="{{ route('users.edit', $user->id) }}"
+                                        class="bg-yellow-400 hover:bg-yellow-300 text-black font-semibold px-3 py-1.5 rounded-lg tooltip">
+                                        Edit
+                                        <span class="tooltip-text">Ubah data user</span>
+                                    </a>
+                                    <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="inline-block"
+                                        onsubmit="return confirm('Yakin ingin menghapus pengguna ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="bg-red-500 hover:bg-red-400 text-white px-3 py-1.5 rounded-lg tooltip">
+                                            Hapus
+                                            <span class="tooltip-text">Hapus user dari sistem</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                 </tbody>
-
             </table>
         </div>
     </div>
 
-
-
-    <!-- ========================== -->
-    <!-- MODAL EDIT USER -->
-    <!-- ========================== -->
-    <div id="editModal" class="fixed inset-0 bg-black/60 z-50 hidden">
-        <div class="flex items-center justify-center w-full h-full">
-            <div class="modal-white p-6 rounded-xl w-full max-w-lg transition">
-
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-                    Edit User
-                </h2>
-
-                <form id="editForm" method="POST">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="mb-3">
-                        <label class="text-gray-700 dark:text-gray-300">Nama</label>
-                        <input id="editName" type="text" name="name"
-                            class="w-full input-fix dark:input-fix px-3 py-2 rounded-lg" required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="text-gray-700 dark:text-gray-300">Email</label>
-                        <input id="editEmail" type="email" name="email"
-                            class="w-full input-fix dark:input-fix px-3 py-2 rounded-lg" required />
-                    </div>
-
-                    <div class="flex justify-end gap-2 mt-6">
-                        <button type="button" onclick="closeModal()"
-                            class="px-4 py-2 bg-gray-300 dark:bg-gray-700 
-                                   dark:text-white rounded-lg">
-                            Batal
-                        </button>
-
-                        <button type="submit"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-500 
-                                   text-white rounded-lg">
-                            Simpan
-                        </button>
-                    </div>
-
-                </form>
-
-            </div>
-        </div>
-    </div>
-
-
 </div>
-
-@vite('resources/js/manage.js')
 
 @endsection

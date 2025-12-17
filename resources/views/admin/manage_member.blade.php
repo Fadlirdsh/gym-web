@@ -1,80 +1,291 @@
 @extends('layout.app')
 
+@section('title', 'Manage Member')
+
 @section('content')
-    <div class="max-w-6xl mx-auto px-4 py-10 space-y-12">
 
-        {{-- HEADER --}}
-        <div>
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white">
-                Manage Member
-            </h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Kelola member dan paket token.
-            </p>
-        </div>
 
-        {{-- FLASH MESSAGE --}}
+    <style>
+        /* =========================================================
+       UNIVERSAL UI MODERN - Light & Dark - Glassmorphism Style
+       ========================================================= */
+
+        /* Card */
+        .card {
+            background-color: #f8fafc;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(8px);
+            transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .card {
+                background-color: rgba(31, 41, 55, 0.8);
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(12px);
+            }
+        }
+
+        /* Input & Select */
+        .input-fix {
+            background-color: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            color: #1e293b;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23636fef' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+        }
+
+        .input-fix:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+            outline: none;
+        }
+
+        /* Dark mode for input/select and options */
+        @media (prefers-color-scheme: dark) {
+            .input-fix {
+                background-color: rgba(255, 255, 255, 0.08);
+                color: #f1f5f9;
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23f1f5f9' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            }
+
+            .input-fix:focus {
+                border-color: #6366f1;
+                box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+            }
+
+            /* Make dropdown options visible in dark mode */
+            select.input-fix option {
+                background-color: rgba(31, 41, 55, 0.95) !important;
+                color: #f1f5f9 !important;
+            }
+        }
+
+        /* Buttons */
+        button {
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            cursor: pointer;
+            transform: translateY(-1px);
+        }
+
+        /* Table */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 100%;
+        }
+
+        table th,
+        table td {
+            padding: 0.75rem 1rem;
+        }
+
+        table tr {
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        table tr:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            table tr:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        /* Table Head */
+        .thead-light {
+            background: #f8fafc !important;
+            color: #1e293b !important;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .thead-light {
+                background: rgba(51, 65, 85, 0.6) !important;
+                color: #e2e8f0 !important;
+            }
+        }
+
+        /* Badges */
+        .badge-green {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border-radius: 8px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-red {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border-radius: 8px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: max-content;
+            max-width: 200px;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 5px 8px;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 0.75rem;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Body transition */
+        body {
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Grid spacing for forms */
+        .grid-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        @media(min-width: 768px) {
+            .grid-form-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid-form-3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Header theme-aware */
+        .card h2 {
+            color: #111827;
+            /* Light mode */
+            transition: color 0.3s ease;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .card h2 {
+                color: #f3f4f6;
+                /* Dark mode */
+            }
+        }
+    </style>
+
+    <div class="container mx-auto px-4 py-8 space-y-10">
+
+        {{-- SUCCESS ALERT --}}
         @if (session('success'))
-            <div
-                class="rounded-lg bg-green-100 text-green-700 border border-green-300
-                    dark:bg-green-600/20 dark:text-green-300 dark:border-green-500/40
-                    px-5 py-3 text-sm">
+            <div class="p-4 rounded-xl card text-green-700 dark:text-green-300 shadow">
                 {{ session('success') }}
             </div>
         @endif
 
-        @if (session('error'))
-            <div
-                class="rounded-lg bg-red-100 text-red-700 border border-red-300
-                    dark:bg-red-600/20 dark:text-red-300 dark:border-red-500/40
-                    px-5 py-3 text-sm">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        {{-- ACTION BUTTON --}}
-        <div class="flex gap-3">
-            <button id="openMemberModal"
-                class="bg-indigo-600 hover:bg-indigo-500 text-white
-                   px-4 py-2 rounded-lg text-sm font-medium shadow">
-                + Tambah Member
-            </button>
-
-            <button id="openTokenModal"
-                class="bg-gray-800 hover:bg-gray-700 text-white
-                   px-4 py-2 rounded-lg text-sm font-medium shadow">
-                + Tambah Paket Token
-            </button>
+        {{-- FORM TAMBAH MEMBER --}}
+        <div class="card p-6 space-y-4">
+            <h2 class="text-2xl font-semibold mb-5">
+                Tambah Member dari Pelanggan
+            </h2>
+            <form action="{{ route('member.store') }}" method="POST" class="space-y-4">
+                @csrf
+                <div class="grid grid-form grid-form-2">
+                    <select name="user_id" class="input-fix w-full" required>
+                        <option value="">-- Pilih Pelanggan --</option>
+                        @foreach ($pelanggan as $user)
+                            <option value="{{ $user->id }}">
+                                {{ $user->name }} ({{ $user->email }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <select name="tipe_kelas" class="input-fix w-full" required>
+                        <option value="">-- Pilih Tipe Kelas --</option>
+                        @foreach ($tipeKelasList as $tipe)
+                            <option value="{{ $tipe }}">{{ $tipe }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white tooltip">
+                    + Buat Member
+                    <span class="tooltip-text">Klik untuk membuat member baru</span>
+                </button>
+            </form>
         </div>
 
         {{-- TABLE MEMBER --}}
-        <div>
-            <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
-                Daftar Member
-            </h3>
-
-            <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-                <table class="min-w-full bg-white dark:bg-gray-900 text-sm">
-                    <thead class="bg-gray-100 dark:bg-gray-800">
-                        <tr class="text-left text-gray-600 dark:text-gray-300">
-                            <th class="px-4 py-3">ID</th>
-                            <th class="px-4 py-3">Nama</th>
-                            <th class="px-4 py-3">Email</th>
-                            <th class="px-4 py-3">Tipe Kelas</th>
+        <div class="card shadow-lg overflow-hidden">
+            <div class="p-4 border-b border-gray-300 dark:border-gray-600 flex justify-between items-center">
+                <h2 class="text-lg md:text-xl font-semibold">
+                    Daftar Member
+                </h2>
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                    {{ count($members) }} data ditemukan
+                </span>
+            </div>
+            <div class="table-wrapper overflow-x-auto">
+                <table class="min-w-full text-sm md:text-base">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nama</th>
+                            <th>Email</th>
+                            <th>Tipe Kelas</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($members as $member)
-                            <tr class="border-t border-gray-200 dark:border-gray-700">
-                                <td class="px-4 py-3">{{ $member->id }}</td>
-                                <td class="px-4 py-3">{{ $member->nama }}</td>
-                                <td class="px-4 py-3">{{ $member->email }}</td>
-                                <td class="px-4 py-3">{{ $member->tipe_kelas ?? '-' }}</td>
+                            <tr>
+                                <td data-label="ID">{{ $member->id }}</td>
+                                <td data-label="Nama">{{ $member->nama }}</td>
+                                <td data-label="Email">{{ $member->email }}</td>
+                                <td data-label="Tipe Kelas">{{ $member->tipe_kelas ?? '-' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-4 py-6 text-center text-gray-400">
-                                    Belum ada member.
+                                <td colspan="4" class="text-center text-gray-400 dark:text-gray-500 py-4">
+                                    Belum ada member terdaftar.
                                 </td>
                             </tr>
                         @endforelse
@@ -83,49 +294,77 @@
             </div>
         </div>
 
-        {{-- TABLE TOKEN --}}
-        <div>
-            <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
-                Daftar Paket Token
-            </h3>
 
-            <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-                <table class="min-w-full bg-white dark:bg-gray-900 text-sm">
-                    <thead class="bg-gray-100 dark:bg-gray-800">
-                        <tr class="text-left text-gray-600 dark:text-gray-300">
-                            <th class="px-4 py-3">ID</th>
-                            <th class="px-4 py-3">Token</th>
-                            <th class="px-4 py-3">Tipe</th>
-                            <th class="px-4 py-3">Harga</th>
-                            <th class="px-4 py-3">Aksi</th>
+        {{-- FORM TAMBAH TOKEN PACKAGE --}}
+        <div class="card p-6 space-y-4">
+            <h2 class="text-2xl font-semibold mb-5">
+                Tambah Paket Token Baru
+            </h2>
+            <form action="{{ route('token-package.store') }}" method="POST" class="space-y-4">
+                @csrf
+                <div class="grid grid-form grid-form-3 gap-4">
+                    <input type="number" name="jumlah_token" placeholder="Jumlah Token" class="input-fix" required>
+                    <select name="tipe_kelas" class="input-fix" required>
+                        <option value="">-- Pilih Tipe Kelas --</option>
+                        @foreach ($tipeKelasList as $tipe)
+                            <option value="{{ $tipe }}">{{ $tipe }}</option>
+                        @endforeach
+                    </select>
+                    <input type="number" name="harga" placeholder="Harga" class="input-fix" required>
+                </div>
+                <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white tooltip">
+                    + Tambah Paket
+                    <span class="tooltip-text">Klik untuk menambahkan paket token baru</span>
+                </button>
+            </form>
+        </div>
+
+        {{-- TABLE TOKEN PACKAGE --}}
+        <div class="card shadow-lg overflow-hidden">
+            <div class="p-4 border-b border-gray-300 dark:border-gray-600 flex justify-between items-center">
+                <h2 class="text-lg md:text-xl font-semibold">
+                    Daftar Paket Token
+                </h2>
+            </div>
+            <div class="table-wrapper overflow-x-auto">
+                <table class="min-w-full text-sm md:text-base">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Jumlah Token</th>
+                            <th>Tipe Kelas</th>
+                            <th>Harga</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($tokenPackages as $package)
-                            <tr class="border-t border-gray-200 dark:border-gray-700">
-                                <td class="px-4 py-3">{{ $package->id }}</td>
-                                <td class="px-4 py-3">{{ $package->jumlah_token }}</td>
-                                <td class="px-4 py-3">{{ $package->tipe_kelas }}</td>
-                                <td class="px-4 py-3">
-                                    Rp {{ number_format($package->harga, 0, ',', '.') }}
-                                </td>
-                                <td class="px-4 py-3 flex gap-2">
+                            <tr>
+                                <td data-label="ID">{{ $package->id }}</td>
+                                <td data-label="Jumlah Token">{{ $package->jumlah_token }}</td>
+                                <td data-label="Tipe Kelas">{{ $package->tipe_kelas }}</td>
+                                <td data-label="Harga">Rp {{ number_format($package->harga, 0, ',', '.') }}</td>
+                                <td data-label="Aksi" class="flex gap-2">
                                     <a href="{{ route('token-package.edit', $package->id) }}"
-                                        class="px-3 py-1 rounded-md bg-gray-200 dark:bg-gray-700">
+                                        class="bg-yellow-400 hover:bg-yellow-300 text-black font-semibold px-3 py-1.5 rounded-lg tooltip">
                                         Edit
+                                        <span class="tooltip-text">Ubah paket token</span>
                                     </a>
-                                    <form action="{{ route('token-package.destroy', $package->id) }}" method="POST">
+                                    <form action="{{ route('token-package.destroy', $package->id) }}" method="POST"
+                                        onsubmit="return confirm('Yakin ingin menghapus paket token ini?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="px-3 py-1 rounded-md bg-red-600 text-white">
+                                        <button type="submit"
+                                            class="bg-red-500 hover:bg-red-400 text-white px-3 py-1.5 rounded-lg tooltip">
                                             Hapus
+                                            <span class="tooltip-text">Hapus paket token</span>
                                         </button>
                                     </form>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-4 py-6 text-center text-gray-400">
+                                <td colspan="5" class="text-center text-gray-400 dark:text-gray-500 py-4">
                                     Belum ada paket token.
                                 </td>
                             </tr>
@@ -136,200 +375,4 @@
         </div>
     </div>
 
-    {{-- ================= MODAL TAMBAH MEMBER ================= --}}
-    <div id="memberModal"
-        class="hidden fixed inset-0 z-50 items-center justify-center
-            bg-black/60 backdrop-blur-sm p-4">
-
-        <div
-            class="relative w-full max-w-md
-                bg-white
-                rounded-2xl shadow-2xl
-                border border-slate-200">
-
-            {{-- HEADER --}}
-            <div class="px-6 py-5 border-b border-slate-200">
-                <h3 class="text-lg font-semibold text-slate-800">
-                    Tambah Member
-                </h3>
-                <p class="text-sm text-slate-500 mt-1">
-                    Pilih pelanggan dan tipe kelas
-                </p>
-
-                <button onclick="closeMemberModal()"
-                    class="absolute top-4 right-4 w-9 h-9 rounded-full
-                       flex items-center justify-center
-                       text-slate-400 hover:text-slate-600
-                       hover:bg-slate-100 transition">
-                    ✕
-                </button>
-            </div>
-
-            {{-- BODY --}}
-            <form action="{{ route('member.store') }}" method="POST" class="px-6 py-6 space-y-5">
-                @csrf
-
-                <div>
-                    <label class="text-sm font-medium text-slate-600">
-                        Pelanggan
-                    </label>
-                    <select name="user_id"
-                        class="mt-2 w-full rounded-xl
-                           bg-slate-50
-                           border border-slate-300
-                           px-4 py-2.5 text-sm
-                           text-slate-700
-                           focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach ($pelanggan as $user)
-                            <option value="{{ $user->id }}">
-                                {{ $user->name }} ({{ $user->email }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-slate-600">
-                        Tipe Kelas
-                    </label>
-                    <select name="tipe_kelas"
-                        class="mt-2 w-full rounded-xl
-                           bg-slate-50
-                           border border-slate-300
-                           px-4 py-2.5 text-sm
-                           text-slate-700
-                           focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        @foreach ($tipeKelasList as $tipe)
-                            <option value="{{ $tipe }}">{{ $tipe }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- FOOTER --}}
-                <div class="pt-6 flex justify-end gap-3">
-                    <button type="button" onclick="closeMemberModal()"
-                        class="px-4 py-2.5 rounded-xl text-sm
-                           bg-slate-100 text-slate-600
-                           hover:bg-slate-200 transition">
-                        Batal
-                    </button>
-
-                    <button type="submit"
-                        class="px-6 py-2.5 rounded-xl text-sm font-semibold
-                           bg-indigo-600 hover:bg-indigo-500
-                           text-white shadow-lg shadow-indigo-600/30 transition">
-                        Simpan Member
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- ================= MODAL TAMBAH TOKEN ================= --}}
-    <div id="tokenModal"
-        class="hidden fixed inset-0 z-50 items-center justify-center
-            bg-black/60 backdrop-blur-sm p-4">
-
-        <div
-            class="relative w-full max-w-md
-                bg-white
-                rounded-2xl shadow-2xl
-                border border-slate-200">
-
-            <div class="px-6 py-5 border-b border-slate-200">
-                <h3 class="text-lg font-semibold text-slate-800">
-                    Tambah Paket Token
-                </h3>
-                <p class="text-sm text-slate-500 mt-1">
-                    Atur jumlah token dan harga
-                </p>
-
-                <button onclick="closeTokenModal()"
-                    class="absolute top-4 right-4 w-9 h-9 rounded-full
-                       flex items-center justify-center
-                       text-slate-400 hover:text-slate-600
-                       hover:bg-slate-100 transition">
-                    ✕
-                </button>
-            </div>
-
-            <form action="{{ route('token-package.store') }}" method="POST" class="px-6 py-6 space-y-5">
-                @csrf
-
-                <div>
-                    <label class="text-sm font-medium text-slate-600">
-                        Jumlah Token
-                    </label>
-                    <input type="number" name="jumlah_token"
-                        class="mt-2 w-full rounded-xl
-                           bg-slate-50
-                           border border-slate-300
-                           px-4 py-2.5 text-sm
-                           text-slate-700
-                           focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-slate-600">
-                        Tipe Kelas
-                    </label>
-                    <select name="tipe_kelas"
-                        class="mt-2 w-full rounded-xl
-                           bg-slate-50
-                           border border-slate-300
-                           px-4 py-2.5 text-sm
-                           text-slate-700
-                           focus:ring-2 focus:ring-indigo-500">
-                        @foreach ($tipeKelasList as $tipe)
-                            <option value="{{ $tipe }}">{{ $tipe }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-slate-600">
-                        Harga
-                    </label>
-                    <input type="number" name="harga"
-                        class="mt-2 w-full rounded-xl
-                           bg-slate-50
-                           border border-slate-300
-                           px-4 py-2.5 text-sm
-                           text-slate-700
-                           focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <div class="pt-6 flex justify-end gap-3">
-                    <button type="button" onclick="closeTokenModal()"
-                        class="px-4 py-2.5 rounded-xl
-                           bg-slate-100 text-slate-600">
-                        Batal
-                    </button>
-
-                    <button type="submit"
-                        class="px-6 py-2.5 rounded-xl font-semibold
-                           bg-indigo-600 hover:bg-indigo-500
-                           text-white shadow-lg">
-                        Simpan Paket
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        document.getElementById('openMemberModal').onclick = () =>
-            document.getElementById('memberModal').classList.remove('hidden');
-
-        document.getElementById('openTokenModal').onclick = () =>
-            document.getElementById('tokenModal').classList.remove('hidden');
-
-        function closeMemberModal() {
-            document.getElementById('memberModal').classList.add('hidden');
-        }
-
-        function closeTokenModal() {
-            document.getElementById('tokenModal').classList.add('hidden');
-        }
-    </script>
 @endsection

@@ -71,7 +71,7 @@ body {
 }
 
 /* =========================
-   ✏️ Input Form Elegan
+   ✏ Input Form Elegan
 ========================= */
 .input-group {
     display: flex;
@@ -182,7 +182,7 @@ button:active {
 }
 
 /* =========================
-   ⚠️ Pesan Error
+   ⚠ Pesan Error
 ========================= */
 .error-message {
     background: rgba(239, 68, 68, 0.1);
@@ -194,7 +194,7 @@ button:active {
 }
 
 /* =========================
-   🕶️ Footer Login (Opsional)
+   🕶 Footer Login (Opsional)
 ========================= */
 .login-footer {
     text-align: center;

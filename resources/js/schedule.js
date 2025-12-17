@@ -1,78 +1,46 @@
 document.addEventListener("DOMContentLoaded", () => {
-    /* ===========================
-     * FILTER FORM
-     * ===========================*/
+
+    /* =====================================================
+       FILTER FORM — Auto-submit + Reset
+    =====================================================*/
     const formFilter = document.querySelector("form[action*='admin/schedules']");
-    const inputClient = document.getElementById("client");
-    const inputDate = document.getElementById("date");
-    const inputTime = document.getElementById("time");
-
     if (formFilter) {
-        if (inputClient) {
-            inputClient.addEventListener("keypress", (e) => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    formFilter.submit();
-                }
-            });
-        }
-        if (inputDate) inputDate.addEventListener("change", () => formFilter.submit());
-        if (inputTime) inputTime.addEventListener("change", () => formFilter.submit());
+        formFilter.querySelectorAll("select, input").forEach(el => {
+            el.addEventListener("change", () => formFilter.submit());
+        });
 
-        const btnReset = document.querySelector("a.bg-gray-400");
+        const btnReset = formFilter.querySelector("a.btn-gray");
         if (btnReset) {
             btnReset.addEventListener("click", (e) => {
                 e.preventDefault();
-                window.location.href = formFilter.getAttribute("action");
+                btnReset.classList.add("opacity-50");
+                setTimeout(() => window.location.href = formFilter.getAttribute("action"), 200);
             });
         }
     }
 
-    /* ===========================
-     * SUBMIT FORM (CREATE / UPDATE)
-     * ===========================*/
+    /* =====================================================
+       SUBMIT FORM — CREATE / UPDATE
+    =====================================================*/
     const scheduleForm = document.getElementById("scheduleForm");
     if (scheduleForm) {
-        scheduleForm.addEventListener("submit", async function (e) {
+        const btnSubmit = scheduleForm.querySelector("button[type='submit']");
+        scheduleForm.addEventListener("submit", async (e) => {
             e.preventDefault();
+            btnSubmit.disabled = true;
 
-            const kelasEl = document.getElementById("kelas_id");
-            const trainerEl = document.getElementById("trainer_id");
-            const dayEl = document.getElementById("day");
-            const startEl = document.getElementById("start_time");
-            const endEl = document.getElementById("end_time");
-            const focusEl = document.getElementById("class_focus");
-            const activeEl = document.getElementById("is_active");
-            const scheduleIdEl = document.getElementById("schedule_id");
+            const payload = collectFormData();
+            if (!payload.day) { showToast("Pilih hari terlebih dahulu", "error"); btnSubmit.disabled=false; return; }
 
-            if (!kelasEl || !trainerEl || !dayEl || !startEl || !endEl || !focusEl || !activeEl || !scheduleIdEl) {
-                alert("Form belum lengkap, cek console!");
-                console.error("Form element missing", { kelasEl, trainerEl, dayEl, startEl, endEl, focusEl, activeEl, scheduleIdEl });
-                return;
-            }
-
-            if (!dayEl.value) {
-                alert("Pilih hari dulu!");
-                return;
-            }
-
-            const payload = {
-                kelas_id: kelasEl.value,
-                trainer_id: trainerEl.value,
-                day: dayEl.value,
-                start_time: startEl.value,
-                end_time: endEl.value,
-                class_focus: focusEl.value,
-                is_active: activeEl.value === "1" ? 1 : 0
-            };
-
-            const id = scheduleIdEl.value;
+            const id = document.getElementById("schedule_id").value;
             const url = id ? `/admin/schedules/${id}` : `/admin/schedules`;
             const method = id ? "PUT" : "POST";
 
             try {
+                btnSubmit.innerHTML = `<span class="loader mr-2"></span> Menyimpan...`;
+
                 const response = await fetch(url, {
-                    method: method,
+                    method, 
                     headers: {
                         "X-CSRF-TOKEN": document.querySelector("meta[name='csrf-token']").content,
                         "Content-Type": "application/json",
@@ -81,61 +49,87 @@ document.addEventListener("DOMContentLoaded", () => {
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) {
-                    const text = await response.text();
-                    console.error(text);
-                    alert("Terjadi error server, cek console");
-                    return;
-                }
-
                 const res = await response.json();
+                if (!response.ok) throw new Error(res.message || "Server error");
 
                 if (res.success) {
+                    showToast("Jadwal berhasil disimpan!", "success");
                     closeModal();
-                    // update table tanpa reload bisa ditambahkan di sini jika mau
-                    location.reload();
+                    localStorage.setItem("highlightSchedule", "1");
+                    setTimeout(() => location.reload(), 400);
                 } else {
-                    alert(res.message || "Gagal menyimpan jadwal");
+                    showToast(res.message || "Gagal menyimpan jadwal", "error");
                 }
-
             } catch (err) {
                 console.error(err);
-                alert("Terjadi error: " + err.message);
+                showToast(err.message, "error");
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = "Simpan";
             }
         });
     }
 });
 
-/* ===========================
- * MODAL
- * ===========================*/
-function openModalTambah() {
-    const scheduleForm = document.getElementById("scheduleForm");
-    if (!scheduleForm) return;
+/* =====================================================
+   COLLECT FORM DATA
+=====================================================*/
+function collectFormData() {
+    return {
+        kelas_id: document.getElementById("kelas_id").value,
+        trainer_id: document.getElementById("trainer_id").value,
+        day: document.getElementById("day").value,
+        start_time: document.getElementById("start_time").value,
+        end_time: document.getElementById("end_time").value,
+        class_focus: document.getElementById("class_focus").value,
+        is_active: document.getElementById("is_active").value==="1"?1:0
+    };
+}
 
-    scheduleForm.reset();
+/* =====================================================
+   MODAL SYSTEM — Open / Close Smooth
+=====================================================*/
+function openModalTambah() {
+    const form = document.getElementById("scheduleForm");
+    form.reset();
     document.getElementById("schedule_id").value = "";
     document.getElementById("modalTitle").innerText = "Tambah Jadwal";
+    showModal();
+}
+
+function showModal() {
     const modal = document.getElementById("modalSchedule");
-    modal.classList.remove("hidden");
+    const box = modal.querySelector(".modal-box");
+
     modal.classList.add("flex");
+    modal.classList.remove("hidden");
+
+    box.classList.add("opacity-0","scale-90");
+    setTimeout(() => {
+        box.classList.remove("opacity-0","scale-90");
+        box.classList.add("opacity-100","scale-100");
+    }, 20);
 }
 
 function closeModal() {
     const modal = document.getElementById("modalSchedule");
-    modal.classList.add("hidden");
-    modal.classList.remove("flex");
+    const box = modal.querySelector(".modal-box");
+
+    box.classList.add("opacity-0","scale-95");
+    setTimeout(() => {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        box.classList.remove("opacity-0","scale-95");
+    }, 180);
 }
 
-/* ===========================
- * EDIT
- * ===========================*/
+/* =====================================================
+   EDIT — Prefill + Show Modal
+=====================================================*/
 async function editSchedule(id) {
     try {
-        const response = await fetch(`/admin/schedules/${id}/edit`, {
-            headers: { "Accept": "application/json" }
-        });
-        const data = await response.json();
+        const res = await fetch(`/admin/schedules/${id}/edit`, { headers: { "Accept": "application/json" } });
+        const data = await res.json();
 
         document.getElementById("schedule_id").value = data.id;
         document.getElementById("kelas_id").value = data.kelas_id;
@@ -147,52 +141,63 @@ async function editSchedule(id) {
         document.getElementById("is_active").value = data.is_active;
 
         document.getElementById("modalTitle").innerText = "Edit Jadwal";
-        const modal = document.getElementById("modalSchedule");
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
+        showModal();
     } catch (err) {
         console.error(err);
-        alert("Gagal load data jadwal");
+        showToast("Gagal memuat data jadwal", "error");
     }
 }
 
-/* ===========================
- * DELETE
- * ===========================*/
+/* =====================================================
+   DELETE
+=====================================================*/
 async function deleteSchedule(id) {
-    if (!confirm("Hapus jadwal ini?")) return;
+    if (!confirm("Yakin ingin menghapus jadwal ini?")) return;
 
     try {
-        const response = await fetch(`/admin/schedules/${id}`, {
+        const res = await fetch(`/admin/schedules/${id}`, {
             method: "DELETE",
             headers: {
                 "X-CSRF-TOKEN": document.querySelector("meta[name='csrf-token']").content,
                 "Accept": "application/json"
             }
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            console.error(text);
-            alert("Terjadi error server saat hapus");
-            return;
-        }
-
-        const res = await response.json();
+        }).then(r => r.json());
 
         if (res.success) {
-            const btn = document.querySelector(`[data-id='${id}']`);
-            if (btn) btn.closest("tr").remove();
-            alert(res.message || "Jadwal berhasil dihapus");
-        } else {
-            alert(res.message || "Gagal menghapus jadwal");
-        }
-    } catch (err) {
-        console.error(err);
-        alert("Terjadi error: " + err.message);
-    }
+            showToast("Jadwal berhasil dihapus","success");
+            setTimeout(()=>location.reload(),500);
+        } else showToast(res.message,"error");
+
+    } catch (err) { console.error(err); showToast("Gagal menghapus jadwal","error"); }
 }
 
+/* =====================================================
+   TOAST SYSTEM
+=====================================================*/
+function showToast(message,type="success"){
+    const toast=document.createElement("div");
+    toast.className=`fixed bottom-6 right-6 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-semibold z-[9999] animate-slide-up ${type==="error"?"bg-red-600":"bg-green-600"}`;
+    toast.innerText=message;
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(),2500);
+}
+
+/* =====================================================
+   GLOBAL ANIMATIONS
+=====================================================*/
+const style=document.createElement("style");
+style.innerHTML=`
+@keyframes slide-up { from {transform:translateY(20px);opacity:0;} to {transform:translateY(0);opacity:1;} }
+.animate-slide-up { animation: slide-up .25s ease-out; }
+.loader { width:16px; height:16px; border:2px solid white; border-top-color:transparent; border-radius:50%; display:inline-block; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.modal-box { transition:0.18s ease; }
+`;
+document.head.appendChild(style);
+
+/* =====================================================
+   EXPORT
+=====================================================*/
 window.openModalTambah = openModalTambah;
 window.closeModal = closeModal;
 window.editSchedule = editSchedule;
