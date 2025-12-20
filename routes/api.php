@@ -2,6 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| CONTROLLERS
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ReservasiController;
 use App\Http\Controllers\Api\KelasController;
@@ -14,6 +19,7 @@ use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\Api\TokenPackageController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\TrainerProfileController;
+use App\Http\Controllers\Api\VoucherController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,11 +35,15 @@ Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refr
 
 /*
 |--------------------------------------------------------------------------
-| ME (JWT – ALL ROLES)
+| ME / USER PROFILE (JWT – ALL ROLES)
 |--------------------------------------------------------------------------
-| 👉 SATU-SATUNYA endpoint identitas login
 */
 Route::middleware('jwt.auth')->get('/me', function () {
+    return auth()->user();
+});
+
+// Alias untuk frontend
+Route::middleware('jwt.auth')->get('/user', function () {
     return auth()->user();
 });
 
@@ -62,10 +72,24 @@ Route::get('/users/trainer', [UserController::class, 'getTrainers']);
 
 /*
 |--------------------------------------------------------------------------
-| DISKON (TETAP)
+| DISKON
 |--------------------------------------------------------------------------
 */
 Route::apiResource('diskon', DiskonController::class);
+
+/*
+|--------------------------------------------------------------------------
+| VOUCHERS
+|--------------------------------------------------------------------------
+*/
+// PUBLIC: bisa dilihat siapa saja
+Route::get('/vouchers', [VoucherController::class, 'index']);
+
+// JWT: khusus user
+Route::middleware('jwt.auth')->group(function () {
+    Route::get('/vouchers/my', [VoucherController::class, 'userVouchers']);
+    Route::post('/voucher/claim', [VoucherController::class, 'claim']);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -84,7 +108,6 @@ Route::middleware(['jwt.auth', 'role:trainer'])
 |--------------------------------------------------------------------------
 */
 Route::prefix('member')->middleware('jwt.auth')->group(function () {
-
     Route::post('/store', [MemberController::class, 'store']);
     Route::get('/kelas', [MemberController::class, 'kelasMember']);
     Route::post('/bayar', [MemberController::class, 'bayarDummy']);
@@ -124,6 +147,9 @@ Route::apiResource('token-packages', TokenPackageController::class);
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::post('/checkout/price', [CheckoutController::class, 'price']);
     Route::post('/checkout/confirm', [CheckoutController::class, 'confirm']);
+
+    // Tambahan: route Midtrans token agar FormBooking.tsx bisa pakai
+    Route::post('/checkout/midtrans/token', [CheckoutController::class, 'midtransToken']);
 });
 
 /*
@@ -132,7 +158,6 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['jwt.auth', 'role:trainer'])->group(function () {
-
     Route::get('/trainer/profile', [TrainerProfileController::class, 'show']);
     Route::post('/trainer/profile', [TrainerProfileController::class, 'store']);
 });

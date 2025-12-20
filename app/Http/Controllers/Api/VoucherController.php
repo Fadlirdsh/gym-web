@@ -14,9 +14,13 @@ class VoucherController extends Controller
     // ============================
     public function index()
     {
+        // Ambil semua voucher aktif, kuota > 0, tanggal berlaku
+        $today = now()->toDateString();
+
         $vouchers = Voucher::where('status', 'aktif')
-            ->whereDate('tanggal_mulai', '<=', now())
-            ->whereDate('tanggal_akhir', '>=', now())
+            ->whereDate('tanggal_mulai', '<=', $today)
+            ->whereDate('tanggal_akhir', '>=', $today)
+            ->where('kuota', '>', 0)
             ->get([
                 'id',
                 'kode',
@@ -31,62 +35,6 @@ class VoucherController extends Controller
             ]);
 
         return response()->json($vouchers);
-    }
-
-    // ============================
-    // DETAIL VOUCHER
-    // ============================
-    public function show($id)
-    {
-        $voucher = Voucher::findOrFail($id);
-
-        return response()->json($voucher);
-    }
-
-    // ============================
-    // CREATE VOUCHER (ADMIN)
-    // ============================
-    public function store(Request $request)
-    {
-        $request->validate([
-            'kode'           => 'required|string|unique:vouchers,kode',
-            'deskripsi'      => 'nullable|string',
-            'diskon_persen'  => 'required|integer|min:1|max:100',
-            'kelas_id'       => 'nullable|integer',
-            'role_target'    => 'nullable|string',
-            'tanggal_mulai'  => 'required|date',
-            'tanggal_akhir'  => 'required|date|after_or_equal:tanggal_mulai',
-            'kuota'          => 'required|integer|min:1',
-            'status'         => 'required|in:aktif,nonaktif',
-        ]);
-
-        $voucher = Voucher::create($request->all());
-
-        return response()->json($voucher, 201);
-    }
-
-    // ============================
-    // UPDATE VOUCHER
-    // ============================
-    public function update(Request $request, $id)
-    {
-        $voucher = Voucher::findOrFail($id);
-
-        $voucher->update($request->all());
-
-        return response()->json($voucher);
-    }
-
-    // ============================
-    // DELETE VOUCHER
-    // ============================
-    public function destroy($id)
-    {
-        Voucher::destroy($id);
-
-        return response()->json([
-            'message' => 'Voucher berhasil dihapus'
-        ]);
     }
 
     // ============================
@@ -131,17 +79,15 @@ class VoucherController extends Controller
 
         $voucher = Voucher::find($request->voucher_id);
 
-        // cek status
+        // cek status, tanggal, kuota
         if ($voucher->status !== 'aktif') {
             return response()->json(['message' => 'Voucher tidak aktif'], 400);
         }
 
-        // cek tanggal
         if (now()->lt($voucher->tanggal_mulai) || now()->gt($voucher->tanggal_akhir)) {
             return response()->json(['message' => 'Voucher sudah kadaluarsa'], 400);
         }
 
-        // cek kuota
         if ($voucher->kuota <= 0) {
             return response()->json(['message' => 'Kuota voucher habis'], 400);
         }
