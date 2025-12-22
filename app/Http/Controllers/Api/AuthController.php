@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use App\Models\KuponPengguna;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Google\Client as GoogleClient;
 use App\Http\Controllers\Controller;
@@ -89,13 +88,6 @@ class AuthController extends Controller
             'password' => bcrypt($request->password),
             'role' => 'pelanggan',
             'phone' => $request->phone,
-        ]);
-
-        KuponPengguna::create([
-            'user_id' => $user->id,
-            'status' => 'pending',
-            'berlaku_hingga' => now()->addDays(7),
-            'persentase_diskon' => 40, // FIRST TIME DISCOUNT
         ]);
 
         $token = JWTAuth::fromUser($user);
