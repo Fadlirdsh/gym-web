@@ -6,8 +6,8 @@
 
     <style>
         /* ==========================================
-           PREMIUM FLIP CARD UI - Dark/Light Mode
-        ========================================== */
+               PREMIUM FLIP CARD UI - Dark/Light Mode
+            ========================================== */
         .page-bg {
             background: linear-gradient(180deg, #f0f4f8 0%, #e2e8f0 100%);
             min-height: 100vh;
@@ -27,12 +27,14 @@
             font-weight: 700;
             margin-bottom: 1rem;
             transition: color 0.3s;
-            color: #1e293b; /* default light mode color */
+            color: #1e293b;
+            /* default light mode color */
         }
 
         @media (prefers-color-scheme: dark) {
             .page-title {
-                color: #ffffff; /* dark mode color */
+                color: #ffffff;
+                /* dark mode color */
             }
         }
 
@@ -137,8 +139,13 @@
         }
 
         @keyframes holoMove {
-            0% { transform: translateX(-100%) rotate(25deg); }
-            100% { transform: translateX(100%) rotate(25deg); }
+            0% {
+                transform: translateX(-100%) rotate(25deg);
+            }
+
+            100% {
+                transform: translateX(100%) rotate(25deg);
+            }
         }
 
         /* Text & badges */
@@ -185,8 +192,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         /* Card actions */
@@ -308,6 +322,87 @@
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 10px 25px rgba(59, 130, 246, 0.6);
         }
+
+        .teks {
+            color: black
+        }
+
+        /* ===============================
+       ADAPTIVE LIGHT / DARK MODE
+    =============================== */
+
+        /* Teks label kecil */
+        .teks {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #374151;
+            /* light mode */
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .teks {
+                color: #e5e7eb;
+                /* dark mode */
+            }
+        }
+
+        /* Modal background adaptif */
+        .modal-bg {
+            background: rgba(255, 255, 255, 0.96);
+            color: #1f2937;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .modal-bg {
+                background: rgba(15, 23, 42, 0.95);
+                color: #e5e7eb;
+            }
+        }
+
+        /* Input & select adaptif */
+        .form-input {
+            background: #ffffff;
+            color: #1f2937;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .form-input {
+                background: rgba(30, 41, 59, 0.95);
+                color: #e5e7eb;
+                border-color: rgba(255, 255, 255, 0.15);
+            }
+
+            .form-input::placeholder {
+                color: #9ca3af;
+            }
+        }
+
+        /* Judul modal */
+        #modalTitle {
+            color: #1f2937;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #modalTitle {
+                color: #ffffff;
+            }
+        }
+
+        /* Tombol close */
+        .modal-close {
+            color: #374151;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .modal-close {
+                color: #e5e7eb;
+            }
+
+            .modal-close:hover {
+                color: #f87171;
+            }
+        }
     </style>
 
     <div class="flex justify-between items-center mb-6">
@@ -369,24 +464,32 @@
                 <input type="text" name="kode" placeholder="Kode Voucher" class="form-input w-full p-3 rounded-lg" required>
                 <textarea name="deskripsi" placeholder="Deskripsi" class="form-input w-full p-3 rounded-lg h-24"></textarea>
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="number" name="diskon_persen" placeholder="Diskon (%)" class="form-input w-full p-3 rounded-lg" min="1" max="100" required>
-                    <input type="number" name="kuota" placeholder="Kuota" class="form-input w-full p-3 rounded-lg" min="1" required>
+                    <input type="number" name="diskon_persen" placeholder="Diskon (%)"
+                        class="form-input w-full p-3 rounded-lg" min="1" max="100" required>
+                    <input type="number" name="kuota" placeholder="Kuota" class="form-input w-full p-3 rounded-lg" min="1"
+                        required>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
+                    <p class="teks">tanggal mulai</p>
                     <input type="date" name="tanggal_mulai" class="form-input w-full p-3 rounded-lg" required>
+                    <p class="teks">Berakhir</p>
                     <input type="date" name="tanggal_akhir" class="form-input w-full p-3 rounded-lg" required>
                 </div>
+                <p class="teks">Target</p>
                 <select name="role_target" class="form-input w-full p-3 rounded-lg">
+
                     <option value="semua">Semua</option>
                     <option value="pelanggan">Pelanggan</option>
                     <option value="member">Member</option>
                 </select>
+                <p class="teks">Status</p>
                 <select name="status" class="form-input w-full p-3 rounded-lg">
                     <option value="aktif">Aktif</option>
                     <option value="nonaktif">Nonaktif</option>
                 </select>
                 <div class="flex justify-between mt-5">
-                    <button type="submit" class="btn-primary w-full py-3 font-semibold" id="btnSaveVoucher">💾 Simpan</button>
+                    <button type="submit" class="btn-primary w-full py-3 font-semibold" id="btnSaveVoucher">💾
+                        Simpan</button>
                 </div>
             </form>
         </div>
