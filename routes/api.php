@@ -82,13 +82,13 @@ Route::apiResource('diskon', DiskonController::class);
 | VOUCHERS
 |--------------------------------------------------------------------------
 */
-// PUBLIC: bisa dilihat siapa saja
+// PUBLIC: semua user boleh lihat
 Route::get('/vouchers', [VoucherController::class, 'index']);
 
-// JWT: khusus user
+// JWT: khusus user login
 Route::middleware('jwt.auth')->group(function () {
     Route::get('/vouchers/my', [VoucherController::class, 'userVouchers']);
-    Route::post('/voucher/claim', [VoucherController::class, 'claim']);
+    Route::post('/vouchers/claim', [VoucherController::class, 'claim']); // ✅ FIXED
 });
 
 /*
@@ -112,16 +112,16 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::get('/kelas', [MemberController::class, 'kelasMember']);
     Route::post('/bayar', [MemberController::class, 'bayarDummy']);
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
+
+    // TRANSAKSI
     Route::get('/transaksi/sync', [TransaksiController::class, 'sync']);
+    Route::post('/transaksi/create', [TransaksiController::class, 'create']);
+    Route::get('/transaksi', [TransaksiController::class, 'index']);
+    Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
 
     // MIDTRANS
     Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
     Route::post('/midtrans/token', [MidtransController::class, 'getSnapToken']);
-
-    // TRANSAKSI
-    Route::post('/transaksi/create', [TransaksiController::class, 'create']);
-    Route::get('/transaksi', [TransaksiController::class, 'index']);
-    Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
 });
 
 /*
@@ -147,8 +147,6 @@ Route::apiResource('token-packages', TokenPackageController::class);
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::post('/checkout/price', [CheckoutController::class, 'price']);
     Route::post('/checkout/confirm', [CheckoutController::class, 'confirm']);
-
-    // Tambahan: route Midtrans token agar FormBooking.tsx bisa pakai
     Route::post('/checkout/midtrans/token', [CheckoutController::class, 'midtransToken']);
 });
 
