@@ -21,6 +21,10 @@ use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\TrainerProfileController;
 use App\Http\Controllers\Api\VoucherController;
 
+use App\Http\Controllers\Api\QrCodeController;
+use App\Http\Controllers\Api\AttendanceController;
+
+
 /*
 |--------------------------------------------------------------------------
 | AUTH
@@ -158,4 +162,47 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 Route::middleware(['jwt.auth', 'role:trainer'])->group(function () {
     Route::get('/trainer/profile', [TrainerProfileController::class, 'show']);
     Route::post('/trainer/profile', [TrainerProfileController::class, 'store']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| ABSENSI QR CODE
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * =========================
+ * PELANGGAN
+ * =========================
+ * - Cek apakah bisa check-in (banner)
+ * - Generate QR absensi
+ */
+Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
+
+    // Banner Home: cek absensi hari ini
+    Route::get(
+        '/attendance/today',
+        [AttendanceController::class, 'today']
+    );
+
+    // Generate QR absensi (ditampilkan ke pelanggan)
+    Route::get(
+        '/attendance/qr/{reservasi_id}',
+        [QrCodeController::class, 'show']
+    );
+});
+
+/**
+ * =========================
+ * ADMIN / TRAINER
+ * =========================
+ * - Scan QR untuk absensi
+ */
+Route::middleware(['jwt.auth', 'role:admin,trainer'])->group(function () {
+
+    // Scan QR (kamera admin)
+    Route::post(
+        '/attendance/scan',
+        [AttendanceController::class, 'scan']
+    );
 });

@@ -18,7 +18,12 @@ class Reservasi extends Model
         'kelas_id',
         'jadwal',
         'status',
+        'status_hadir',
         'catatan',
+    ];
+
+    protected $casts = [
+        'jadwal' => 'datetime',
     ];
 
     public function pelanggan()
@@ -35,6 +40,13 @@ class Reservasi extends Model
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
     }
+
+    public function qrCode()
+    {
+        return $this->hasOne(QrCode::class);
+    }
+
+
 
     // ✅ hanya satu booted(), gabungkan logikanya di sini
     protected static function booted()

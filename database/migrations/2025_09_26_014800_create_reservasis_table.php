@@ -13,25 +13,28 @@ return new class extends Migration
 
             // relasi pelanggan (user dengan role = pelanggan)
             $table->foreignId('pelanggan_id')
-                  ->constrained('users')
-                  ->onDelete('cascade');
+                ->constrained('users')
+                ->onDelete('cascade');
 
             // relasi trainer (user dengan role = trainer)
             $table->foreignId('trainer_id')
-                  ->constrained('users')
-                  ->onDelete('cascade');
+                ->constrained('users')
+                ->onDelete('cascade');
 
             // relasi kelas
             $table->foreignId('kelas_id')
-                  ->constrained('kelas')
-                  ->onDelete('cascade');
+                ->constrained('kelas')
+                ->onDelete('cascade');
 
             // jadwal reservasi
             $table->dateTime('jadwal');
 
             // status reservasi
             $table->enum('status', ['pending', 'approved', 'canceled'])
-                  ->default('pending');
+                ->default('pending');
+
+            $table->enum('status_hadir', ['belum_hadir', 'hadir'])->default('belum_hadir');
+
 
             // // metode pembayaran (opsional)
             // $table->enum('metode_pembayaran', ['cash', 'transfer', 'ewallet'])
