@@ -93,12 +93,6 @@
                                     <i class="fa-solid fa-trash mr-2"></i> Hapus
                                 </button>
                             </form>
-
-                            <button
-                                class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium"
-                                onclick="openQrModal('{{ $k->id }}','{{ $k->nama_kelas }}')">
-                                <i class="fa-solid fa-qrcode mr-2"></i> QR
-                            </button>
                         </div>
                     </div>
                 </div>

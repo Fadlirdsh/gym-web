@@ -10,8 +10,21 @@ return new class extends Migration
     {
         Schema::create('qr_codes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kelas_id')->constrained('kelas')->onDelete('cascade'); // relasi ke tabel kelas
-            $table->string('qr_url')->nullable(); // path/gambar QR
+
+            // QR ini MILIK SATU RESERVASI
+            $table->foreignId('reservasi_id')
+                ->constrained('reservasi')
+                ->cascadeOnDelete();
+
+            // Token yang discan admin
+            $table->string('token')->unique();
+
+            // Masa berlaku QR
+            $table->timestamp('expired_at');
+
+            // QR hanya bisa dipakai sekali
+            $table->timestamp('used_at')->nullable();
+
             $table->timestamps();
         });
     }

@@ -10,15 +10,24 @@ class QrCode extends Model
     use HasFactory;
 
     protected $table = 'qr_codes';
+
     protected $fillable = [
-        'kelas_id',
-        'qr_url',
-        
+        'reservasi_id',
+        'token',
+        'expired_at',
+        'used_at',
     ];
 
-    // Relasi ke kelas
-    public function kelas()
+    protected $casts = [
+        'expired_at' => 'datetime',
+        'used_at'    => 'datetime',
+    ];
+
+    /**
+     * QR ini milik satu reservasi
+     */
+    public function reservasi()
     {
-        return $this->belongsTo(Kelas::class);
+        return $this->belongsTo(Reservasi::class);
     }
 }
