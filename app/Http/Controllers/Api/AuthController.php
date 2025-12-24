@@ -16,21 +16,34 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
+        // 🔹 Ambil flag remember dari frontend
+        $remember = $request->boolean('remember');
+
+        // 🔹 Tentukan TTL (MENIT)
+        $ttl = $remember
+            ? 10080   // 7 hari
+            : 120;    // 2 jam
+
+        // 🔹 SET TTL SEBELUM TOKEN DIBUAT
+        JWTAuth::factory()->setTTL($ttl);
+
+        // 🔹 Attempt login (token dibuat DI SINI)
         if (!$token = Auth::guard('api')->attempt($credentials)) {
             return response()->json(['error' => 'Email atau password salah'], 401);
         }
 
         $user = Auth::guard('api')->user();
 
+        // 🔹 Cek role
         if (!in_array($user->role, ['pelanggan', 'trainer'])) {
             return response()->json(['error' => 'Anda tidak memiliki akses'], 403);
         }
 
         return response()->json([
-            'access_token' => $token, // 🔹 nama token disamakan
-            'token_type' => 'bearer',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60,
-            'user' => $user
+            'access_token' => $token,
+            'token_type'   => 'bearer',
+            'expires_in'   => $ttl * 60,
+            'user'         => $user,
         ]);
     }
 
