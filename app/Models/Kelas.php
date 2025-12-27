@@ -100,8 +100,12 @@ class Kelas extends Model
 
     public function scopeAktif($query)
     {
-        return $query->where('expired_at', '>=', now()->toDateString());
+        return $query->where(function ($q) {
+            $q->whereNull('expired_at')
+                ->orWhere('expired_at', '>', now());
+        });
     }
+
     public function qr()
     {
         return $this->hasOne(QrCode::class);

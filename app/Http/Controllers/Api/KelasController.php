@@ -14,13 +14,16 @@ class KelasController extends Controller
      */
     public function index()
     {
-        $kelas = Kelas::with([
-            'schedules' => fn($query) => $query->where('is_active', true),
-            'trainer'
-        ])->withCount('reservasi')->get();
+        $kelas = Kelas::aktif()
+            ->with([
+                'schedules' => fn($q) => $q->where('is_active', true),
+                'trainer'
+            ])
+            ->withCount('reservasi')
+            ->get();
 
         $data = $kelas->map(function ($item) {
-            $jadwal = $item->schedules->first(); // ambil satu jadwal aktif
+            $jadwal = $item->schedules->first();
 
             return [
                 'id'            => $item->id,
@@ -28,25 +31,22 @@ class KelasController extends Controller
                 'tipe_kelas'    => $item->tipe_kelas,
                 'harga'         => $item->harga,
                 'deskripsi'     => $item->deskripsi,
-                'expired_at'    => $item->expired_at, // ✅ TAMBAH INI
+                'expired_at'    => $item->expired_at,
                 'waktu_mulai'   => $item->waktu_mulai,
                 'diskon_persen' => $item->diskon_persen,
                 'harga_diskon'  => $item->harga_diskon,
                 'sisa_kursi'    => $item->sisa_kursi,
                 'tipe_paket'    => $item->tipe_paket,
-
-                // Info jadwal & instruktur
                 'hari'          => $jadwal->day ?? null,
                 'jam_mulai'     => $jadwal->time ?? null,
                 'instruktur'    => $item->trainer->name ?? 'Instruktur',
-
-                // Perbaikan gambar supaya URL valid
                 'gambar'        => $item->gambar ? url($item->gambar) : null,
             ];
         });
 
         return response()->json($data);
     }
+
 
     /**
      * GET /api/kelas/{id}

@@ -15,8 +15,8 @@ class MemberController extends Controller
         // Ambil semua pelanggan (role = 'pelanggan')
         $pelanggan = User::where('role', 'pelanggan')->get();
 
-        // Ambil semua member
-        $members = Member::all();
+        // Ambil semua member + relasi user (WAJIB)
+        $members = Member::with('user')->get();
 
         // Ambil semua token package
         $tokenPackages = TokenPackage::all();
@@ -41,21 +41,20 @@ class MemberController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id'     => 'required|exists:users,id',
-            'tipe_kelas'  => 'required|string|max:255',
+            'user_id'    => 'required|exists:users,id',
+            'tipe_kelas' => 'required|string|max:255',
         ]);
 
-        $user = User::find($request->user_id);
+        $user = User::findOrFail($request->user_id);
 
         // Cek apakah user sudah member
         if (Member::where('user_id', $user->id)->exists()) {
             return redirect()->back()->with('error', 'User ini sudah menjadi member.');
         }
 
+        // ❗️nama & email TIDAK disimpan di tabel members
         Member::create([
             'user_id'        => $user->id,
-            'nama'           => $user->name,
-            'email'          => $user->email,
             'tipe_kelas'     => $request->tipe_kelas,
             'harga'          => 0,
             'token_total'    => 0,
@@ -71,8 +70,8 @@ class MemberController extends Controller
     public function assignUser(Request $request)
     {
         $request->validate([
-            'user_id'     => 'required|exists:users,id',
-            'tipe_kelas'  => 'required|string|max:255',
+            'user_id'    => 'required|exists:users,id',
+            'tipe_kelas' => 'required|string|max:255',
         ]);
 
         // Cek apakah sudah member
@@ -80,12 +79,11 @@ class MemberController extends Controller
             return redirect()->back()->with('error', 'User ini sudah menjadi member.');
         }
 
-        $user = User::find($request->user_id);
+        $user = User::findOrFail($request->user_id);
 
+        // ❗️nama & email TIDAK disimpan di tabel members
         Member::create([
             'user_id'        => $user->id,
-            'nama'           => $user->name,
-            'email'          => $user->email,
             'tipe_kelas'     => $request->tipe_kelas,
             'harga'          => 0,
             'token_total'    => 0,

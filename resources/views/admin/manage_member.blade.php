@@ -7,8 +7,8 @@
 
     <style>
         /* =========================================================
-       UNIVERSAL UI MODERN - Light & Dark - Glassmorphism Style
-       ========================================================= */
+           UNIVERSAL UI MODERN - Light & Dark - Glassmorphism Style
+           ========================================================= */
 
         /* Card */
         .card {
@@ -278,8 +278,8 @@
                         @forelse ($members as $member)
                             <tr>
                                 <td data-label="ID">{{ $member->id }}</td>
-                                <td data-label="Nama">{{ $member->nama }}</td>
-                                <td data-label="Email">{{ $member->email }}</td>
+                                <td>{{ $member->user->name ?? '-' }}</td>
+                                <td>{{ $member->user->email ?? '-' }}</td>
                                 <td data-label="Tipe Kelas">{{ $member->tipe_kelas ?? '-' }}</td>
                             </tr>
                         @empty
