@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\VisitLog;
 use Illuminate\Http\Request;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class VisitLogController extends Controller
 {
@@ -13,7 +12,7 @@ class VisitLogController extends Controller
         // 🔹 load relasi yang benar
         $query = VisitLog::with(['user', 'kelas']);
 
-        // Filter cepat
+        // 🔹 Quick filter
         if ($request->filter) {
             switch ($request->filter) {
                 case 'today':
@@ -25,27 +24,35 @@ class VisitLogController extends Controller
                     break;
 
                 case 'week':
-                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    $query->whereBetween('created_at', [
+                        now()->startOfWeek(),
+                        now()->endOfWeek()
+                    ]);
                     break;
             }
         }
-        // Filter manual range
+        // 🔹 Filter manual range
         elseif ($request->filled('from') && $request->filled('to')) {
             $query->whereBetween('created_at', [
                 $request->from . ' 00:00:00',
                 $request->to . ' 23:59:59',
             ]);
         }
-        // Filter 1 tanggal
+        // 🔹 Filter 1 tanggal
         elseif ($request->filled('date')) {
             $query->whereDate('created_at', $request->date);
         }
-        // Default
+        // 🔹 Default: hari ini
         else {
             $query->whereDate('created_at', today());
         }
 
-        $visitLogs = $query->latest()->get();
+        // ✅ PAGINATION DITAMBAHKAN (INI SATU-SATUNYA PERUBAHAN BESAR)
+        $visitLogs = $query
+            ->latest()
+            ->paginate(10)
+            ->appends($request->query());
+
 
         return view('admin.visitlog', compact('visitLogs'));
     }
@@ -57,20 +64,14 @@ class VisitLogController extends Controller
         ]);
 
         VisitLog::create([
-            'user_id' => auth()->id(),
+            'user_id'  => auth()->id(),
             'kelas_id' => $request->kelas_id,
-            'status' => 'hadir',
-            'catatan' => null,
+            'status'   => 'hadir',
+            'catatan'  => null,
         ]);
 
         return response()->json([
             'message' => 'Check-in berhasil',
         ]);
-    }
-    
-    public function generateQR()
-    {
-        $qr = QrCode::size(300)->generate('Hello World');
-        return view('qr', compact('qr'));
     }
 }
