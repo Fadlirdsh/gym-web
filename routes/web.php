@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TokenPackageController;
 use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\Admin\AttendanceScanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -126,10 +127,10 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     });
 
     // ===============================
-    // Qr Code
+    // Scan 
     // ===============================
-    Route::get('/kelas/{kelas_id}/qr', [QrCodeController::class, 'show'])
-        ->name('kelas.qr.modal')
-        ->middleware('auth');
-    Route::get('/kelas/{kelas_id}/qr', [QrCodeController::class, 'show']);
+    
+    Route::post('/admin/absensi/scan', [AttendanceScanController::class, 'scan'])
+    ->name('admin.absensi.scan')
+    ->middleware(['auth']);
 });

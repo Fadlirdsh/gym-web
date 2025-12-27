@@ -205,4 +205,9 @@ Route::middleware(['jwt.auth', 'role:admin,trainer'])->group(function () {
         '/attendance/scan',
         [AttendanceController::class, 'scan']
     );
+
+    Route::post('/admin/absensi/scan', [AttendanceController::class, 'scan'])
+    ->name('admin.absensi.scan')
+    ->middleware(['auth']);
+    
 });

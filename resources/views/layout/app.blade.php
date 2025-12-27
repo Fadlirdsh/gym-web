@@ -17,7 +17,7 @@
 
     <!-- ================= PREVENT SIDEBAR GLITCH ================= -->
     <script>
-        (function () {
+        (function() {
             if (localStorage.getItem('sidebarCollapsed') === '1') {
                 document.documentElement.classList.add('sidebar-pre-collapsed');
             }
@@ -233,17 +233,48 @@
             @php
                 $menu = [
                     ['url' => url('/admin/home'), 'label' => 'Home', 'icon' => 'fa-house', 'pattern' => 'admin/home'],
-                    ['url' => url('/admin/dashboard'), 'label' => 'Dashboard', 'icon' => 'fa-chart-line', 'pattern' => 'admin/dashboard*'],
-                    ['url' => url('/admin/manage'), 'label' => 'Manage Users', 'icon' => 'fa-user', 'pattern' => 'admin/manage*'],
-                    ['url' => url('/admin/member'), 'label' => 'Manage Member', 'icon' => 'fa-users', 'pattern' => 'admin/member*'],
-                    ['url' => url('/admin/kelas'), 'label' => 'Manage Kelas', 'icon' => 'fa-bars-progress', 'pattern' => 'admin/kelas*'],
-                    ['url' => url('/admin/schedules'), 'label' => 'Manage Schedule', 'icon' => 'fa-calendar', 'pattern' => 'admin/schedules*'],
-                    ['url' => url('/admin/visitlog'), 'label' => 'Visit Log', 'icon' => 'fa-eye', 'pattern' => 'admin/visitlog*'],
+                    [
+                        'url' => url('/admin/dashboard'),
+                        'label' => 'Dashboard',
+                        'icon' => 'fa-chart-line',
+                        'pattern' => 'admin/dashboard*',
+                    ],
+                    [
+                        'url' => url('/admin/manage'),
+                        'label' => 'Manage Users',
+                        'icon' => 'fa-user',
+                        'pattern' => 'admin/manage*',
+                    ],
+                    [
+                        'url' => url('/admin/member'),
+                        'label' => 'Manage Member',
+                        'icon' => 'fa-users',
+                        'pattern' => 'admin/member*',
+                    ],
+                    [
+                        'url' => url('/admin/kelas'),
+                        'label' => 'Manage Kelas',
+                        'icon' => 'fa-bars-progress',
+                        'pattern' => 'admin/kelas*',
+                    ],
+                    [
+                        'url' => url('/admin/schedules'),
+                        'label' => 'Manage Schedule',
+                        'icon' => 'fa-calendar',
+                        'pattern' => 'admin/schedules*',
+                    ],
+                    [
+                        'url' => url('/admin/visitlog'),
+                        'label' => 'Visit Log',
+                        'icon' => 'fa-eye',
+                        'pattern' => 'admin/visitlog*',
+                    ],
                 ];
             @endphp
 
-            @foreach($menu as $item)
-                <a href="{{ $item['url'] }}" class="sidebar-item {{ request()->is($item['pattern']) ? 'active' : '' }}">
+            @foreach ($menu as $item)
+                <a href="{{ $item['url'] }}"
+                    class="sidebar-item {{ request()->is($item['pattern']) ? 'active' : '' }}">
                     <i class="fa-solid {{ $item['icon'] }} w-5"></i>
                     <span class="sidebar-label">{{ $item['label'] }}</span>
                 </a>
@@ -287,6 +318,27 @@
                     <i id="collapseIcon" class="fa-solid fa-angles-left"></i>
                 </button>
 
+                <button onclick="openScanner()"
+                    class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700">
+                    Scan QR
+                </button>
+
+                <div id="scanModal" class="fixed inset-0 bg-black/60 hidden z-50">
+                    <div class="bg-white max-w-md mx-auto mt-20 p-4 rounded">
+                        <h2 class="font-bold mb-2">Scan QR Pelanggan</h2>
+
+                        <div id="reader" style="width:100%"></div>
+
+                        <button onclick="closeScanner()" class="mt-3 text-sm text-red-600">
+                            Tutup
+                        </button>
+
+                        <div id="scanResult" class="mt-2 text-sm"></div>
+                    </div>
+                </div>
+
+
+
                 <form action="{{ route('admin.logout') }}" method="POST">@csrf
                     <button class="text-red-500 text-sm">
                         <i class="fa-solid fa-right-from-bracket"></i> Logout
@@ -318,9 +370,9 @@
                     sidebar.classList.toggle('collapsed', collapsed);
                     layout.classList.toggle('sidebar-collapsed', collapsed);
                     header.classList.toggle('sidebar-collapsed', collapsed);
-                    icon.className = collapsed
-                        ? 'fa-solid fa-angles-right'
-                        : 'fa-solid fa-angles-left';
+                    icon.className = collapsed ?
+                        'fa-solid fa-angles-right' :
+                        'fa-solid fa-angles-left';
                 }
 
                 btn.onclick = () => {
@@ -334,4 +386,70 @@
             });
         </script>
 </body>
+
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+    let html5Qr;
+
+    function openScanner() {
+        document.getElementById('scanModal').classList.remove('hidden');
+
+        html5Qr = new Html5Qrcode("reader");
+
+        html5Qr.start({
+                facingMode: "environment"
+            }, {
+                fps: 10,
+                qrbox: 250
+            },
+            onScanSuccess
+        );
+    }
+
+    function closeScanner() {
+        document.getElementById('scanModal').classList.add('hidden');
+
+        if (html5Qr) {
+            html5Qr.stop().then(() => {
+                html5Qr.clear();
+            });
+        }
+    }
+
+    function onScanSuccess(text) {
+        document.getElementById('scanResult').innerHTML = 'Memproses...';
+
+        fetch("{{ route('admin.absensi.scan') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    token: text
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                document.getElementById('scanResult').innerHTML = res.message;
+
+                if (res.success) {
+                    setTimeout(closeScanner, 1000);
+                }
+            });
+    }
+
+    html5Qr.start({
+            facingMode: "environment"
+        }, {
+            fps: 10,
+            qrbox: 250
+        },
+        onScanSuccess
+    );
+</script>
+
+
 </html>
