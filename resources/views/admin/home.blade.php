@@ -2,7 +2,8 @@
 
 @section('content')
 
-<div class="min-h-screen px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-20
+<div class="min-h-screen px-4 sm:px-6 lg:px-8 pt-14 sm:pt-16 pb-20
+
             bg-gradient-to-br
             from-indigo-100/40 via-white to-sky-100/40
             dark:from-indigo-950 dark:via-slate-900 dark:to-slate-950
@@ -145,7 +146,7 @@
                       flex items-center justify-between
                       px-6 py-4 rounded-2xl
                       bg-gradient-to-r from-indigo-600 to-violet-600
-                      text-white font-semibold
+                      font-semibold text-slate-900 dark:text-white
                       shadow-xl hover:shadow-2xl
                       transition-all duration-300">
 
@@ -162,8 +163,8 @@
                class="group relative overflow-hidden
                       flex items-center justify-between
                       px-6 py-4 rounded-2xl
-                      bg-gradient-to-r from-emerald-600 to-green-600
-                      text-white font-semibold
+                      bg-gradient-to-r from-indigo-600 to-violet-600
+                      font-semibold text-slate-900 dark:text-white
                       shadow-xl hover:shadow-2xl
                       transition-all duration-300">
 

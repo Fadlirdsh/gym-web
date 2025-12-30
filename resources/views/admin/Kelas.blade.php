@@ -8,8 +8,8 @@
         {{-- SUCCESS NOTIFICATION --}}
         @if (session('success'))
             <div class="mb-6 rounded-lg bg-green-100 text-green-700 border border-green-300
-                dark:bg-green-600/20 dark:text-green-300 dark:border-green-500/40
-                px-5 py-3 text-sm shadow-sm">
+                                                        dark:bg-green-600/20 dark:text-green-300 dark:border-green-500/40
+                                                        px-5 py-3 text-sm shadow-sm">
                 {{ session('success') }}
             </div>
         @endif
@@ -27,9 +27,10 @@
 
 
             {{-- ADD BUTTON --}}
-            <button id="btnOpenCreate" class="flex items-center justify-center gap-2 px-5 py-2.5 
-                bg-indigo-600 hover:bg-indigo-500 text-white font-semibold 
-                rounded-lg shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
+            <button id="btnOpenCreate"
+                class="flex items-center justify-center gap-2 px-5 py-2.5 
+                                    bg-indigo-600 hover:bg-indigo-500 text-white font-semibold 
+                                    rounded-lg shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-300">
                 <i class="fa-solid fa-plus"></i> Tambah Kelas
             </button>
         </div>
@@ -37,9 +38,10 @@
         {{-- GRID KELAS --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse ($kelas as $k)
-                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
-                               rounded-xl shadow-md hover:shadow-lg transition-transform duration-200
-                               transform hover:-translate-y-1 overflow-hidden flex flex-col">
+                <div
+                    class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
+                                                                       rounded-xl shadow-md hover:shadow-lg transition-transform duration-200
+                                                                       transform hover:-translate-y-1 overflow-hidden flex flex-col">
                     {{-- GAMBAR --}}
                     @if ($k->gambar)
                         <div class="w-full h-44 overflow-hidden">
@@ -61,14 +63,16 @@
                         <div class="text-gray-600 dark:text-gray-300 text-sm space-y-1">
                             <p><i class="fa-solid fa-users mr-2 text-indigo-500"></i> {{ $k->tipe_kelas }}</p>
                             <p><i class="fa-solid fa-money-bill mr-2 text-green-600"></i> Rp
-                                {{ number_format($k->harga, 0, ',', '.') }}</p>
+                                {{ number_format($k->harga, 0, ',', '.') }}
+                            </p>
                             <p><i class="fa-solid fa-percent mr-2 text-yellow-500"></i> Diskon: {{ $k->diskon_persen }}%</p>
                             <p><i class="fa-solid fa-tag mr-2 text-blue-500"></i>
                                 <span class="font-medium text-gray-800 dark:text-gray-100">Rp
                                     {{ number_format($k->harga_diskon, 0, ',', '.') }}</span>
                             </p>
                             <p><i class="fa-solid fa-hourglass-end mr-2 text-red-500"></i> Expired:
-                                {{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('d-m-Y') : '-' }}</p>
+                                {{ $k->expired_at ? \Carbon\Carbon::parse($k->expired_at)->format('d-m-Y') : '-' }}
+                            </p>
                         </div>
 
                         <p class="text-gray-600 dark:text-gray-400 text-sm mt-3 line-clamp-3">
@@ -134,103 +138,119 @@
     MODAL CREATE & EDIT
     ========================= --}}
     @foreach (['Create' => 'Tambah Kelas', 'Edit' => 'Edit Kelas'] as $modalId => $modalTitle)
-        <div id="modal{{ $modalId }}" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-            <div class="absolute inset-0 bg-black/40 modal-overlay" onclick="hideElementById('modal{{ $modalId }}')"
-                aria-hidden="true"></div>
+        <div id="modal{{ $modalId }}" class="fixed inset-0 z-50 hidden">
 
+            {{-- Overlay --}}
+            <div class="absolute inset-0 bg-black/40" onclick="hideElementById('modal{{ $modalId }}')">
+            </div>
+
+            {{-- Modal Wrapper (TIDAK FULL LAYAR) --}}
             <div class="flex items-center justify-center min-h-screen px-4">
-                <div
-                    class="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg shadow-2xl transform scale-95 opacity-0 animate-showModal flex flex-col max-h-[90vh]">
+                <div class="bg-white dark:bg-gray-900
+                                                           w-full max-w-md md:max-w-lg
+                                                           rounded-xl
+                                                           shadow-2xl
+                                                           transform scale-95 opacity-0 animate-showModal
+                                                           flex flex-col
+                                                           max-h-[90vh]">
 
-                    {{-- header --}}
-                    <div class="flex items-center justify-between px-6 py-4 border-b dark:border-gray-800">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $modalTitle }}</h3>
-                        <button id="btnClose{{ $modalId }}" class="text-gray-500 hover:text-gray-700 dark:hover:text-white">
+                    {{-- HEADER --}}
+                    <div class="flex items-center justify-between
+                                                               px-6 py-4
+                                                               border-b border-gray-200 dark:border-gray-800">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            {{ $modalTitle }}
+                        </h3>
+                        <button class="text-gray-500 hover:text-gray-700
+                                                                   dark:text-gray-400 dark:hover:text-white"
+                            onclick="hideElementById('modal{{ $modalId }}')">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>
 
-                    {{-- body form --}}
-                    <div class="overflow-y-auto px-6 py-6 flex-1">
+                    {{-- BODY --}}
+                    <div class="flex-1 overflow-y-auto px-6 py-5">
                         <form id="form{{ $modalId }}" action="{{ $modalId === 'Create' ? route('kelas.store') : '' }}"
                             method="POST" enctype="multipart/form-data" class="space-y-4">
+
                             @csrf
                             @if ($modalId === 'Edit') @method('PUT') @endif
-
                             <input type="hidden" name="id" id="{{ strtolower($modalId) }}Id">
 
-                            @if ($modalId === 'Create')
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Kelas</label>
-                                    <input id="createNama" name="nama_kelas" type="text" class="input-modern mt-1" required>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipe Kelas</label>
-                                    <select id="createTipe" name="tipe_kelas" class="input-modern mt-1">
-                                        @foreach (['Pilates Group', 'Pilates Private', 'Yoga Group', 'Yoga Private'] as $tipe)
-                                            <option value="{{ $tipe }}">{{ $tipe }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @else
-                                <div>
-
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Kelas</label>
-                                    <input id="editNama" name="nama_kelas" type="text" class="input-modern mt-1" required>
-                                </div>
-                                <div>
-
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipe Kelas</label>
-                                    <select id="editTipe" name="tipe_kelas" class="input-modern mt-1">
-                                        @foreach (['Pilates Group', 'Pilates Private', 'Yoga Group', 'Yoga Private'] as $tipe)
-                                            <option value="{{ $tipe }}">{{ $tipe }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @endif
-
+                            {{-- Nama Kelas --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga</label>
-                                <input id="{{ strtolower($modalId) }}Harga" name="harga" type="number"
-                                    class="input-modern mt-1">
+                                <label class="label-modern">Nama Kelas</label>
+                                <input id="{{ $modalId === 'Create' ? 'createNama' : 'editNama' }}" name="nama_kelas"
+                                    type="text" class="input-modern" required>
                             </div>
 
+                            {{-- Tipe Kelas --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kapasitas</label>
-                                <input id="{{ strtolower($modalId) }}Kapasitas" name="kapasitas" type="number" min="1"
-                                    class="input-modern mt-1" required>
+                                <label class="label-modern">Tipe Kelas</label>
+                                <select id="{{ $modalId === 'Create' ? 'createTipe' : 'editTipe' }}" name="tipe_kelas"
+                                    class="input-modern">
+                                    @foreach (['Pilates Group', 'Pilates Private', 'Yoga Group', 'Yoga Private'] as $tipe)
+                                        <option value="{{ $tipe }}">{{ $tipe }}</option>
+                                    @endforeach
+                                </select>
                             </div>
 
+                            {{-- Harga & Kapasitas --}}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="label-modern">Harga</label>
+                                    <input id="{{ strtolower($modalId) }}Harga" name="harga" class="input-modern">
+                                </div>
+
+                                <div>
+                                    <label class="label-modern">Kapasitas</label>
+                                    <input id="{{ strtolower($modalId) }}Kapasitas" name="kapasitas" type="number" min="1"
+                                        class="input-modern" required>
+                                </div>
+                            </div>
+
+                            {{-- Deskripsi --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Deskripsi</label>
+                                <label class="label-modern">Deskripsi</label>
                                 <textarea id="{{ strtolower($modalId) }}Deskripsi" name="deskripsi" rows="3"
-                                    class="input-modern mt-1"></textarea>
+                                    class="input-modern resize-none"></textarea>
                             </div>
 
+                       
+                            {{-- Expired --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Expired At</label>
-                                <input id="{{ strtolower($modalId) }}Expired" name="expired_at" type="date"
-                                    class="input-modern mt-1">
+                                <label class="label-modern">Kadaluarsa</label>
+                                <input type="date" name="expired_at" id="{{ strtolower($modalId) }}Expired" class="input-modern"
+                                    min="{{ now()->toDateString() }}">
                             </div>
 
+
+                            {{-- Gambar --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Gambar</label>
-                                <input name="gambar" type="file" accept="image/*" class="input-modern mt-1">
+                                <label class="label-modern">Gambar</label>
+                                <input name="gambar" type="file" accept="image/*" class="input-modern">
                             </div>
                         </form>
                     </div>
 
-                    {{-- footer --}}
-                    <div class="px-6 py-4 border-t dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-3">
-                        <button id="btnClose{{ $modalId }}Bottom" class="btn-cancel">Batal</button>
+                    {{-- FOOTER --}}
+                    <div class="px-6 py-4
+                                                               border-t border-gray-200 dark:border-gray-800
+                                                               bg-gray-50 dark:bg-gray-900
+                                                               flex justify-end gap-3">
+                        <button class="btn-cancel" onclick="hideElementById('modal{{ $modalId }}')">
+                            Batal
+                        </button>
                         <button type="submit" form="form{{ $modalId }}" class="btn-primary">
                             {{ $modalId === 'Create' ? 'Simpan' : 'Update' }}
                         </button>
                     </div>
+
                 </div>
             </div>
         </div>
     @endforeach
+
 
 
     {{-- =========================

@@ -313,6 +313,7 @@
             @php
                 $menu = [
                     ['url' => url('/admin/home'), 'label' => 'Home', 'icon' => 'fa-house', 'pattern' => 'admin/home'],
+
                     [
                         'url' => url('/admin/dashboard'),
                         'label' => 'Dashboard',
