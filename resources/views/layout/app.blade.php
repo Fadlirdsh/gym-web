@@ -350,14 +350,6 @@
                         'icon' => 'fa-eye',
                         'pattern' => 'admin/visitlog*',
                     ],
-
-                    ['url' => url('/admin/dashboard'), 'label' => 'Overview', 'icon' => 'fa-chart-line', 'pattern' => 'admin/dashboard*'],
-                    ['url' => url('/admin/manage'), 'label' => 'Manage Users', 'icon' => 'fa-user', 'pattern' => 'admin/manage*'],
-                    ['url' => url('/admin/member'), 'label' => 'Manage Member', 'icon' => 'fa-users', 'pattern' => 'admin/member*'],
-                    ['url' => url('/admin/kelas'), 'label' => 'Manage Kelas', 'icon' => 'fa-bars-progress', 'pattern' => 'admin/kelas*'],
-                    ['url' => url('/admin/schedules'), 'label' => 'Manage Schedule', 'icon' => 'fa-calendar', 'pattern' => 'admin/schedules*'],
-                    ['url' => url('/admin/visitlog'), 'label' => 'Visit Log', 'icon' => 'fa-eye', 'pattern' => 'admin/visitlog*'],
-
                 ];
             @endphp
 
