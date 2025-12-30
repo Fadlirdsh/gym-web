@@ -6,8 +6,8 @@
 
     <style>
         /* =========================================================
-       VISIT LOG - Light & Dark - Glassmorphism Style
-    ========================================================= */
+           VISIT LOG - Light & Dark - Glassmorphism Style
+        ========================================================= */
 
         /* Card */
         .card {
@@ -208,36 +208,39 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div>
                 <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-                    <span class="text-cyan-600 dark:text-cyan-400 text-5xl">📋</span>
+                    <span class="text-cyan-600 dark:text-cyan-400 text-5xl"></span>
                     Visit Log
                 </h1>
-                <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Rekap kunjungan lengkap dengan filter & catatan.</p>
+                <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                    Rekap kunjungan lengkap dengan filter & catatan.
+                </p>
             </div>
 
-            {{-- QUICK FILTER --}}
+            {{-- QUICK FILTER + QR --}}
             <div class="flex flex-wrap gap-2 mt-4 md:mt-0 quick-filter">
                 @php $q = request('filter'); @endphp
+
                 <a href="?filter=today"
-                    class="{{ $q === 'today' ? 'bg-cyan-600 text-white shadow' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' }}">Hari
-                    Ini</a>
+                    class="{{ $q === 'today' ? 'bg-cyan-600 text-white shadow' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' }}">
+                    Hari Ini
+                </a>
+
                 <a href="?filter=yesterday"
-                    class="{{ $q === 'yesterday' ? 'bg-indigo-600 text-white shadow' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' }}">Kemarin</a>
+                    class="{{ $q === 'yesterday' ? 'bg-indigo-600 text-white shadow' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' }}">
+                    Kemarin
+                </a>
+
                 <a href="?filter=week"
-                    class="{{ $q === 'week' ? 'bg-emerald-600 text-white shadow' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' }}">Minggu
-                    Ini</a>
+                    class="{{ $q === 'week' ? 'bg-emerald-600 text-white shadow' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' }}">
+                    Minggu Ini
+                </a>
+
+                <button onclick="openScanner()" class="bg-indigo-600 text-white hover:bg-indigo-700">
+                    📷 Scan QR
+                </button>
             </div>
         </div>
 
-        {{-- FILTER FORM --}}
-        <form method="GET" class="card p-6 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" name="from" value="{{ request('from') }}" placeholder="Dari Tanggal"
-                    class="input-fix datepicker">
-                <input type="text" name="to" value="{{ request('to') }}" placeholder="Sampai Tanggal"
-                    class="input-fix datepicker">
-            </div>
-            <button class="bg-indigo-600 text-white w-full sm:w-auto">🔍 Filter</button>
-        </form>
 
         {{-- TABLE --}}
         <div class="card shadow-lg overflow-hidden">
