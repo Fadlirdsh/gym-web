@@ -17,7 +17,7 @@
 
     <!-- ================= PREVENT SIDEBAR GLITCH ================= -->
     <script>
-        (function() {
+        (function () {
             if (localStorage.getItem('sidebarCollapsed') === '1') {
                 document.documentElement.classList.add('sidebar-pre-collapsed');
             }
@@ -214,6 +214,86 @@
             left: 4.5rem;
             width: calc(100% - 4.5rem);
         }
+
+        /* ================= QR SCAN UI ================= */
+        .scan-frame {
+            position: absolute;
+            inset: 14px;
+            border-radius: 1rem;
+            border: 2px solid rgba(99, 102, 241, .7);
+            pointer-events: none;
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #6366f1, transparent);
+            animation: scanMove 2s linear infinite;
+        }
+
+        @keyframes scanMove {
+            0% {
+                top: 12%;
+                opacity: .3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 88%;
+                opacity: .3;
+            }
+        }
+
+        .scan-status {
+            display: inline-block;
+            padding: .4rem .75rem;
+            border-radius: .5rem;
+            font-size: .75rem;
+            background: var(--primary-soft);
+            color: var(--primary);
+        }
+
+        /* ================= QR ACTION (VISITLOG STYLE - GLOBAL) ================= */
+        .qr-action {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+
+            padding: .45rem .9rem;
+            border-radius: .75rem;
+
+            font-weight: 600;
+            font-size: .875rem;
+
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: #fff;
+
+            transition: transform .15s ease,
+                box-shadow .15s ease,
+                background .2s ease;
+            white-space: nowrap;
+        }
+
+        .qr-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, .35);
+            background: linear-gradient(135deg, #4338ca, #4f46e5);
+        }
+
+        .qr-action i {
+            font-size: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .qr-action span {
+                display: none;
+            }
+        }
     </style>
 </head>
 
@@ -273,8 +353,7 @@
             @endphp
 
             @foreach ($menu as $item)
-                <a href="{{ $item['url'] }}"
-                    class="sidebar-item {{ request()->is($item['pattern']) ? 'active' : '' }}">
+                <a href="{{ $item['url'] }}" class="sidebar-item {{ request()->is($item['pattern']) ? 'active' : '' }}">
                     <i class="fa-solid {{ $item['icon'] }} w-5"></i>
                     <span class="sidebar-label">{{ $item['label'] }}</span>
                 </a>
@@ -314,36 +393,65 @@
 
         <header class="fixed top-0 right-0 z-50">
             <div class="flex items-center justify-between px-6 h-16">
+
                 <button id="collapseSidebar" class="hidden md:inline-flex">
                     <i id="collapseIcon" class="fa-solid fa-angles-left"></i>
                 </button>
 
-                <button onclick="openScanner()"
-                    class="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700">
-                    Scan QR
+                <button onclick="openScanner()" class="qr-action">
+                    <i class="fa-solid fa-qrcode"></i>
+                    <span>Scan QR</span>
                 </button>
 
-                <div id="scanModal" class="fixed inset-0 bg-black/60 hidden z-50">
-                    <div class="bg-white max-w-md mx-auto mt-20 p-4 rounded">
-                        <h2 class="font-bold mb-2">Scan QR Pelanggan</h2>
 
-                        <div id="reader" style="width:100%"></div>
+                <!-- ================= QR SCAN MODAL ================= -->
+                <div id="scanModal" class="fixed inset-0 z-50 hidden">
+                    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
-                        <button onclick="closeScanner()" class="mt-3 text-sm text-red-600">
-                            Tutup
-                        </button>
+                    <div class="relative bg-white dark:bg-slate-900
+        w-full max-w-md mx-auto mt-28 rounded-2xl shadow-2xl
+        border border-slate-200 dark:border-slate-700">
 
-                        <div id="scanResult" class="mt-2 text-sm"></div>
+                        <!-- Header -->
+                        <div class="flex items-center justify-between px-5 h-14 border-b">
+                            <span class="font-semibold">Scan QR Member</span>
+                            <button onclick="closeScanner()" class="text-gray-500 hover:text-red-500">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="p-5 space-y-4">
+                            <div class="relative aspect-square rounded-xl overflow-hidden bg-black">
+                                <div id="reader" class="absolute inset-0"></div>
+                                <div class="scan-frame"></div>
+                                <div class="scan-line"></div>
+                            </div>
+
+                            <div class="text-center">
+                                <span id="scanResult" class="scan-status">
+                                    Arahkan QR Code ke area scan
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="px-5 py-3 bg-slate-50 dark:bg-slate-800 text-right rounded-b-2xl">
+                            <button onclick="closeScanner()" class="text-sm text-red-500 hover:underline">
+                                Tutup
+                            </button>
+                        </div>
                     </div>
                 </div>
 
 
-
-                <form action="{{ route('admin.logout') }}" method="POST">@csrf
+                <form action="{{ route('admin.logout') }}" method="POST">
+                    @csrf
                     <button class="text-red-500 text-sm">
                         <i class="fa-solid fa-right-from-bracket"></i> Logout
                     </button>
                 </form>
+
             </div>
         </header>
 
@@ -388,67 +496,59 @@
 </body>
 
 
+{{-- ================= QR SCAN SCRIPT (FIXED) ================= --}}
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-    let html5Qr;
+    let html5Qr = null;
 
     function openScanner() {
-        document.getElementById('scanModal').classList.remove('hidden');
+        const modal = document.getElementById('scanModal');
+        modal.classList.remove('hidden');
 
-        html5Qr = new Html5Qrcode("reader");
+        if (!html5Qr) {
+            html5Qr = new Html5Qrcode("reader");
+        }
 
-        html5Qr.start({
-                facingMode: "environment"
-            }, {
-                fps: 10,
-                qrbox: 250
-            },
+        html5Qr.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
             onScanSuccess
         );
     }
 
     function closeScanner() {
-        document.getElementById('scanModal').classList.add('hidden');
+        const modal = document.getElementById('scanModal');
+        modal.classList.add('hidden');
 
         if (html5Qr) {
-            html5Qr.stop().then(() => {
-                html5Qr.clear();
-            });
+            html5Qr.stop().then(() => html5Qr.clear());
         }
     }
 
     function onScanSuccess(text) {
-        document.getElementById('scanResult').innerHTML = 'Memproses...';
+        const result = document.getElementById('scanResult');
+        result.innerText = 'Memproses...';
 
         fetch("{{ route('admin.absensi.scan') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    token: text
-                })
-            })
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ token: text })
+        })
             .then(res => res.json())
             .then(res => {
-                document.getElementById('scanResult').innerHTML = res.message;
-
+                result.innerText = res.message;
                 if (res.success) {
                     setTimeout(closeScanner, 1000);
                 }
+            })
+            .catch(() => {
+                result.innerText = 'Gagal memproses QR';
             });
     }
-
-    html5Qr.start({
-            facingMode: "environment"
-        }, {
-            fps: 10,
-            qrbox: 250
-        },
-        onScanSuccess
-    );
 </script>
 
 

@@ -406,7 +406,7 @@
     </style>
 
     <div class="flex justify-between items-center mb-6">
-        <h1 class="page-title">🎫 Manage Voucher</h1>
+        <h1 class="page-title">Manage Voucher</h1>
         <button id="btnOpenCreate" class="btn-primary">+ Tambah Voucher</button>
     </div>
 

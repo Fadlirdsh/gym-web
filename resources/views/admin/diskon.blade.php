@@ -135,7 +135,7 @@ table tr:hover { background: rgba(59,130,246,0.05); border-radius:12px; }
     <div class="container mx-auto space-y-8">
         {{-- HEADER --}}
         <div class="flex flex-col sm:flex-row justify-between items-center mb-8">
-            <h1 class="page-title">💰 Manage Diskon</h1>
+            <h1 class="page-title">Manage Diskon</h1>
             <div class="flex flex-col sm:flex-row gap-3 mt-3 sm:mt-0">
                 <div id="searchInputWrapper">
                     <input type="text" id="searchInput" placeholder=" " class="input-box">

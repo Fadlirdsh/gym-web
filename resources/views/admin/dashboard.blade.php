@@ -86,7 +86,7 @@
 
             <div>
                 <h1 class="text-4xl md:text-5xl font-extrabold text-title">Dashboard</h1>
-                <p class="mt-1 text-sm text-sub">Selamat datang kembali, Admin 👋</p>
+                <p class="mt-1 text-sm text-sub">Selamat datang kembali, Admin</p>
             </div>
 
             <div class="flex items-center gap-4">
