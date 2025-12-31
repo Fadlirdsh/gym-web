@@ -11,29 +11,53 @@ return new class extends Migration
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
 
-            // Relasi ke kelas (Pilates/Yoga Group)
-            $table->foreignId('kelas_id')->constrained('kelas')->cascadeOnDelete();
+            /**
+             * =========================
+             * RELASI INTI
+             * =========================
+             */
 
-            // Relasi ke trainer
-            $table->foreignId('trainer_id')->constrained('users')->cascadeOnDelete();
+            // Relasi ke shift kerja trainer (WAJIB)
+            $table->foreignId('trainer_shift_id')
+                  ->constrained('trainer_shifts')
+                  ->cascadeOnDelete();
 
-            // Jadwal mingguan (Monday–Sunday)
+            // Relasi ke kelas
+            $table->foreignId('kelas_id')
+                  ->constrained('kelas')
+                  ->cascadeOnDelete();
+
+            // Relasi ke trainer (redundan tapi sengaja, untuk query cepat)
+            $table->foreignId('trainer_id')
+                  ->constrained('users')
+                  ->cascadeOnDelete();
+
+            /**
+             * =========================
+             * JADWAL KELAS
+             * =========================
+             */
+
             $table->enum('day', [
-                'Monday', 'Tuesday', 'Wednesday',
-                'Thursday', 'Friday', 'Saturday', 'Sunday'
-            ])->nullable(); // nullable agar bisa pakai date untuk jadwal khusus
+                'Monday',
+                'Tuesday',
+                'Wednesday',
+                'Thursday',
+                'Friday',
+                'Saturday',
+                'Sunday'
+            ]);
 
-            // Jadwal tanggal spesifik (optional)
-            $table->date('date')->nullable();
-
-            // Waktu mulai & selesai kelas
             $table->time('start_time');
-            $table->time('end_time')->nullable(); // Boleh null jika durasi belum pasti
+            $table->time('end_time');
 
-            // Fokus kelas (catatan tambahan)
+            /**
+             * =========================
+             * META
+             * =========================
+             */
+
             $table->string('class_focus')->nullable();
-
-            // Status jadwal aktif/tidak
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();

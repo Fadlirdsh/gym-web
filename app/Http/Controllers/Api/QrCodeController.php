@@ -12,31 +12,42 @@ use App\Models\Reservasi;
 
 class QrCodeController extends Controller
 {
-    /**
-     * =========================
-     * PELANGGAN
-     * Generate QR Absensi
-     * =========================
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | PELANGGAN - GENERATE QR ABSENSI
+    |--------------------------------------------------------------------------
+    | SYARAT:
+    | - reservasi milik user
+    | - status = paid
+    | - status_hadir = belum_hadir
+    */
     public function show($reservasi_id)
     {
         $user = Auth::user();
 
-        // 1. Pastikan reservasi milik user & masih valid
+        /*
+        |----------------------------------------------------------------------
+        | 1. VALIDASI RESERVASI
+        |----------------------------------------------------------------------
+        */
         $reservasi = Reservasi::where('id', $reservasi_id)
             ->where('pelanggan_id', $user->id)
-            ->where('status', 'approved')
+            ->where('status', 'paid')              // 🔥 KUNCI UTAMA
             ->where('status_hadir', 'belum_hadir')
             ->first();
 
         if (!$reservasi) {
             return response()->json([
                 'success' => false,
-                'message' => 'Reservasi tidak valid atau sudah hadir'
+                'message' => 'Reservasi belum dibayar, sudah hadir, atau tidak valid'
             ], 403);
         }
 
-        // 2. Kalau QR masih aktif, pakai ulang
+        /*
+        |----------------------------------------------------------------------
+        | 2. JIKA QR MASIH AKTIF → PAKAI ULANG
+        |----------------------------------------------------------------------
+        */
         if (
             $reservasi->qrCode &&
             !$reservasi->qrCode->used_at &&
@@ -49,10 +60,18 @@ class QrCodeController extends Controller
             ]);
         }
 
-        // 3. Hapus QR lama (kalau ada)
+        /*
+        |----------------------------------------------------------------------
+        | 3. HAPUS QR LAMA (JIKA ADA)
+        |----------------------------------------------------------------------
+        */
         QrCode::where('reservasi_id', $reservasi->id)->delete();
 
-        // 4. Generate QR baru
+        /*
+        |----------------------------------------------------------------------
+        | 4. BUAT QR BARU
+        |----------------------------------------------------------------------
+        */
         $qr = QrCode::create([
             'reservasi_id' => $reservasi->id,
             'token'        => Str::uuid()->toString(),

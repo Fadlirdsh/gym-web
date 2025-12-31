@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\VisitLog; // ← penting! tambahkan ini biar dikenali
 
 class Reservasi extends Model
 {
@@ -17,14 +16,20 @@ class Reservasi extends Model
         'trainer_id',
         'kelas_id',
         'jadwal',
-        'status',
-        'status_hadir',
+        'status',        // pending_payment | paid | canceled
+        'status_hadir',  // belum_hadir | hadir
         'catatan',
     ];
 
     protected $casts = [
         'jadwal' => 'datetime',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONSHIPS
+    |--------------------------------------------------------------------------
+    */
 
     public function pelanggan()
     {
@@ -46,27 +51,24 @@ class Reservasi extends Model
         return $this->hasOne(QrCode::class);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | STATUS HELPERS (OPSIONAL TAPI DISARANKAN)
+    |--------------------------------------------------------------------------
+    */
 
-
-    // ✅ hanya satu booted(), gabungkan logikanya di sini
-    protected static function booted()
+    public function isPendingPayment(): bool
     {
-        static::updated(function ($reservasi) {
-            // cek kalau status berubah ke 'approved'
-            if ($reservasi->isDirty('status') && $reservasi->status === 'approved') {
+        return $this->status === 'pending_payment';
+    }
 
-                // pastikan tidak duplikat
-                $exists = VisitLog::where('reservasi_id', $reservasi->id)->exists();
+    public function isPaid(): bool
+    {
+        return $this->status === 'paid';
+    }
 
-                if (!$exists) {
-                    VisitLog::create([
-                        'reservasi_id' => $reservasi->id,
-                        'user_id'      => $reservasi->pelanggan_id,
-                        'status'       => 'approved',
-                        'catatan'      => 'Reservasi disetujui dan dicatat ke Visit Log.',
-                    ]);
-                }
-            }
-        });
+    public function isCanceled(): bool
+    {
+        return $this->status === 'canceled';
     }
 }

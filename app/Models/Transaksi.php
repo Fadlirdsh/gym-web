@@ -14,66 +14,62 @@ class Transaksi extends Model
     protected $fillable = [
         'kode_transaksi',
         'user_id',
-        'jenis',
-        'source_id',
-        'jumlah',
-        'diskon_persen',           // 🔥 baru
-        'total_setelah_diskon',    // 🔥 baru
-        'metode',
-        'status',
+        'jenis',         // member | reservasi
+        'source_id',     // id member / reservasi
+        'harga_asli',    // harga sebelum diskon
+        'diskon',        // nominal diskon (rupiah)
+        'total_bayar',   // total akhir
+        'metode',        // midtrans / manual / transfer
+        'status',        // pending | success | failed | refund | dll
     ];
 
     protected $casts = [
-        'jumlah' => 'integer',
-        'diskon_persen' => 'integer',        // 🔥 baru
-        'total_setelah_diskon' => 'integer', // 🔥 baru
+        'harga_asli'  => 'integer',
+        'diskon'      => 'integer',
+        'total_bayar' => 'integer',
     ];
 
     /*
     |--------------------------------------------------------------------------
-    | RELASI
+    | RELATIONS
     |--------------------------------------------------------------------------
     */
 
-    // Relasi ke user (pembayar)
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // Relasi dinamis ke sumber transaksi (Member atau Reservasi)
-    public function source()
+    public function reservasi()
     {
-        if ($this->jenis === 'member') {
-            return $this->belongsTo(Member::class, 'source_id');
-        }
+        return $this->belongsTo(Reservasi::class, 'source_id')
+            ->where('jenis', 'reservasi');
+    }
 
-        if ($this->jenis === 'reservasi') {
-            return $this->belongsTo(Reservasi::class, 'source_id');
-        }
-
-        return null;
+    public function member()
+    {
+        return $this->belongsTo(Member::class, 'source_id')
+            ->where('jenis', 'member');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | ACCESSOR
+    | ACCESSORS (FORMAT RUPIAH)
     |--------------------------------------------------------------------------
     */
 
-    // Format jumlah
-    public function getJumlahFormatAttribute()
+    public function getHargaAsliFormatAttribute(): string
     {
-        return 'Rp ' . number_format($this->jumlah, 0, ',', '.');
+        return 'Rp ' . number_format($this->harga_asli, 0, ',', '.');
     }
 
-    // 🔥 Format total setelah diskon (kalau ada)
-    public function getTotalSetelahDiskonFormatAttribute()
+    public function getDiskonFormatAttribute(): string
     {
-        if (!$this->total_setelah_diskon) {
-            return $this->jumlah_format; // fallback
-        }
+        return 'Rp ' . number_format($this->diskon, 0, ',', '.');
+    }
 
-        return 'Rp ' . number_format($this->total_setelah_diskon, 0, ',', '.');
+    public function getTotalBayarFormatAttribute(): string
+    {
+        return 'Rp ' . number_format($this->total_bayar, 0, ',', '.');
     }
 }

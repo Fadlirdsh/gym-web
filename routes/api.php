@@ -65,7 +65,21 @@ Route::get('/kelas/{id}', [KelasController::class, 'show']);
 |--------------------------------------------------------------------------
 */
 Route::middleware(['jwt.auth', 'role:pelanggan'])
-    ->apiResource('reservasi', ReservasiController::class);
+->apiResource('reservasi', ReservasiController::class);
+
+/*
+|--------------------------------------------------------------------------|
+| CHECKOUT (JWT – PELANGGAN)
+|--------------------------------------------------------------------------|
+*/
+Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
+    Route::post('/checkout/price', [CheckoutController::class, 'price']);
+    Route::post('/checkout/confirm', [CheckoutController::class, 'confirm']);
+    Route::post('/checkout/midtrans/token', [CheckoutController::class, 'midtransToken']);
+
+    // ✅ INI YANG DIPAKAI
+    Route::post('/checkout/reservasi', [CheckoutController::class, 'checkoutReservasi']);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -209,5 +223,7 @@ Route::middleware(['jwt.auth', 'role:admin,trainer'])->group(function () {
     Route::post('/admin/absensi/scan', [AttendanceController::class, 'scan'])
     ->name('admin.absensi.scan')
     ->middleware(['auth']);
+
+
     
 });

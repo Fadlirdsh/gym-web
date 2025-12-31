@@ -87,29 +87,55 @@ class AttendanceController extends Controller
         if (!$user) {
             return response()->json([
                 'can_checkin' => false,
-                'reason' => 'Unauthenticated'
+                'reason' => 'unauthenticated'
             ], 401);
         }
 
         $now = now();
 
+        // Ambil reservasi TERDEKAT hari ini
         $reservasi = Reservasi::with('kelas')
             ->where('pelanggan_id', $user->id)
-            ->where('status', 'approved')
-            ->where('status_hadir', 'belum_hadir')
-            ->whereBetween('jadwal', [
-                $now->copy()->subHours(1),
-                $now->copy()->addHours(2),
-            ])
+            ->whereDate('jadwal', today())
             ->orderBy('jadwal', 'asc')
             ->first();
 
         if (!$reservasi) {
             return response()->json([
-                'can_checkin' => false
+                'can_checkin' => false,
+                'reason' => 'no_reservation_today'
             ]);
         }
 
+        if ($reservasi->status !== 'paid') {
+            return response()->json([
+                'can_checkin' => false,
+                'reason' => 'not_paid'
+            ]);
+        }
+
+        if ($reservasi->status_hadir === 'hadir') {
+            return response()->json([
+                'can_checkin' => false,
+                'reason' => 'already_checked_in'
+            ]);
+        }
+
+        if ($reservasi->jadwal->lt($now->copy()->subHour())) {
+            return response()->json([
+                'can_checkin' => false,
+                'reason' => 'session_expired'
+            ]);
+        }
+
+        if ($reservasi->jadwal->gt($now->copy()->addHours(2))) {
+            return response()->json([
+                'can_checkin' => false,
+                'reason' => 'too_early'
+            ]);
+        }
+
+        // LOLOS SEMUA SYARAT
         return response()->json([
             'can_checkin'  => true,
             'reservasi_id' => $reservasi->id,
