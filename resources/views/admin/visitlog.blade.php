@@ -6,8 +6,8 @@
 
     <style>
         /* =========================================================
-           VISIT LOG - Light & Dark - Glassmorphism Style
-        ========================================================= */
+               VISIT LOG - Light & Dark - Glassmorphism Style
+            ========================================================= */
 
         /* Card */
         .card {
@@ -207,31 +207,30 @@
         {{-- HEADER --}}
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div>
-                <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-                    <span class="text-cyan-600 dark:text-cyan-400 text-5xl"></span>
+                <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white">
                     Visit Log
                 </h1>
                 <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                    Rekap kunjungan lengkap dengan filter & catatan.
+                    Rekap kunjungan berdasarkan kehadiran aktual (QR Scan).
                 </p>
             </div>
 
-            {{-- QUICK FILTER + QR --}}
+            {{-- QUICK FILTER --}}
             <div class="flex flex-wrap gap-2 mt-4 md:mt-0 quick-filter">
                 @php $q = request('filter'); @endphp
 
                 <a href="?filter=today"
-                    class="{{ $q === 'today' ? 'bg-cyan-600 text-white shadow' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' }}">
+                    class="{{ $q === 'today' ? 'bg-cyan-600 text-white' : 'bg-white text-gray-800 border' }}">
                     Hari Ini
                 </a>
 
                 <a href="?filter=yesterday"
-                    class="{{ $q === 'yesterday' ? 'bg-indigo-600 text-white shadow' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' }}">
+                    class="{{ $q === 'yesterday' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-800 border' }}">
                     Kemarin
                 </a>
 
                 <a href="?filter=week"
-                    class="{{ $q === 'week' ? 'bg-emerald-600 text-white shadow' : 'bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600' }}">
+                    class="{{ $q === 'week' ? 'bg-emerald-600 text-white' : 'bg-white text-gray-800 border' }}">
                     Minggu Ini
                 </a>
 
@@ -241,7 +240,6 @@
             </div>
         </div>
 
-
         {{-- TABLE --}}
         <div class="card shadow-lg overflow-hidden">
             <div class="table-wrapper">
@@ -249,10 +247,10 @@
                     <thead class="thead-light">
                         <tr>
                             <th>Tanggal</th>
+                            <th>Jam Masuk</th>
                             <th>Pelanggan</th>
-                            <th>Jam</th>
                             <th>Kelas</th>
-                            <th>Pengajar</th>
+                            <th>Trainer</th>
                             <th>Status</th>
                             <th>Catatan</th>
                         </tr>
@@ -260,50 +258,58 @@
                     <tbody>
                         @forelse($visitLogs as $log)
                             <tr>
-                                <td data-label="Tanggal">{{ $log->created_at?->format('d F Y') }}</td>
-                                <td data-label="Pelanggan">{{ $log->user?->name ?? 'N/A' }}</td>
-                                <td data-label="Jam">{{ $log->reservasi->jam_kelas ?? '-' }}</td>
-                                <td data-label="Kelas">{{ $log->reservasi->kelas->nama_kelas ?? '-' }}</td>
-                                <td data-label="Pengajar">{{ $log->reservasi->pengajar ?? '-' }}</td>
-                                <td data-label="Status">
-                                    @php
-                                        $s = strtolower($log->status);
-                                        $badge = match ($s) {
-                                            'approved', 'attended' => 'badge-green',
-                                            'pending' => 'badge-yellow',
-                                            default => 'badge-red',
-                                        };
-                                    @endphp
-                                    <span class="{{ $badge }}">{{ ucfirst($log->status) }}</span>
+                                {{-- Tanggal --}}
+                                <td data-label="Tanggal">
+                                    {{ $log->checkin_at->format('d F Y') }}
                                 </td>
-                                <td data-label="Catatan">{{ $log->catatan ?? '-' }}</td>
+
+                                {{-- Jam --}}
+                                <td data-label="Jam Masuk">
+                                    {{ $log->checkin_at->format('H:i') }}
+                                </td>
+
+                                {{-- Pelanggan --}}
+                                <td data-label="Pelanggan">
+                                    {{ $log->user?->name ?? '-' }}
+                                </td>
+
+                                {{-- Kelas --}}
+                                <td data-label="Kelas">
+                                    {{ $log->reservasi->kelas->nama_kelas ?? '-' }}
+                                </td>
+
+                                {{-- Trainer --}}
+                                <td data-label="Trainer">
+                                    {{ $log->reservasi->trainer->name ?? '-' }}
+                                </td>
+
+                                {{-- Status (SELALU HADIR) --}}
+                                <td data-label="Status">
+                                    <span class="badge-green">
+                                        Hadir
+                                    </span>
+                                </td>
+
+                                {{-- Catatan --}}
+                                <td data-label="Catatan">
+                                    {{ $log->catatan ?? '-' }}
+                                </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="7" class="py-10 text-center text-gray-600 dark:text-gray-400 italic">
-                                    🚫 Tidak ada data untuk periode ini.
+                                    🚫 Tidak ada data kunjungan.
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
+
                 <div class="mt-6">
                     {{ $visitLogs->links() }}
                 </div>
-
             </div>
         </div>
-
-        {{-- FLATPICKR --}}
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/light.css">
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script>
-            flatpickr(".datepicker", {
-                dateFormat: "Y-m-d",
-                altInput: true,
-                altFormat: "d F Y",
-            });
-        </script>
 
     </div>
 

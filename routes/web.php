@@ -14,7 +14,7 @@ use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TokenPackageController;
 use App\Http\Controllers\TrainerShiftController;
-use App\Http\Controllers\Admin\AttendanceScanController;
+use App\Http\Controllers\AttendanceScanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,12 +43,12 @@ Route::prefix('admin')->middleware('web')->group(function () {
 Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(function () {
 
     // ===============================
-    // 🏠 Halaman Home (Dashboard Ringkas)
+    // 🏠 Home
     // ===============================
     Route::get('/home', [HomeController::class, 'index'])->name('admin.home');
 
     // ===============================
-    // 👥 Manage User (TANPA Member, karena dipindah)
+    // 👥 Manage User
     // ===============================
     Route::prefix('manage')->group(function () {
         Route::get('/', [UserController::class, 'manage'])->name('users.manage');
@@ -58,31 +58,31 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
         Route::delete('/{id}', [UserController::class, 'destroyWeb'])->name('users.destroy');
     });
 
-    // Resource Kelas
+    // ===============================
+    // 📚 Kelas
+    // ===============================
     Route::resource('kelas', KelasController::class)->parameters([
         'kelas' => 'kelas',
     ]);
 
-    // Route tambahan untuk QR
-    Route::get('/admin/kelas/{id}/qr', [KelasController::class, 'getQr'])
-        ->whereNumber('id') // <- ini penting, hanya menerima numeric
+    Route::get('/kelas/{id}/qr', [KelasController::class, 'getQr'])
+        ->whereNumber('id')
         ->name('kelas.qr');
 
-
     // ===============================
-    // 🕒 Jadwal / Schedule
+    // 🕒 Schedule
     // ===============================
     Route::get('/schedules/export-pdf', [ScheduleController::class, 'exportPDF'])->name('schedules.exportPDF');
     Route::resource('schedules', ScheduleController::class)->except(['create', 'show']);
     Route::get('/schedules/{id}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
 
     // ===============================
-    // 💸 Diskon CRUD
+    // 💸 Diskon
     // ===============================
     Route::resource('diskon', DiskonController::class)->except(['create', 'edit']);
 
     // ===============================
-    // 🎟 Voucher CRUD
+    // 🎟 Voucher
     // ===============================
     Route::resource('voucher', VoucherController::class)->except(['create', 'edit']);
 
@@ -102,40 +102,39 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // 👀 VisitLog
     // ===============================
     Route::get('/visitlog', [VisitLogController::class, 'index'])->name('visitlog.index');
-    Route::get('/checkin', [VisitLogController::class, 'store']);
-
 
     // ===============================
-    // 👥 Manage Member (BENAR)
+    // 👥 Member
     // ===============================
     Route::prefix('member')->group(function () {
-
         Route::get('/', [MemberController::class, 'index'])->name('member.index');
-
         Route::post('/create', [MemberController::class, 'store'])->name('member.store');
-
-        // Route assign user yang BENAR
         Route::post('/assign-user', [MemberController::class, 'assignUser'])
             ->name('member.assignUser');
     });
 
     // ===============================
-    // Token
+    // 🎟 Token Package
     // ===============================
-    Route::prefix('admin')->group(function () {
-        Route::resource('token-package', TokenPackageController::class);
-    });
+    Route::resource('token-package', TokenPackageController::class);
 
     // ===============================
-    // Scan 
+    // 🔴 ABSENSI SCAN (FINAL & SATU-SATUNYA)
     // ===============================
+    Route::post('/attendance/scan', [AttendanceScanController::class, 'scan'])
+        ->name('attendance.scan');
 
-    Route::post('/admin/absensi/scan', [AttendanceScanController::class, 'scan'])
-        ->name('admin.absensi.scan')
-        ->middleware(['auth']);
 
     // ===============================
-    // Shift 
+    // 📷 HALAMAN SCAN
+    // ===============================
+    Route::get('/scan', function () {
+        return view('admin.scan');
+    })->name('admin.scan');
+
+
+    // ===============================
+    // 🧑‍🏫 Trainer Shift
     // ===============================
     Route::resource('trainer-shifts', TrainerShiftController::class);
 });
