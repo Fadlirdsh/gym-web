@@ -9,17 +9,20 @@ return new class extends Migration {
     {
         Schema::create('visit_logs', function (Blueprint $table) {
             $table->id();
+
             $table->foreignId('reservasi_id')
                 ->constrained('reservasi')
-                ->onDelete('cascade');
+                ->cascadeOnDelete();
 
             $table->foreignId('user_id')
-                ->nullable()
                 ->constrained('users')
-                ->nullOnDelete();
+                ->cascadeOnDelete();
 
-            $table->string('status'); // contoh: hadir, batal, pending
+            // WAKTU HADIR SEBENARNYA
+            $table->timestamp('checkin_at');
+
             $table->text('catatan')->nullable();
+
             $table->timestamps();
         });
     }

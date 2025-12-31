@@ -9,13 +9,24 @@ class VisitLog extends Model
 {
     use HasFactory;
 
+    /**
+     * VisitLog = catatan kejadian hadir
+     * Status & kelas diambil dari reservasi
+     */
     protected $fillable = [
         'reservasi_id',
         'user_id',
-        'kelas_id',   // <-- WAJIB TAMBAH INI
-        'status',
-        'catatan'
+        'catatan',
+        'checkin_at',
     ];
+
+    protected $casts = [
+        'checkin_at' => 'datetime',
+    ];
+
+    /* ==============================
+     | RELATIONS
+     ============================== */
 
     public function reservasi()
     {
@@ -24,26 +35,47 @@ class VisitLog extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id')->where('role', 'pelanggan');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    // 🔥 Tambah relasi kelas
+    /**
+     * Kelas DIAMBIL dari reservasi
+     */
     public function kelas()
     {
-        return $this->belongsTo(Kelas::class, 'kelas_id');
+        return $this->hasOneThrough(
+            Kelas::class,
+            Reservasi::class,
+            'id',        // FK di reservasi
+            'id',        // PK di kelas
+            'reservasi_id',
+            'kelas_id'
+        );
     }
 
-    public function scopeApprovedOnDate($query, $date)
+    /* ==============================
+     | SCOPES
+     ============================== */
+
+    /**
+     * Hadir pada tanggal tertentu
+     */
+    public function scopeHadirOnDate($query, $date)
     {
         return $query->whereHas('reservasi', function ($q) {
-            $q->where('status', 'approved');
-        })->whereDate('created_at', $date);
+            $q->where('status', 'paid')
+                ->where('status_hadir', 'hadir');
+        })->whereDate('checkin_at', $date);
     }
 
-    public function scopeApprovedBetween($query, $startDate, $endDate)
+    /**
+     * Hadir dalam rentang tanggal
+     */
+    public function scopeHadirBetween($query, $startDate, $endDate)
     {
         return $query->whereHas('reservasi', function ($q) {
-            $q->where('status', 'approved');
-        })->whereBetween('created_at', [$startDate, $endDate]);
+            $q->where('status', 'paid')
+                ->where('status_hadir', 'hadir');
+        })->whereBetween('checkin_at', [$startDate, $endDate]);
     }
 }

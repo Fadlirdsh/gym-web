@@ -7,71 +7,69 @@ use Illuminate\Http\Request;
 
 class VisitLogController extends Controller
 {
+    /**
+     * READ ONLY — Visit Log
+     * Sumber kehadiran = reservasi.status_hadir
+     */
     public function index(Request $request)
     {
-        // 🔹 load relasi yang benar
-        $query = VisitLog::with(['user', 'kelas']);
+        $query = VisitLog::with([
+            'user',
+            'kelas',
+            'reservasi'
+        ])->whereHas('reservasi', function ($q) {
+            $q->where('status', 'paid')
+              ->where('status_hadir', 'hadir');
+        });
 
-        // 🔹 Quick filter
+        /* ==============================
+         | QUICK FILTER
+         ============================== */
         if ($request->filter) {
             switch ($request->filter) {
                 case 'today':
-                    $query->whereDate('created_at', today());
+                    $query->whereDate('checkin_at', today());
                     break;
 
                 case 'yesterday':
-                    $query->whereDate('created_at', today()->subDay());
+                    $query->whereDate('checkin_at', today()->subDay());
                     break;
 
                 case 'week':
-                    $query->whereBetween('created_at', [
+                    $query->whereBetween('checkin_at', [
                         now()->startOfWeek(),
                         now()->endOfWeek()
                     ]);
                     break;
             }
         }
-        // 🔹 Filter manual range
+        /* ==============================
+         | RANGE FILTER
+         ============================== */
         elseif ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('created_at', [
+            $query->whereBetween('checkin_at', [
                 $request->from . ' 00:00:00',
                 $request->to . ' 23:59:59',
             ]);
         }
-        // 🔹 Filter 1 tanggal
+        /* ==============================
+         | SINGLE DATE
+         ============================== */
         elseif ($request->filled('date')) {
-            $query->whereDate('created_at', $request->date);
+            $query->whereDate('checkin_at', $request->date);
         }
-        // 🔹 Default: hari ini
+        /* ==============================
+         | DEFAULT: TODAY
+         ============================== */
         else {
-            $query->whereDate('created_at', today());
+            $query->whereDate('checkin_at', today());
         }
 
-        // ✅ PAGINATION DITAMBAHKAN (INI SATU-SATUNYA PERUBAHAN BESAR)
         $visitLogs = $query
-            ->latest()
+            ->latest('checkin_at')
             ->paginate(10)
             ->appends($request->query());
 
-
         return view('admin.visitlog', compact('visitLogs'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'kelas_id' => 'required|exists:kelas,id',
-        ]);
-
-        VisitLog::create([
-            'user_id'  => auth()->id(),
-            'kelas_id' => $request->kelas_id,
-            'status'   => 'hadir',
-            'catatan'  => null,
-        ]);
-
-        return response()->json([
-            'message' => 'Check-in berhasil',
-        ]);
     }
 }

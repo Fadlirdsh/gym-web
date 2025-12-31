@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+
 use App\Models\QrCode;
 use App\Models\Reservasi;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Models\VisitLog;
 
 class AttendanceController extends Controller
 {
@@ -21,7 +23,9 @@ class AttendanceController extends Controller
             'token' => 'required|string'
         ]);
 
-        // 1. Cari QR
+        /* =====================================================
+           1. VALIDASI QR
+        ===================================================== */
         $qr = QrCode::where('token', $request->token)->first();
 
         if (!$qr) {
@@ -31,7 +35,6 @@ class AttendanceController extends Controller
             ], 404);
         }
 
-        // 2. Cek QR sudah dipakai
         if ($qr->used_at) {
             return response()->json([
                 'success' => false,
@@ -39,15 +42,16 @@ class AttendanceController extends Controller
             ], 400);
         }
 
-        // 3. Cek expired
-        if ($qr->expired_at->isPast()) {
+        if ($qr->expired_at && $qr->expired_at->isPast()) {
             return response()->json([
                 'success' => false,
                 'message' => 'QR sudah kedaluwarsa'
             ], 400);
         }
 
-        // 4. Ambil reservasi
+        /* =====================================================
+           2. AMBIL RESERVASI
+        ===================================================== */
         $reservasi = Reservasi::find($qr->reservasi_id);
 
         if (!$reservasi) {
@@ -57,17 +61,46 @@ class AttendanceController extends Controller
             ], 404);
         }
 
-        // 5. Tandai QR sudah dipakai
-        $qr->update([
-            'used_at' => Carbon::now()
-        ]);
+        /* =====================================================
+           3. CEGAH DOBEL CHECK-IN (WAJIB SEBELUM UPDATE APA PUN)
+        ===================================================== */
+        if (VisitLog::where('reservasi_id', $reservasi->id)
+            ->where('status', 'hadir')
+            ->exists()
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reservasi sudah check-in'
+            ], 409);
+        }
 
-        // 6. Tandai reservasi HADIR
-        $reservasi->update([
-            'status_hadir' => 'hadir'
-        ]);
+        /* =====================================================
+           4. TRANSACTION (AMAN & KONSISTEN)
+        ===================================================== */
+        DB::transaction(function () use ($qr, $reservasi) {
 
+            // Tandai QR sudah dipakai
+            $qr->update([
+                'used_at' => Carbon::now()
+            ]);
 
+            // CREATE VISIT LOG (EVENT UTAMA)
+            VisitLog::create([
+                'reservasi_id' => $reservasi->id,
+                'user_id'      => auth()->check() ? auth()->id() : null,
+                'status'       => 'hadir',
+                'catatan'      => 'Scan QR oleh admin',
+            ]);
+
+            // Sync ke reservasi (SECONDARY STATE)
+            $reservasi->update([
+                'status_hadir' => 'hadir'
+            ]);
+        });
+
+        /* =====================================================
+           5. RESPONSE
+        ===================================================== */
         return response()->json([
             'success' => true,
             'message' => 'Absensi berhasil',
@@ -80,6 +113,10 @@ class AttendanceController extends Controller
         ]);
     }
 
+    /**
+     * USER
+     * Cek apakah bisa check-in hari ini
+     */
     public function today()
     {
         $user = auth()->user();
@@ -135,7 +172,6 @@ class AttendanceController extends Controller
             ]);
         }
 
-        // LOLOS SEMUA SYARAT
         return response()->json([
             'can_checkin'  => true,
             'reservasi_id' => $reservasi->id,

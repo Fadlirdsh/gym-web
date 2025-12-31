@@ -1,17 +1,22 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\QrCode;
 use App\Models\Reservasi;
+use App\Models\VisitLog;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class AttendanceScanController extends Controller
 {
     public function scan(Request $request)
     {
+
+        Log::info('SCAN', $request->all());
+
+
         $request->validate([
             'token' => 'required|string'
         ]);
@@ -39,15 +44,28 @@ class AttendanceScanController extends Controller
             ], 400);
         }
 
-        $qr->update(['used_at' => Carbon::now()]);
+        $reservasi = Reservasi::find($qr->reservasi_id);
+        if (!$reservasi) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reservasi tidak ditemukan'
+            ], 404);
+        }
 
-        Reservasi::where('id', $qr->reservasi_id)
-            ->update(['status_hadir' => 'hadir']);
+        $qr->update(['used_at' => now()]);
+        $reservasi->update(['status_hadir' => 'hadir']);
+
+        VisitLog::create([
+            'reservasi_id' => $reservasi->id,
+            'user_id'      => optional(auth()->user())->id,
+            'checkin_at'   => now(),
+            'catatan'      => 'Scan QR oleh admin',
+        ]);
+
 
         return response()->json([
             'success' => true,
-            'message' => 'Absensi berhasil'
-        ]);
+            'message' => 'Absensi berhasil',
+        ], 200);
     }
 }
-
