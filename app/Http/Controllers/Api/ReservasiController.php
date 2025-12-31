@@ -35,22 +35,19 @@ class ReservasiController extends Controller
             'catatan'  => 'nullable|string',
         ]);
 
-        $user = JWTAuth::parseToken()->authenticate();
+        $user  = JWTAuth::parseToken()->authenticate();
         $kelas = Kelas::findOrFail($request->kelas_id);
 
-        // Hitung harga langsung dari kelas
-        $harga = $kelas->harga;
+        $jadwal = Carbon::parse($request->date . ' ' . $request->time);
 
-        $jadwal = $request->date . ' ' . $request->time;
-
-        // Simpan reservasi
+        // 🔒 RESERVASI HANYA SAMPAI PENDING_PAYMENT
         $reservasi = Reservasi::create([
             'pelanggan_id' => $user->id,
             'trainer_id'   => $kelas->trainer_id ?? 1,
             'kelas_id'     => $kelas->id,
-            'jadwal'       => Carbon::parse($jadwal),
-            'status'       => 'pending',
-            'harga'        => $harga,
+            'jadwal'       => $jadwal,
+            'status'       => 'pending_payment', // ✅ FIX
+            'status_hadir' => 'belum_hadir',
             'catatan'      => $request->catatan,
         ]);
 
@@ -65,7 +62,9 @@ class ReservasiController extends Controller
     // ===============================
     public function show($id)
     {
-        $reservasi = Reservasi::with(['pelanggan', 'trainer', 'kelas'])->findOrFail($id);
+        $reservasi = Reservasi::with(['pelanggan', 'trainer', 'kelas'])
+            ->findOrFail($id);
+
         return response()->json($reservasi);
     }
 
@@ -75,7 +74,13 @@ class ReservasiController extends Controller
     public function update(Request $request, $id)
     {
         $reservasi = Reservasi::findOrFail($id);
-        $reservasi->update($request->all());
+
+        $reservasi->update($request->only([
+            'jadwal',
+            'catatan',
+            'status',
+            'status_hadir',
+        ]));
 
         return response()->json([
             'message' => 'Reservasi berhasil diperbarui',
@@ -91,7 +96,9 @@ class ReservasiController extends Controller
         $reservasi = Reservasi::findOrFail($id);
         $reservasi->delete();
 
-        return response()->json(['message' => 'Reservasi berhasil dihapus']);
+        return response()->json([
+            'message' => 'Reservasi berhasil dihapus'
+        ]);
     }
 
     // ===============================
@@ -108,6 +115,8 @@ class ReservasiController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'User tidak ditemukan atau bukan pelanggan'], 404);
+        return response()->json([
+            'message' => 'User tidak ditemukan atau bukan pelanggan'
+        ], 404);
     }
 }

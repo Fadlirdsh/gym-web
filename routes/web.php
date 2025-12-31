@@ -13,7 +13,7 @@ use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TokenPackageController;
-use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\TrainerShiftController;
 use App\Http\Controllers\Admin\AttendanceScanController;
 
 /*
@@ -129,8 +129,13 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // ===============================
     // Scan 
     // ===============================
-    
+
     Route::post('/admin/absensi/scan', [AttendanceScanController::class, 'scan'])
-    ->name('admin.absensi.scan')
-    ->middleware(['auth']);
+        ->name('admin.absensi.scan')
+        ->middleware(['auth']);
+
+    // ===============================
+    // Shift 
+    // ===============================
+    Route::resource('trainer-shifts', TrainerShiftController::class);
 });

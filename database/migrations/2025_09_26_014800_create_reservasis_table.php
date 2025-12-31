@@ -30,8 +30,12 @@ return new class extends Migration
             $table->dateTime('jadwal');
 
             // status reservasi
-            $table->enum('status', ['pending', 'approved', 'canceled'])
-                ->default('pending');
+            $table->enum('status', [
+                'pending_payment', // user baru klik reserve
+                'paid',            // transaksi sukses
+                'canceled'         // gagal / dibatalkan
+            ])->default('pending_payment');
+
 
             $table->enum('status_hadir', ['belum_hadir', 'hadir'])->default('belum_hadir');
 
