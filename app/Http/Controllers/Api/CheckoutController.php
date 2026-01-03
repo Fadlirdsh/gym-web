@@ -56,7 +56,9 @@ class CheckoutController extends Controller
              * =====================================
              */
             $voucherUser = null;
-            $voucherId   = null;
+
+
+            $voucherUserId = null;
 
             if ($request->voucher_user_id) {
                 $voucherUser = UserVoucher::where('id', $request->voucher_user_id)
