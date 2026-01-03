@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Midtrans\Config;
+use Illuminate\Support\Facades\Log;
 use Midtrans\Snap;
 
 class MidtransController extends Controller
@@ -65,7 +66,7 @@ class MidtransController extends Controller
     public function getSnapToken(Request $request)
     {
         // 🔥 Log setiap request yang masuk dari front-end
-        \Log::info("MIDTRANS REQUEST:", $request->all());
+        Log::info("MIDTRANS REQUEST:", $request->all());
 
         // Validasi wajib
         $request->validate([
@@ -95,7 +96,7 @@ class MidtransController extends Controller
             ];
 
             // 🔥 Log parameter final ke Midtrans
-            \Log::info("MIDTRANS PARAMS:", $params);
+            Log::info("MIDTRANS PARAMS:", $params);
 
             // Ambil snap token dari Midtrans
             $snapToken = Snap::getSnapToken($params);
@@ -103,10 +104,11 @@ class MidtransController extends Controller
             return response()->json([
                 'snapToken' => $snapToken
             ]);
-
         } catch (\Exception $e) {
             // 🔥 Log error detail
-            \Log::error("MIDTRANS ERROR: " . $e->getMessage());
+            Log::error("MIDTRANS ERROR", [
+                'message' => $e->getMessage(),
+            ]);
 
             return response()->json([
                 'error' => true,

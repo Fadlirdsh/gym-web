@@ -7,10 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\Reservasi;
-use Carbon\Carbon;
 use App\Models\Transaksi;
 use App\Models\Kelas;
+use App\Models\UserVoucher;
 use App\Services\PricingService;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+
 
 use Midtrans\Snap;
 use Midtrans\Config;
@@ -19,147 +22,26 @@ class CheckoutController extends Controller
 {
     public function __construct()
     {
-        // Midtrans configuration
-        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        Config::$serverKey    = env('MIDTRANS_SERVER_KEY');
         Config::$isProduction = env('MIDTRANS_IS_PRODUCTION', false);
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
+        Config::$isSanitized  = true;
+        Config::$is3ds        = true;
     }
 
     /**
-     * 🔹 HITUNG HARGA SAJA (TANPA CREATE TRANSAKSI)
+     * ============================
+     * CHECKOUT RESERVASI (FINAL)
+     * ============================
+     * Voucher: OPTIONAL
      */
-    public function price(Request $request, PricingService $pricing)
+    public function checkoutReservasi(Request $request, PricingService $pricing)
     {
         $request->validate([
-            'kelas_id' => 'required|exists:kelas,id',
-            'voucher_id' => 'nullable|numeric',
-        ]);
-
-        $user = auth()->user();
-
-        $hargaFinal = $pricing->getFinalPrice(
-            $user,
-            $request->kelas_id,
-            $request->voucher_id ?? null
-        );
-
-        return response()->json([
-            'harga' => $hargaFinal
-        ]);
-    }
-
-    /**
-     * 🔹 CONFIRM CHECKOUT (CREATE TRANSAKSI)
-     */
-    public function confirm(Request $request, PricingService $pricing)
-    {
-        $request->validate([
-            'kelas_id' => 'required|exists:kelas,id',
-            'metode'   => 'required|string',
-            'jenis'    => 'required|in:member,reservasi',
-            'source_id' => 'required|numeric',
-            'voucher_id' => 'nullable|numeric',
-        ]);
-
-        $user = auth()->user();
-
-        DB::beginTransaction();
-
-        try {
-            // 🔥 HARGA DIHITUNG ULANG (ANTI MANIPULASI)
-            $hargaFinal = $pricing->getFinalPrice(
-                $user,
-                $request->kelas_id,
-                $request->voucher_id ?? null
-            );
-
-            $transaksi = Transaksi::create([
-                'kode_transaksi' => 'TRX-' . strtoupper(Str::random(8)),
-                'user_id'        => $user->id,
-                'jenis'          => $request->jenis,
-                'source_id'      => $request->source_id,
-                'jumlah'         => $hargaFinal,
-                'metode'         => $request->metode,
-                'status'         => 'pending', // ⛔ jangan paid
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'message'   => 'Transaksi dibuat',
-                'transaksi' => $transaksi,
-                'harga'     => $hargaFinal,
-            ]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            \Log::error('Checkout confirm error: ' . $e->getMessage());
-
-            return response()->json([
-                'message' => 'Checkout gagal',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * 🔹 GENERATE MIDTRANS SNAP TOKEN
-     */
-    public function midtransToken(Request $request, PricingService $pricing)
-    {
-        $request->validate([
-            'kelas_id'   => 'required|exists:kelas,id',
-            'voucher_id' => 'nullable|numeric',
-        ]);
-
-        $user = auth()->user();
-
-        try {
-            // 🔹 Hitung harga final
-            $hargaFinal = $pricing->getFinalPrice(
-                $user,
-                $request->kelas_id,
-                $request->voucher_id ?? null
-            );
-
-            $kelas = Kelas::find($request->kelas_id);
-
-            $params = [
-                'transaction_details' => [
-                    'order_id' => 'ORDER-' . time(),
-                    'gross_amount' => $hargaFinal,
-                ],
-                'customer_details' => [
-                    'first_name' => $user->name,
-                    'email' => $user->email,
-                ],
-                'item_details' => [
-                    [
-                        'id' => $kelas->id,
-                        'price' => $hargaFinal,
-                        'quantity' => 1,
-                        'name' => $kelas->nama_kelas,
-                    ]
-                ],
-            ];
-
-            $snapToken = Snap::getSnapToken($params);
-
-            return response()->json(['snapToken' => $snapToken]);
-        } catch (\Throwable $e) {
-            \Log::error('Midtrans error: ' . $e->getMessage());
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function checkoutReservasi(Request $request)
-    {
-        $request->validate([
-            'kelas_id' => 'required|exists:kelas,id',
-            'date'     => 'required|date',
-            'time'     => 'required|string',
-            'catatan'  => 'nullable|string',
+            'kelas_id'         => 'required|exists:kelas,id',
+            'date'             => 'required|date',
+            'time'             => 'required|string',
+            'catatan'          => 'nullable|string',
+            'voucher_user_id'  => 'nullable|exists:user_vouchers,id',
         ]);
 
         $user  = auth()->user();
@@ -168,7 +50,48 @@ class CheckoutController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1️⃣ RESERVASI
+            /**
+             * =====================================
+             * 1️⃣ VALIDASI VOUCHER (JIKA ADA)
+             * =====================================
+             */
+            $voucherUser = null;
+            $voucherId   = null;
+
+            if ($request->voucher_user_id) {
+                $voucherUser = UserVoucher::where('id', $request->voucher_user_id)
+                    ->where('user_id', $user->id)
+                    ->where('status', 'claimed')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$voucherUser) {
+                    return response()->json([
+                        'message' => 'Voucher tidak valid atau sudah digunakan'
+                    ], 400);
+                }
+
+                $voucherUserId = $voucherUser->id;
+            }
+
+            /**
+             * =====================================
+             * 2️⃣ HITUNG HARGA FINAL (ANTI MANIPULASI)
+             * =====================================
+             */
+            $hargaFinal = $pricing->getFinalPrice(
+                $user,
+                $kelas->id,
+                $voucherUserId
+            );
+
+            $diskon = $kelas->harga - $hargaFinal;
+
+            /**
+             * =====================================
+             * 3️⃣ BUAT RESERVASI
+             * =====================================
+             */
             $reservasi = Reservasi::create([
                 'pelanggan_id' => $user->id,
                 'trainer_id'   => $kelas->trainer_id ?? 1,
@@ -179,30 +102,46 @@ class CheckoutController extends Controller
                 'catatan'      => $request->catatan,
             ]);
 
-            // 2️⃣ TRANSAKSI
-            $kode = 'TRX-' . strtoupper(Str::random(10));
+            /**
+             * =====================================
+             * 4️⃣ BUAT TRANSAKSI
+             * =====================================
+             */
+            $kodeTrx = 'TRX-' . strtoupper(Str::random(10));
 
-            $transaksi = Transaksi::create([
-                'kode_transaksi' => $kode,
+            Transaksi::create([
+                'kode_transaksi' => $kodeTrx,
                 'user_id'        => $user->id,
                 'jenis'          => 'reservasi',
                 'source_id'      => $reservasi->id,
                 'harga_asli'     => $kelas->harga,
-                'diskon'         => 0,
-                'total_bayar'    => $kelas->harga,
+                'diskon'         => max(0, $diskon),
+                'total_bayar'    => $hargaFinal,
                 'metode'         => 'midtrans',
                 'status'         => 'pending',
             ]);
 
-            // 3️⃣ MIDTRANS TOKEN (order_id = kode_transaksi)
+            /**
+             * =====================================
+             * 5️⃣ MIDTRANS SNAP TOKEN
+             * =====================================
+             */
             $snapToken = Snap::getSnapToken([
                 'transaction_details' => [
-                    'order_id'     => $kode,
-                    'gross_amount' => $kelas->harga,
+                    'order_id'     => $kodeTrx,
+                    'gross_amount' => $hargaFinal,
                 ],
                 'customer_details' => [
                     'first_name' => $user->name,
                     'email'      => $user->email,
+                ],
+                'item_details' => [
+                    [
+                        'id'       => $kelas->id,
+                        'price'    => $hargaFinal,
+                        'quantity' => 1,
+                        'name'     => $kelas->nama_kelas,
+                    ]
                 ],
             ]);
 
@@ -211,11 +150,20 @@ class CheckoutController extends Controller
             return response()->json([
                 'snap_token'   => $snapToken,
                 'reservasi_id' => $reservasi->id,
-                'kode_trx'     => $kode,
+                'kode_trx'     => $kodeTrx,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
+
+            Log::error('Checkout reservasi error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Checkout gagal',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
     }
 }
