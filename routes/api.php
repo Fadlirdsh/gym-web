@@ -20,10 +20,9 @@ use App\Http\Controllers\Api\TokenPackageController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\TrainerProfileController;
 use App\Http\Controllers\Api\VoucherController;
-
+use App\Http\Controllers\Api\MidtransCallbackController;
 use App\Http\Controllers\Api\QrCodeController;
 use App\Http\Controllers\Api\AttendanceController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -39,17 +38,11 @@ Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refr
 
 /*
 |--------------------------------------------------------------------------
-| ME / USER PROFILE (JWT – ALL ROLES)
+| USER PROFILE
 |--------------------------------------------------------------------------
 */
-Route::middleware('jwt.auth')->get('/me', function () {
-    return auth()->user();
-});
-
-// Alias untuk frontend
-Route::middleware('jwt.auth')->get('/user', function () {
-    return auth()->user();
-});
+Route::middleware('jwt.auth')->get('/me', fn () => auth()->user());
+Route::middleware('jwt.auth')->get('/user', fn () => auth()->user());
 
 /*
 |--------------------------------------------------------------------------
@@ -65,49 +58,38 @@ Route::get('/kelas/{id}', [KelasController::class, 'show']);
 |--------------------------------------------------------------------------
 */
 Route::middleware(['jwt.auth', 'role:pelanggan'])
-->apiResource('reservasi', ReservasiController::class);
+    ->apiResource('reservasi', ReservasiController::class);
 
 /*
-|--------------------------------------------------------------------------|
-| CHECKOUT (JWT – PELANGGAN)
-|--------------------------------------------------------------------------|
+|--------------------------------------------------------------------------
+| CHECKOUT RESERVASI (FINAL – SATU PINTU)
+|--------------------------------------------------------------------------
 */
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::post('/checkout/price', [CheckoutController::class, 'price']);
-    Route::post('/checkout/confirm', [CheckoutController::class, 'confirm']);
-    Route::post('/checkout/midtrans/token', [CheckoutController::class, 'midtransToken']);
-
-    // ✅ INI YANG DIPAKAI
     Route::post('/checkout/reservasi', [CheckoutController::class, 'checkoutReservasi']);
 });
 
 /*
 |--------------------------------------------------------------------------
-| TRAINER (PUBLIC LIST)
+| VOUCHER
+|--------------------------------------------------------------------------
+*/
+Route::get('/vouchers', [VoucherController::class, 'index']);
+
+Route::middleware('jwt.auth')->group(function () {
+    Route::get('/vouchers/my', [VoucherController::class, 'userVouchers']);
+    Route::post('/vouchers/claim', [VoucherController::class, 'claim']);
+    Route::middleware('jwt.auth')->get('/vouchers', [VoucherController::class, 'index']);
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| TRAINER (PUBLIC)
 |--------------------------------------------------------------------------
 */
 Route::get('/users/trainer', [UserController::class, 'getTrainers']);
-
-/*
-|--------------------------------------------------------------------------
-| DISKON
-|--------------------------------------------------------------------------
-*/
-Route::apiResource('diskon', DiskonController::class);
-
-/*
-|--------------------------------------------------------------------------
-| VOUCHERS
-|--------------------------------------------------------------------------
-*/
-// PUBLIC: semua user boleh lihat
-Route::get('/vouchers', [VoucherController::class, 'index']);
-
-// JWT: khusus user login
-Route::middleware('jwt.auth')->group(function () {
-    Route::get('/vouchers/my', [VoucherController::class, 'userVouchers']);
-    Route::post('/vouchers/claim', [VoucherController::class, 'claim']); // ✅ FIXED
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -131,99 +113,37 @@ Route::prefix('member')->middleware('jwt.auth')->group(function () {
     Route::post('/bayar', [MemberController::class, 'bayarDummy']);
     Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
 
-    // TRANSAKSI
     Route::get('/transaksi/sync', [TransaksiController::class, 'sync']);
     Route::post('/transaksi/create', [TransaksiController::class, 'create']);
     Route::get('/transaksi', [TransaksiController::class, 'index']);
     Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
 
-    // MIDTRANS
     Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
     Route::post('/midtrans/token', [MidtransController::class, 'getSnapToken']);
 });
 
 /*
 |--------------------------------------------------------------------------
-| MIDTRANS CALLBACK (NO AUTH)
+| MIDTRANS CALLBACK (NO AUTH – FINAL)
 |--------------------------------------------------------------------------
 */
-Route::post('/transaksi/store', [TransaksiController::class, 'store']);
-Route::post('/transaksi/callback', [TransaksiController::class, 'callback']);
+Route::post('/midtrans/callback', [MidtransCallbackController::class, 'handle']);
 
 /*
 |--------------------------------------------------------------------------
-| TOKEN PACKAGES
-|--------------------------------------------------------------------------
-*/
-Route::apiResource('token-packages', TokenPackageController::class);
-
-/*
-|--------------------------------------------------------------------------
-| CHECKOUT (JWT – PELANGGAN)
+| ABSENSI – PELANGGAN
 |--------------------------------------------------------------------------
 */
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
-    Route::post('/checkout/price', [CheckoutController::class, 'price']);
-    Route::post('/checkout/confirm', [CheckoutController::class, 'confirm']);
-    Route::post('/checkout/midtrans/token', [CheckoutController::class, 'midtransToken']);
+    Route::get('/attendance/today', [AttendanceController::class, 'today']);
+    Route::get('/attendance/qr/{reservasi_id}', [QrCodeController::class, 'show']);
 });
 
 /*
 |--------------------------------------------------------------------------
-| TRAINER PROFILE (JWT – TRAINER)
+| ABSENSI – ADMIN / TRAINER
 |--------------------------------------------------------------------------
 */
-Route::middleware(['jwt.auth', 'role:trainer'])->group(function () {
-    Route::get('/trainer/profile', [TrainerProfileController::class, 'show']);
-    Route::post('/trainer/profile', [TrainerProfileController::class, 'store']);
-});
-
-/*
-|--------------------------------------------------------------------------
-| ABSENSI QR CODE
-|--------------------------------------------------------------------------
-*/
-
-/**
- * =========================
- * PELANGGAN
- * =========================
- * - Cek apakah bisa check-in (banner)
- * - Generate QR absensi
- */
-Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
-
-    // Banner Home: cek absensi hari ini
-    Route::get(
-        '/attendance/today',
-        [AttendanceController::class, 'today']
-    );
-
-    // Generate QR absensi (ditampilkan ke pelanggan)
-    Route::get(
-        '/attendance/qr/{reservasi_id}',
-        [QrCodeController::class, 'show']
-    );
-});
-
-/**
- * =========================
- * ADMIN / TRAINER
- * =========================
- * - Scan QR untuk absensi
- */
 Route::middleware(['jwt.auth', 'role:admin,trainer'])->group(function () {
-
-    // Scan QR (kamera admin)
-    Route::post(
-        '/attendance/scan',
-        [AttendanceController::class, 'scan']
-    );
-
-    Route::post('/admin/absensi/scan', [AttendanceController::class, 'scan'])
-    ->name('admin.absensi.scan')
-    ->middleware(['auth']);
-
-
-    
+    Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
 });

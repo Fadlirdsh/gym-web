@@ -73,9 +73,7 @@ class User extends Authenticatable implements JWTSubject
             'user_vouchers',
             'user_id',
             'voucher_id'
-        )
-        ->withPivot('status')
-        ->wherePivot('status', 'aktif');
+        )->withPivot('status');
     }
 
     // =====================

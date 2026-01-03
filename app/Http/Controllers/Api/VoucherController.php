@@ -12,33 +12,36 @@ class VoucherController extends Controller
     // ============================
     // LIST SEMUA VOUCHER (PUBLIC)
     // ============================
-    public function index()
+    public function index(Request $request)
     {
-        // Ambil semua voucher aktif, kuota > 0, tanggal berlaku
         $today = now()->toDateString();
+        $userId = $request->user()?->id; // null kalau belum login
 
         $vouchers = Voucher::where('status', 'aktif')
             ->whereDate('tanggal_mulai', '<=', $today)
             ->whereDate('tanggal_akhir', '>=', $today)
-            ->where('kuota', '>', 0)
-            ->get([
-                'id',
-                'kode',
-                'deskripsi',
-                'diskon_persen',
-                'kelas_id',
-                'role_target',
-                'tanggal_mulai',
-                'tanggal_akhir',
-                'kuota',
-                'status',
-            ]);
+            ->get()
+            ->map(function ($voucher) use ($userId) {
+
+                // default
+                $voucher->is_claimed = false;
+
+                if ($userId) {
+                    $voucher->is_claimed = UserVoucher::where('user_id', $userId)
+                        ->where('voucher_id', $voucher->id)
+                        ->where('status', 'claimed')
+                        ->exists();
+                }
+
+                return $voucher;
+            });
 
         return response()->json($vouchers);
     }
 
+
     // ============================
-    // LIST VOUCHER MILIK USER
+    // LIST VOUCHER MILIK USER (🔥 FIX DI SINI)
     // ============================
     public function userVouchers(Request $request)
     {
@@ -48,12 +51,23 @@ class VoucherController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        $isMember = $user->member()->exists();
+
         $vouchers = $user->vouchers()
+            ->wherePivot('status', 'claimed')
             ->whereDate('tanggal_akhir', '>=', now())
+            ->where(function ($q) use ($isMember) {
+                $q->where('role_target', 'semua');
+
+                if ($isMember) {
+                    $q->orWhere('role_target', 'member');
+                } else {
+                    $q->orWhere('role_target', 'pelanggan');
+                }
+            })
             ->get([
-                'vouchers.id',
+                'user_vouchers.id as id',      // 🔥 INI KUNCI NYA
                 'vouchers.kode',
-                'vouchers.deskripsi',
                 'vouchers.diskon_persen',
                 'vouchers.kelas_id',
                 'vouchers.tanggal_akhir',
@@ -63,7 +77,7 @@ class VoucherController extends Controller
     }
 
     // ============================
-    // CLAIM VOUCHER (JWT REQUIRED)
+    // CLAIM VOUCHER
     // ============================
     public function claim(Request $request)
     {
@@ -77,9 +91,8 @@ class VoucherController extends Controller
             'voucher_id' => 'required|exists:vouchers,id'
         ]);
 
-        $voucher = Voucher::find($request->voucher_id);
+        $voucher = Voucher::findOrFail($request->voucher_id);
 
-        // cek status, tanggal, kuota
         if ($voucher->status !== 'aktif') {
             return response()->json(['message' => 'Voucher tidak aktif'], 400);
         }
@@ -92,7 +105,6 @@ class VoucherController extends Controller
             return response()->json(['message' => 'Kuota voucher habis'], 400);
         }
 
-        // cek pernah klaim
         $alreadyClaimed = UserVoucher::where('user_id', $user->id)
             ->where('voucher_id', $voucher->id)
             ->exists();
@@ -101,15 +113,11 @@ class VoucherController extends Controller
             return response()->json(['message' => 'Voucher sudah diklaim'], 400);
         }
 
-        // simpan user_voucher
         UserVoucher::create([
             'user_id'    => $user->id,
             'voucher_id' => $voucher->id,
-            'status'     => 'aktif',
+            'status'     => 'claimed',
         ]);
-
-        // kurangi kuota
-        $voucher->decrement('kuota');
 
         return response()->json([
             'message' => 'Voucher berhasil diklaim'
