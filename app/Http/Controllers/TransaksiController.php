@@ -51,64 +51,6 @@ class TransaksiController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | CALLBACK MIDTRANS (SATU-SATUNYA TEMPAT UPDATE STATUS)
-    |--------------------------------------------------------------------------
-    */
-    public function callback(Request $request)
-    {
-        \Log::info('🔥 MIDTRANS CALLBACK MASUK', $request->all());
-
-        // 1️⃣ Validasi signature
-        $serverKey = config('midtrans.server_key');
-        $signature = hash(
-            'sha512',
-            $request->order_id .
-                $request->status_code .
-                $request->gross_amount .
-                $serverKey
-        );
-
-        if ($signature !== $request->signature_key) {
-            \Log::warning('❌ Signature tidak valid');
-            return response()->json(['message' => 'Invalid signature'], 403);
-        }
-
-        // 2️⃣ Cari transaksi
-        $transaksi = Transaksi::where('kode_transaksi', $request->order_id)->first();
-
-        if (!$transaksi) {
-            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
-        }
-
-        // 3️⃣ Mapping status
-        if (in_array($request->transaction_status, ['capture', 'settlement'])) {
-
-            $transaksi->update([
-                'status' => 'success',
-                'metode' => $request->payment_type ?? 'midtrans',
-            ]);
-
-            if ($transaksi->jenis === 'reservasi') {
-                Reservasi::where('id', $transaksi->source_id)
-                    ->update(['status' => 'paid']);
-            }
-
-            if ($transaksi->jenis === 'member') {
-                Member::where('id', $transaksi->source_id)
-                    ->update(['status' => 'aktif']);
-            }
-        }
-
-        if (in_array($request->transaction_status, ['deny', 'expire', 'cancel'])) {
-            $transaksi->update(['status' => 'failed']);
-        }
-
-        return response()->json(['message' => 'Callback processed']);
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
     | LIST TRANSAKSI
     |--------------------------------------------------------------------------
     */
@@ -127,5 +69,30 @@ class TransaksiController extends Controller
     public function show($id)
     {
         return Transaksi::with('user')->findOrFail($id);
+    }
+
+    public function showByKode($kode)
+    {
+        $transaksi = Transaksi::where('kode_transaksi', $kode)
+            ->with(['reservasi.kelas'])
+            ->first();
+
+        if (!$transaksi) {
+            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        }
+
+        if ($transaksi->status !== 'paid') {
+            return response()->json(['message' => 'Transaksi belum selesai'], 400);
+        }
+
+        return response()->json([
+            'kode'    => $transaksi->kode_transaksi,
+            'total'   => $transaksi->total_bayar,
+            'status'  => $transaksi->status,
+            'kelas'   => $transaksi->reservasi->kelas->nama_kelas,
+            'tanggal' => $transaksi->reservasi->jadwal->format('Y-m-d'),
+            'jam'     => $transaksi->reservasi->jadwal->format('H:i'),
+            'metode'  => $transaksi->metode,
+        ]);
     }
 }

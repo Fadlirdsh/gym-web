@@ -60,6 +60,8 @@ Route::get('/kelas/{id}', [KelasController::class, 'show']);
 Route::middleware(['jwt.auth', 'role:pelanggan'])
     ->apiResource('reservasi', ReservasiController::class);
 
+    
+
 /*
 |--------------------------------------------------------------------------
 | CHECKOUT RESERVASI (FINAL – SATU PINTU)
@@ -69,6 +71,12 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::post('/checkout/price', [CheckoutController::class, 'price']);
     Route::post('/checkout/reservasi', [CheckoutController::class, 'checkoutReservasi']);
 });
+
+Route::middleware('jwt.auth')->get(
+    '/transaksi/kode/{kode}',
+    [TransaksiController::class, 'showByKode']
+);
+
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +91,8 @@ Route::middleware('jwt.auth')->group(function () {
     Route::middleware('jwt.auth')->get('/vouchers', [VoucherController::class, 'index']);
 
 });
+
+
 
 /*
 |--------------------------------------------------------------------------
