@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\AttendanceController;
 | AUTH
 |--------------------------------------------------------------------------
 */
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -41,8 +42,8 @@ Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refr
 | USER PROFILE
 |--------------------------------------------------------------------------
 */
-Route::middleware('jwt.auth')->get('/me', fn () => auth()->user());
-Route::middleware('jwt.auth')->get('/user', fn () => auth()->user());
+Route::middleware('jwt.auth')->get('/me', fn() => auth()->user());
+Route::middleware('jwt.auth')->get('/user', fn() => auth()->user());
 
 /*
 |--------------------------------------------------------------------------
@@ -60,7 +61,7 @@ Route::get('/kelas/{id}', [KelasController::class, 'show']);
 Route::middleware(['jwt.auth', 'role:pelanggan'])
     ->apiResource('reservasi', ReservasiController::class);
 
-    
+
 
 /*
 |--------------------------------------------------------------------------
@@ -70,6 +71,8 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::post('/checkout/price', [CheckoutController::class, 'price']);
     Route::post('/checkout/reservasi', [CheckoutController::class, 'checkoutReservasi']);
+    Route::post('/checkout/member', [CheckoutController::class, 'checkoutMember']);
+    Route::post('/checkout/token', [CheckoutController::class, 'checkoutToken']);
 });
 
 Route::middleware('jwt.auth')->get(
@@ -89,7 +92,6 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/vouchers/my', [VoucherController::class, 'userVouchers']);
     Route::post('/vouchers/claim', [VoucherController::class, 'claim']);
     Route::middleware('jwt.auth')->get('/vouchers', [VoucherController::class, 'index']);
-
 });
 
 

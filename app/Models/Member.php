@@ -27,8 +27,7 @@ class Member extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke kelas (booking)
-    // satu member bisa ikut banyak kelas
+    // Relasi ke kelas
     public function kelas()
     {
         return $this->belongsToMany(Kelas::class, 'kelas_member')
@@ -36,16 +35,10 @@ class Member extends Model
             ->withTimestamps();
     }
 
-    // Accessor otomatis hitung token_sisa jika ingin tanpa simpan di DB
-    public function getTokenSisaAttribute($value)
-    {
-        return $value ?? ($this->token_total - $this->token_terpakai);
-    }
-
-    // Scope member aktif
+    // Scope member aktif (HANYA cek status & tanggal)
     public function scopeAktif($query)
     {
         return $query->where('status', 'aktif')
-                     ->where('tanggal_berakhir', '>=', now()->toDateString());
+            ->where('tanggal_berakhir', '>=', now());
     }
 }

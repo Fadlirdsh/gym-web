@@ -10,6 +10,7 @@ use App\Models\Reservasi;
 use App\Models\Transaksi;
 use App\Models\Kelas;
 use App\Models\UserVoucher;
+use App\Models\Member;
 use App\Services\PricingService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -164,6 +165,197 @@ class CheckoutController extends Controller
 
             return response()->json([
                 'message' => 'Checkout gagal',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function checkoutMember(Request $request)
+    {
+        $user = auth()->user();
+
+        $request->validate([
+            'tipe_kelas' => 'required|in:Pilates Group,Pilates Private,Yoga Group,Yoga Private',
+            'harga'      => 'required|integer|min:0',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            /**
+             * 1️⃣ BUAT MEMBER (PENDING)
+             */
+            $member = Member::create([
+                'user_id' => $user->id,
+                'tipe_kelas' => $request->tipe_kelas,
+                'harga' => $request->harga,
+                'token_total' => 0,
+                'token_terpakai' => 0,
+                'token_sisa' => 0,
+                'status' => 'pending',
+            ]);
+
+            /**
+             * 2️⃣ BUAT TRANSAKSI MEMBER
+             */
+            $kodeTrx = 'TRX-' . strtoupper(Str::random(10));
+
+            Transaksi::create([
+                'kode_transaksi' => $kodeTrx,
+                'user_id' => $user->id,
+                'jenis' => 'member',
+                'source_id' => $member->id, // ⬅️ INI KUNCI
+                'harga_asli' => $request->harga,
+                'diskon' => 0,
+                'total_bayar' => $request->harga,
+                'metode' => 'midtrans',
+                'status' => 'pending',
+            ]);
+
+            /**
+             * 3️⃣ SNAP MIDTRANS
+             */
+            $snapToken = Snap::getSnapToken([
+                'transaction_details' => [
+                    'order_id' => $kodeTrx,
+                    'gross_amount' => $request->harga,
+                ],
+                'customer_details' => [
+                    'first_name' => $user->name,
+                    'email' => $user->email,
+                ],
+                'item_details' => [
+                    [
+                        'id' => 'MEMBER',
+                        'price' => $request->harga,
+                        'quantity' => 1,
+                        'name' => 'Membership Gym',
+                    ]
+                ],
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'snap_token' => $snapToken,
+                'member_id' => $member->id,
+                'kode_trx' => $kodeTrx,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Checkout member gagal',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function checkoutToken(Request $request)
+    {
+        $user = auth()->user();
+
+        $request->validate([
+            'token_qty' => 'required|integer|in:3,5,10',
+        ]);
+
+        // Ambil member aktif
+        $member = Member::where('user_id', $user->id)
+            ->where('status', 'aktif')
+            ->first();
+
+        if (!$member) {
+            return response()->json([
+                'message' => 'Membership tidak aktif'
+            ], 400);
+        }
+
+        /**
+         * 🔐 1️⃣ Ambil harga kelas sebagai BASE PRICE
+         * (contoh: Pilates Group = 250.000)
+         */
+        $hargaKelas = Kelas::where('tipe_kelas', $member->tipe_kelas)
+            ->value('harga');
+
+        if (!$hargaKelas) {
+            return response()->json([
+                'message' => 'Harga kelas tidak ditemukan'
+            ], 400);
+        }
+
+        /**
+         * 🔐 2️⃣ Tentukan diskon berdasarkan tipe_kelas
+         */
+        $diskonPersen = match ($member->tipe_kelas) {
+            'Pilates Group'   => 0.27,
+            'Pilates Private' => 0.15,
+            'Yoga Group'      => 0.25,
+            'Yoga Private'    => 0.10,
+            default           => 0,
+        };
+
+        /**
+         * 🔐 3️⃣ Hitung harga token
+         */
+        $tokenQty     = $request->token_qty;
+        $hargaNormal  = $hargaKelas * $tokenQty;
+        $hargaToken   = (int) ceil($hargaNormal * (1 - $diskonPersen));
+
+        DB::beginTransaction();
+
+        try {
+            $kodeTrx = 'TRX-' . strtoupper(Str::random(10));
+
+            Transaksi::create([
+                'kode_transaksi' => $kodeTrx,
+                'user_id'        => $user->id,
+                'jenis'          => 'token',
+                'source_id'      => $member->id,
+                'harga_asli'     => $hargaNormal,
+                'diskon'         => $hargaNormal - $hargaToken,
+                'total_bayar'    => $hargaToken,
+                'metode'         => 'midtrans',
+                'status'         => 'pending',
+                'meta' => [
+                    'token_qty'     => $tokenQty,
+                    'harga_kelas'   => $hargaKelas,
+                    'harga_normal'  => $hargaNormal,
+                    'diskon_persen' => $diskonPersen,
+                    'tipe_kelas'    => $member->tipe_kelas,
+                ],
+            ]);
+
+            $snapToken = Snap::getSnapToken([
+                'transaction_details' => [
+                    'order_id'     => $kodeTrx,
+                    'gross_amount' => $hargaToken,
+                ],
+                'customer_details' => [
+                    'first_name' => $user->name,
+                    'email'      => $user->email,
+                ],
+                'item_details' => [
+                    [
+                        'id'       => 'TOKEN',
+                        'price'    => $hargaToken,
+                        'quantity' => 1,
+                        'name'     => "Token {$tokenQty}x ({$member->tipe_kelas})",
+                    ]
+                ],
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'snap_token' => $snapToken,
+                'kode_trx'   => $kodeTrx,
+                'total'      => $hargaToken,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Checkout token gagal',
                 'error'   => $e->getMessage(),
             ], 500);
         }
