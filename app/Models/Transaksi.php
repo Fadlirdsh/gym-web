@@ -14,19 +14,20 @@ class Transaksi extends Model
     protected $fillable = [
         'kode_transaksi',
         'user_id',
-        'jenis',         // member | reservasi
-        'source_id',     // id member / reservasi
-        'harga_asli',    // harga sebelum diskon
-        'diskon',        // nominal diskon (rupiah)
-        'total_bayar',   // total akhir
-        'metode',        // midtrans / manual / transfer
-        'status',        // pending | success | failed | refund | dll
+        'jenis',       // member | token | reservasi
+        'source_id',   // id member / reservasi
+        'harga_asli',
+        'diskon',
+        'total_bayar',
+        'metode',
+        'status',
     ];
 
     protected $casts = [
         'harga_asli'  => 'integer',
         'diskon'      => 'integer',
         'total_bayar' => 'integer',
+        'meta'        => 'array',
     ];
 
     /*
@@ -40,16 +41,20 @@ class Transaksi extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Untuk transaksi reservasi
+     */
     public function reservasi()
     {
-        return $this->belongsTo(Reservasi::class, 'source_id')
-            ->where('jenis', 'reservasi');
+        return $this->belongsTo(Reservasi::class, 'source_id');
     }
 
+    /**
+     * Untuk transaksi member & token
+     */
     public function member()
     {
-        return $this->belongsTo(Member::class, 'source_id')
-            ->where('jenis', 'member');
+        return $this->belongsTo(Member::class, 'source_id');
     }
 
     /*
