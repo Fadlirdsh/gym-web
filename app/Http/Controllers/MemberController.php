@@ -5,93 +5,115 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Member;
-use App\Models\TokenPackage;
 
 class MemberController extends Controller
 {
-    // Menampilkan halaman manage member
+    /**
+     * ================================
+     * HALAMAN MANAGE MEMBER (ADMIN)
+     * ================================
+     */
     public function index()
     {
-        // Ambil semua pelanggan (role = 'pelanggan')
-        $pelanggan = User::where('role', 'pelanggan')->get();
+        // HANYA pelanggan yang BELUM punya member aktif
+        $pelanggan = User::where('role', 'pelanggan')
+            ->whereDoesntHave('member', function ($q) {
+                $q->where('status', 'aktif');
+            })
+            ->get();
 
-        // Ambil semua member + relasi user (WAJIB)
-        $members = Member::with('user')->get();
-
-        // Ambil semua token package
-        $tokenPackages = TokenPackage::all();
-
-        // ENUM TIPE KELAS (sesuai migration)
-        $tipeKelasList = [
-            'Pilates Group',
-            'Pilates Private',
-            'Yoga Group',
-            'Yoga Private',
-        ];
+        // Semua member (pending, aktif, nonaktif)
+        $members = Member::with('user')->latest()->get();
 
         return view('admin.manage_member', compact(
             'pelanggan',
-            'members',
-            'tipeKelasList',
-            'tokenPackages'
+            'members'
         ));
     }
 
-    // Membuat member baru manual
+    /**
+     * ================================
+     * BUAT MEMBER BARU (ADMIN)
+     * ================================
+     * STATUS AWAL: PENDING
+     * (ANTI HUMAN ERROR)
+     */
     public function store(Request $request)
     {
         $request->validate([
-            'user_id'    => 'required|exists:users,id',
-            'tipe_kelas' => 'required|string|max:255',
+            'user_id' => 'required|exists:users,id',
         ]);
 
         $user = User::findOrFail($request->user_id);
 
-        // Cek apakah user sudah member
+        // Cegah double member (SEMUA STATUS)
         if (Member::where('user_id', $user->id)->exists()) {
-            return redirect()->back()->with('error', 'User ini sudah menjadi member.');
+            return redirect()->back()
+                ->with('error', 'User ini sudah memiliki data membership.');
         }
 
-        // ❗️nama & email TIDAK disimpan di tabel members
         Member::create([
-            'user_id'        => $user->id,
-            'tipe_kelas'     => $request->tipe_kelas,
-            'harga'          => 0,
-            'token_total'    => 0,
-            'token_terpakai' => 0,
-            'token_sisa'     => 0,
-            'status'         => 'aktif',
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'tanggal_mulai' => null,
+            'tanggal_berakhir' => null,
+            'activated_by_transaction_id' => null,
         ]);
 
-        return redirect()->back()->with('success', 'Member baru berhasil dibuat!');
+        return redirect()->back()
+            ->with('success', 'Member berhasil dibuat dengan status PENDING.');
     }
 
-    // Menambahkan user pelanggan jadi member
-    public function assignUser(Request $request)
+    /**
+     * ======================================
+     * AKTIVASI MEMBER (ADMIN)
+     * ======================================
+     * INI SATU-SATUNYA TEMPAT AKTIF
+     */
+    public function activate(Request $request)
     {
         $request->validate([
-            'user_id'    => 'required|exists:users,id',
-            'tipe_kelas' => 'required|string|max:255',
+            'user_id' => 'required|exists:users,id',
         ]);
 
-        // Cek apakah sudah member
-        if (Member::where('user_id', $request->user_id)->exists()) {
-            return redirect()->back()->with('error', 'User ini sudah menjadi member.');
+        $member = Member::where('user_id', $request->user_id)->first();
+
+        if (!$member) {
+            return redirect()->back()
+                ->with('error', 'Data member tidak ditemukan.');
         }
 
-        $user = User::findOrFail($request->user_id);
+        if ($member->status === 'aktif') {
+            return redirect()->back()
+                ->with('error', 'Membership sudah aktif.');
+        }
 
-        // ❗️nama & email TIDAK disimpan di tabel members
-        Member::create([
-            'user_id'        => $user->id,
-            'tipe_kelas'     => $request->tipe_kelas,
-            'harga'          => 0,
-            'token_total'    => 0,
-            'token_terpakai' => 0,
-            'token_sisa'     => 0,
-            'status'         => 'aktif',
+        $member->update([
+            'status' => 'aktif',
+            'tanggal_mulai' => now(),
+            'tanggal_berakhir' => now()->addMonth(),
+            'activated_by_transaction_id' => null, // ADMIN MANUAL
         ]);
 
-        return redirect()->back()->with('success', 'User berhasil ditambahkan sebagai member!');
+        return redirect()->back()
+            ->with('success', 'Membership berhasil diaktifkan.');
+    }
+
+    /**
+     * ================================
+     * NONAKTIFKAN MEMBER (ADMIN)
+     * ================================
+     */
+    public function deactivate($id)
+    {
+        $member = Member::findOrFail($id);
+
+        $member->update([
+            'status' => 'nonaktif',
+            'tanggal_berakhir' => now(),
+        ]);
+
+        return redirect()->back()
+            ->with('success', 'Membership berhasil dinonaktifkan.');
     }
 }

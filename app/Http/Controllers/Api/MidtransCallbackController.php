@@ -116,27 +116,20 @@ class MidtransCallbackController extends Controller
                      * 🟩 TOKEN TOP-UP (PAKAI member_tokens)
                      */
                     case 'token':
-                        // Ambil paket token
-                        $package = TokenPackage::lockForUpdate()->find($transaksi->source_id);
+                        $package = TokenPackage::lockForUpdate()
+                            ->findOrFail($transaksi->source_id);
 
-                        if (!$package) {
-                            throw new \Exception('Token package tidak ditemukan');
+                        $member = Member::lockForUpdate()
+                            ->where('user_id', $transaksi->user_id)
+                            ->where('status', 'aktif')
+                            ->firstOrFail();
+
+                        // 🔐 CEGAH CALLBACK DOBEL
+                        $alreadyProcessed = MemberToken::where('transaction_id', $transaksi->id)->exists();
+                        if ($alreadyProcessed) {
+                            break; // callback ulang → STOP
                         }
 
-                        // Ambil member user
-                        $member = Member::where('user_id', $transaksi->user_id)
-                            ->lockForUpdate()
-                            ->first();
-
-                        if (!$member) {
-                            throw new \Exception('Member tidak ditemukan');
-                        }
-
-                        if ($member->status !== 'aktif') {
-                            throw new \Exception('Member tidak aktif');
-                        }
-
-                        // Ambil / buat token per tipe kelas
                         $memberToken = MemberToken::firstOrCreate(
                             [
                                 'member_id'  => $member->id,
@@ -149,9 +142,15 @@ class MidtransCallbackController extends Controller
                             ]
                         );
 
-                        // Tambah token
                         $memberToken->increment('token_total', $package->jumlah_token);
                         $memberToken->increment('token_sisa', $package->jumlah_token);
+
+                        // 🔴 CATAT SUMBER TOKEN
+                        $memberToken->update([
+                            'source'         => 'midtrans',
+                            'transaction_id' => $transaksi->id,
+                        ]);
+
                         break;
                 }
 
