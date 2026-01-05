@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Transaksi;
 use App\Models\Reservasi;
 use App\Models\Member;
+use App\Models\MemberToken;
+use App\Models\TokenPackage;
 use App\Models\UserVoucher;
 use App\Models\Voucher;
 
@@ -100,41 +102,56 @@ class MidtransCallbackController extends Controller
                      */
                     case 'member':
                         $member = Member::lockForUpdate()->find($transaksi->source_id);
+
                         if ($member) {
                             $member->update([
                                 'status' => 'aktif',
                                 'tanggal_mulai' => now(),
                                 'tanggal_berakhir' => now()->addMonth(),
+                                'activated_by_transaction_id' => $transaksi->id,
                             ]);
                         }
                         break;
-
                     /**
-                     * 🟩 TOKEN TOP-UP
+                     * 🟩 TOKEN TOP-UP (PAKAI member_tokens)
                      */
                     case 'token':
-                        $member = Member::lockForUpdate()->find($transaksi->source_id);
+                        // Ambil paket token
+                        $package = TokenPackage::lockForUpdate()->find($transaksi->source_id);
+
+                        if (!$package) {
+                            throw new \Exception('Token package tidak ditemukan');
+                        }
+
+                        // Ambil member user
+                        $member = Member::where('user_id', $transaksi->user_id)
+                            ->lockForUpdate()
+                            ->first();
 
                         if (!$member) {
-                            throw new \Exception('Member tidak ditemukan untuk token topup');
+                            throw new \Exception('Member tidak ditemukan');
                         }
 
                         if ($member->status !== 'aktif') {
                             throw new \Exception('Member tidak aktif');
                         }
 
-                        $meta = $transaksi->meta ?? [];
+                        // Ambil / buat token per tipe kelas
+                        $memberToken = MemberToken::firstOrCreate(
+                            [
+                                'member_id'  => $member->id,
+                                'tipe_kelas' => $package->tipe_kelas,
+                            ],
+                            [
+                                'token_total'    => 0,
+                                'token_terpakai' => 0,
+                                'token_sisa'     => 0,
+                            ]
+                        );
 
-                        if (!isset($meta['token_qty']) || (int)$meta['token_qty'] <= 0) {
-                            throw new \Exception('Token quantity tidak valid');
-                        }
-
-                        $tokenTambah = (int) $meta['token_qty'];
-
-                        $member->update([
-                            'token_total' => $member->token_total + $tokenTambah,
-                            'token_sisa'  => $member->token_sisa + $tokenTambah,
-                        ]);
+                        // Tambah token
+                        $memberToken->increment('token_total', $package->jumlah_token);
+                        $memberToken->increment('token_sisa', $package->jumlah_token);
                         break;
                 }
 

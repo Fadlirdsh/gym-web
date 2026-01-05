@@ -52,7 +52,7 @@ class User extends Authenticatable implements JWTSubject
      */
     public function member()
     {
-        return $this->hasOne(Member::class, 'user_id');
+        return $this->hasOne(Member::class);
     }
 
     /**

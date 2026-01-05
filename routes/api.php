@@ -14,7 +14,6 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
 use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\MidtransController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\Api\TokenPackageController;
 use App\Http\Controllers\Api\CheckoutController;
@@ -29,7 +28,6 @@ use App\Http\Controllers\Api\AttendanceController;
 | AUTH
 |--------------------------------------------------------------------------
 */
-
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -42,8 +40,7 @@ Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refr
 | USER PROFILE
 |--------------------------------------------------------------------------
 */
-Route::middleware('jwt.auth')->get('/me', fn() => auth()->user());
-Route::middleware('jwt.auth')->get('/user', fn() => auth()->user());
+Route::middleware('jwt.auth')->get('/me', fn () => auth()->user());
 
 /*
 |--------------------------------------------------------------------------
@@ -52,49 +49,6 @@ Route::middleware('jwt.auth')->get('/user', fn() => auth()->user());
 */
 Route::get('/kelas', [KelasController::class, 'index']);
 Route::get('/kelas/{id}', [KelasController::class, 'show']);
-
-/*
-|--------------------------------------------------------------------------
-| RESERVASI (JWT – PELANGGAN)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['jwt.auth', 'role:pelanggan'])
-    ->apiResource('reservasi', ReservasiController::class);
-
-
-
-/*
-|--------------------------------------------------------------------------
-| CHECKOUT RESERVASI (FINAL – SATU PINTU)
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
-    Route::post('/checkout/price', [CheckoutController::class, 'price']);
-    Route::post('/checkout/reservasi', [CheckoutController::class, 'checkoutReservasi']);
-    Route::post('/checkout/member', [CheckoutController::class, 'checkoutMember']);
-    Route::post('/checkout/token', [CheckoutController::class, 'checkoutToken']);
-});
-
-Route::middleware('jwt.auth')->get(
-    '/transaksi/kode/{kode}',
-    [TransaksiController::class, 'showByKode']
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| VOUCHER
-|--------------------------------------------------------------------------
-*/
-Route::get('/vouchers', [VoucherController::class, 'index']);
-
-Route::middleware('jwt.auth')->group(function () {
-    Route::get('/vouchers/my', [VoucherController::class, 'userVouchers']);
-    Route::post('/vouchers/claim', [VoucherController::class, 'claim']);
-    Route::middleware('jwt.auth')->get('/vouchers', [VoucherController::class, 'index']);
-});
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -116,22 +70,57 @@ Route::middleware(['jwt.auth', 'role:trainer'])
 
 /*
 |--------------------------------------------------------------------------
-| MEMBER (JWT)
+| RESERVASI (JWT – PELANGGAN)
 |--------------------------------------------------------------------------
 */
-Route::prefix('member')->middleware('jwt.auth')->group(function () {
-    Route::post('/store', [MemberController::class, 'store']);
-    Route::get('/kelas', [MemberController::class, 'kelasMember']);
-    Route::post('/bayar', [MemberController::class, 'bayarDummy']);
-    Route::post('/ikut-kelas', [MemberController::class, 'ikutKelas']);
+Route::middleware(['jwt.auth', 'role:pelanggan'])
+    ->apiResource('reservasi', ReservasiController::class);
 
-    Route::get('/transaksi/sync', [TransaksiController::class, 'sync']);
-    Route::post('/transaksi/create', [TransaksiController::class, 'create']);
+/*
+|--------------------------------------------------------------------------
+| CHECKOUT (FINAL – SATU PINTU)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
+
+    // 🔹 Aktivasi member GRATIS (NO MIDTRANS)
+    Route::post('/checkout/member', [CheckoutController::class, 'checkoutMember']);
+
+    // 🔹 Beli token (SATU-SATUNYA pintu uang token)
+    Route::post('/checkout/token', [CheckoutController::class, 'checkoutToken']);
+
+    // 🔹 Checkout reservasi (kelas tanpa token / pay per class)
+    Route::post('/checkout/reservasi', [CheckoutController::class, 'checkoutReservasi']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| TOKEN PACKAGES (PUBLIC)
+|--------------------------------------------------------------------------
+*/
+Route::get('/token-packages', [TokenPackageController::class, 'index']);
+
+/*
+|--------------------------------------------------------------------------
+| TRANSAKSI (JWT)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('jwt.auth')->group(function () {
     Route::get('/transaksi', [TransaksiController::class, 'index']);
     Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
+    Route::get('/transaksi/kode/{kode}', [TransaksiController::class, 'showByKode']);
+});
 
-    Route::post('/midtrans/create', [MidtransController::class, 'createTransaction']);
-    Route::post('/midtrans/token', [MidtransController::class, 'getSnapToken']);
+/*
+|--------------------------------------------------------------------------
+| VOUCHER
+|--------------------------------------------------------------------------
+*/
+Route::get('/vouchers', [VoucherController::class, 'index']);
+
+Route::middleware('jwt.auth')->group(function () {
+    Route::get('/vouchers/my', [VoucherController::class, 'userVouchers']);
+    Route::post('/vouchers/claim', [VoucherController::class, 'claim']);
 });
 
 /*
