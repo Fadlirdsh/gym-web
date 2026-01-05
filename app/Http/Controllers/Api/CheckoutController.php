@@ -11,10 +11,11 @@ use App\Models\Transaksi;
 use App\Models\Kelas;
 use App\Models\UserVoucher;
 use App\Models\Member;
+use App\Models\MemberToken;
+use App\Models\TokenPackage;
 use App\Services\PricingService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-
 
 use Midtrans\Snap;
 use Midtrans\Config;
@@ -30,10 +31,9 @@ class CheckoutController extends Controller
     }
 
     /**
-     * ============================
-     * CHECKOUT RESERVASI (FINAL)
-     * ============================
-     * Voucher: OPTIONAL
+     * =====================================================
+     * CHECKOUT RESERVASI (❌ TIDAK DIUBAH)
+     * =====================================================
      */
     public function checkoutReservasi(Request $request, PricingService $pricing)
     {
@@ -51,14 +51,6 @@ class CheckoutController extends Controller
         DB::beginTransaction();
 
         try {
-            /**
-             * =====================================
-             * 1️⃣ VALIDASI VOUCHER (JIKA ADA)
-             * =====================================
-             */
-            $voucherUser = null;
-
-
             $voucherUserId = null;
 
             if ($request->voucher_user_id) {
@@ -77,11 +69,6 @@ class CheckoutController extends Controller
                 $voucherUserId = $voucherUser->id;
             }
 
-            /**
-             * =====================================
-             * 2️⃣ HITUNG HARGA FINAL (ANTI MANIPULASI)
-             * =====================================
-             */
             $hargaFinal = $pricing->getFinalPrice(
                 $user,
                 $kelas->id,
@@ -90,11 +77,6 @@ class CheckoutController extends Controller
 
             $diskon = $kelas->harga - $hargaFinal;
 
-            /**
-             * =====================================
-             * 3️⃣ BUAT RESERVASI
-             * =====================================
-             */
             $reservasi = Reservasi::create([
                 'pelanggan_id' => $user->id,
                 'trainer_id'   => $kelas->trainer_id ?? 1,
@@ -105,11 +87,6 @@ class CheckoutController extends Controller
                 'catatan'      => $request->catatan,
             ]);
 
-            /**
-             * =====================================
-             * 4️⃣ BUAT TRANSAKSI
-             * =====================================
-             */
             $kodeTrx = 'TRX-' . strtoupper(Str::random(10));
 
             Transaksi::create([
@@ -124,11 +101,6 @@ class CheckoutController extends Controller
                 'status'         => 'pending',
             ]);
 
-            /**
-             * =====================================
-             * 5️⃣ MIDTRANS SNAP TOKEN
-             * =====================================
-             */
             $snapToken = Snap::getSnapToken([
                 'transaction_details' => [
                     'order_id'     => $kodeTrx,
@@ -160,76 +132,72 @@ class CheckoutController extends Controller
 
             Log::error('Checkout reservasi error', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'message' => 'Checkout gagal',
-                'error'   => $e->getMessage(),
             ], 500);
         }
     }
 
+    /**
+     * =====================================================
+     * CHECKOUT MEMBER (MEMBER = STATUS SAJA)
+     * =====================================================
+     */
     public function checkoutMember(Request $request)
     {
         $user = auth()->user();
 
-        $request->validate([
-            'tipe_kelas' => 'required|in:Pilates Group,Pilates Private,Yoga Group,Yoga Private',
-            'harga'      => 'required|integer|min:0',
-        ]);
-
         DB::beginTransaction();
 
         try {
-            /**
-             * 1️⃣ BUAT MEMBER (PENDING)
-             */
-            $member = Member::create([
-                'user_id' => $user->id,
-                'tipe_kelas' => $request->tipe_kelas,
-                'harga' => $request->harga,
-                'token_total' => 0,
-                'token_terpakai' => 0,
-                'token_sisa' => 0,
-                'status' => 'pending',
-            ]);
+            // 1. Pastikan cuma satu member
+            $member = Member::firstOrCreate(
+                ['user_id' => $user->id],
+                ['status' => 'pending']
+            );
 
-            /**
-             * 2️⃣ BUAT TRANSAKSI MEMBER
-             */
+            if ($member->status === 'aktif') {
+                return response()->json([
+                    'message' => 'Membership sudah aktif'
+                ], 400);
+            }
+
+            // 🔴 HARGA MEMBER (FIX)
+            $hargaMember = 250000;
+
+            // 2. Buat transaksi
             $kodeTrx = 'TRX-' . strtoupper(Str::random(10));
 
             Transaksi::create([
                 'kode_transaksi' => $kodeTrx,
-                'user_id' => $user->id,
-                'jenis' => 'member',
-                'source_id' => $member->id, // ⬅️ INI KUNCI
-                'harga_asli' => $request->harga,
-                'diskon' => 0,
-                'total_bayar' => $request->harga,
-                'metode' => 'midtrans',
-                'status' => 'pending',
+                'user_id'        => $user->id,
+                'jenis'          => 'member',
+                'source_id'      => $member->id,
+                'harga_asli'     => $hargaMember,
+                'diskon'         => 0,
+                'total_bayar'    => $hargaMember,
+                'metode'         => 'midtrans',
+                'status'         => 'pending',
             ]);
 
-            /**
-             * 3️⃣ SNAP MIDTRANS
-             */
+            // 3. Midtrans Snap
             $snapToken = Snap::getSnapToken([
                 'transaction_details' => [
-                    'order_id' => $kodeTrx,
-                    'gross_amount' => $request->harga,
+                    'order_id'     => $kodeTrx,
+                    'gross_amount' => $hargaMember,
                 ],
                 'customer_details' => [
                     'first_name' => $user->name,
-                    'email' => $user->email,
+                    'email'      => $user->email,
                 ],
                 'item_details' => [
                     [
-                        'id' => 'MEMBER',
-                        'price' => $request->harga,
+                        'id'       => 'MEMBER',
+                        'price'    => $hargaMember,
                         'quantity' => 1,
-                        'name' => 'Membership Gym',
+                        'name'     => 'Aktivasi Membership',
                     ]
                 ],
             ]);
@@ -238,68 +206,48 @@ class CheckoutController extends Controller
 
             return response()->json([
                 'snap_token' => $snapToken,
-                'member_id' => $member->id,
-                'kode_trx' => $kodeTrx,
+                'kode_trx'   => $kodeTrx,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
-
             return response()->json([
-                'message' => 'Checkout member gagal',
-                'error' => $e->getMessage(),
+                'message' => 'Checkout member gagal'
             ], 500);
         }
     }
 
+    /**
+     * =====================================================
+     * CHECKOUT TOKEN (PAKAI token_packages)
+     * =====================================================
+     */
     public function checkoutToken(Request $request)
     {
         $user = auth()->user();
 
         $request->validate([
-            'token_qty' => 'required|integer|in:3,5,10',
+            'token_package_id' => 'required|exists:token_packages,id',
         ]);
 
-        // Ambil member aktif
-        $member = Member::where('user_id', $user->id)
-            ->where('status', 'aktif')
-            ->first();
+        $member = Member::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'status' => 'aktif',
+                'tanggal_mulai' => now(),
+                'tanggal_berakhir' => now()->addMonth(),
+            ]
+        );
 
-        if (!$member) {
-            return response()->json([
-                'message' => 'Membership tidak aktif'
-            ], 400);
+        // kalau member ada tapi nonaktif → aktifkan
+        if ($member->status !== 'aktif') {
+            $member->update([
+                'status' => 'aktif',
+                'tanggal_mulai' => now(),
+                'tanggal_berakhir' => now()->addMonth(),
+            ]);
         }
 
-        /**
-         * 🔐 1️⃣ Ambil harga kelas sebagai BASE PRICE
-         * (contoh: Pilates Group = 250.000)
-         */
-        $hargaKelas = Kelas::where('tipe_kelas', $member->tipe_kelas)
-            ->value('harga');
-
-        if (!$hargaKelas) {
-            return response()->json([
-                'message' => 'Harga kelas tidak ditemukan'
-            ], 400);
-        }
-
-        /**
-         * 🔐 2️⃣ Tentukan diskon berdasarkan tipe_kelas
-         */
-        $diskonPersen = match ($member->tipe_kelas) {
-            'Pilates Group'   => 0.27,
-            'Pilates Private' => 0.15,
-            'Yoga Group'      => 0.25,
-            'Yoga Private'    => 0.10,
-            default           => 0,
-        };
-
-        /**
-         * 🔐 3️⃣ Hitung harga token
-         */
-        $tokenQty     = $request->token_qty;
-        $hargaNormal  = $hargaKelas * $tokenQty;
-        $hargaToken   = (int) ceil($hargaNormal * (1 - $diskonPersen));
+        $package = TokenPackage::findOrFail($request->token_package_id);
 
         DB::beginTransaction();
 
@@ -310,25 +258,18 @@ class CheckoutController extends Controller
                 'kode_transaksi' => $kodeTrx,
                 'user_id'        => $user->id,
                 'jenis'          => 'token',
-                'source_id'      => $member->id,
-                'harga_asli'     => $hargaNormal,
-                'diskon'         => $hargaNormal - $hargaToken,
-                'total_bayar'    => $hargaToken,
+                'source_id'      => $package->id,
+                'harga_asli'     => $package->harga,
+                'diskon'         => 0,
+                'total_bayar'    => $package->harga,
                 'metode'         => 'midtrans',
                 'status'         => 'pending',
-                'meta' => [
-                    'token_qty'     => $tokenQty,
-                    'harga_kelas'   => $hargaKelas,
-                    'harga_normal'  => $hargaNormal,
-                    'diskon_persen' => $diskonPersen,
-                    'tipe_kelas'    => $member->tipe_kelas,
-                ],
             ]);
 
             $snapToken = Snap::getSnapToken([
                 'transaction_details' => [
                     'order_id'     => $kodeTrx,
-                    'gross_amount' => $hargaToken,
+                    'gross_amount' => $package->harga,
                 ],
                 'customer_details' => [
                     'first_name' => $user->name,
@@ -336,10 +277,10 @@ class CheckoutController extends Controller
                 ],
                 'item_details' => [
                     [
-                        'id'       => 'TOKEN',
-                        'price'    => $hargaToken,
+                        'id'       => 'TOKEN-' . $package->id,
+                        'price'    => $package->harga,
                         'quantity' => 1,
-                        'name'     => "Token {$tokenQty}x ({$member->tipe_kelas})",
+                        'name'     => "{$package->jumlah_token} Token ({$package->tipe_kelas})",
                     ]
                 ],
             ]);
@@ -349,14 +290,13 @@ class CheckoutController extends Controller
             return response()->json([
                 'snap_token' => $snapToken,
                 'kode_trx'   => $kodeTrx,
-                'total'      => $hargaToken,
+                'total'      => $package->harga,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
 
             return response()->json([
                 'message' => 'Checkout token gagal',
-                'error'   => $e->getMessage(),
             ], 500);
         }
     }

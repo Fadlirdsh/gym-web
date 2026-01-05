@@ -9,17 +9,23 @@ class Member extends Model
 {
     use HasFactory;
 
+    /**
+     * Kolom yang boleh diisi
+     * (SESUAI tabel members yang sudah dipreteli)
+     */
     protected $fillable = [
         'user_id',
-        'tipe_kelas',
-        'harga',
-        'token_total',
-        'token_terpakai',
-        'token_sisa',
         'tanggal_mulai',
         'tanggal_berakhir',
         'status',
+        'activated_by_transaction_id',
     ];
+
+    /**
+     * ======================
+     * RELATIONS
+     * ======================
+     */
 
     // Relasi ke User
     public function user()
@@ -27,18 +33,25 @@ class Member extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke kelas
-    public function kelas()
+    // Relasi ke token per tipe kelas
+    public function tokens()
     {
-        return $this->belongsToMany(Kelas::class, 'kelas_member')
-            ->withPivot(['jumlah_token', 'expired_at'])
-            ->withTimestamps();
+        return $this->hasMany(MemberToken::class);
     }
 
-    // Scope member aktif (HANYA cek status & tanggal)
+    /**
+     * ======================
+     * SCOPES
+     * ======================
+     */
+
+    // Scope member aktif (status + tanggal)
     public function scopeAktif($query)
     {
         return $query->where('status', 'aktif')
-            ->where('tanggal_berakhir', '>=', now());
+            ->where(function ($q) {
+                $q->whereNull('tanggal_berakhir')
+                    ->orWhere('tanggal_berakhir', '>=', now());
+            });
     }
 }
