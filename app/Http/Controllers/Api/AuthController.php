@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\FirstTimeDiscount;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Google\Client as GoogleClient;
 use App\Http\Controllers\Controller;
@@ -102,6 +103,12 @@ class AuthController extends Controller
             'role' => 'pelanggan',
             'phone' => $request->phone,
         ]);
+        // AUTO ASSIGN FIRST TIME DISCOUNT
+        FirstTimeDiscount::create([
+            'user_id'    => $user->id,
+            'expired_at' => now()->addDays(7),
+        ]);
+
 
         $token = JWTAuth::fromUser($user);
 

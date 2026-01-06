@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
+use App\Models\FirstTimeDiscount;
 use App\Models\Transaksi;
 use App\Models\Reservasi;
 use App\Models\Member;
@@ -95,6 +95,18 @@ class MidtransCallbackController extends Controller
                     case 'reservasi':
                         Reservasi::where('id', $transaksi->source_id)
                             ->update(['status' => 'paid']);
+
+                        // 🔒 KUNCI FIRST-TIME DISCOUNT (JIKA ADA)
+                        $firstTimeDiscount = FirstTimeDiscount::where('user_id', $transaksi->user_id)
+                            ->whereNull('used_at')
+                            ->where('expired_at', '>=', now())
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($firstTimeDiscount) {
+                            $firstTimeDiscount->markAsUsed();
+                        }
+
                         break;
 
                     /**

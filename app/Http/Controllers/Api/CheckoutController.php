@@ -11,10 +11,10 @@ use App\Models\Transaksi;
 use App\Models\Kelas;
 use App\Models\UserVoucher;
 use App\Models\Member;
-use App\Models\MemberToken;
 use App\Models\TokenPackage;
 use App\Services\PricingService;
 use Carbon\Carbon;
+use App\Models\FirstTimeDiscount;
 use Illuminate\Support\Facades\Log;
 
 use Midtrans\Snap;
@@ -69,11 +69,27 @@ class CheckoutController extends Controller
                 $voucherUserId = $voucherUser->id;
             }
 
+            // 🔍 CEK: apakah user sudah pernah reservasi SUCCESS
+            $hasSuccessReservasi = Transaksi::where('user_id', $user->id)
+                ->where('jenis', 'reservasi')
+                ->where('status', 'success')
+                ->exists();
+
+            // 🔍 CEK: diskon first time user masih valid?
+            $firstTimeDiscount = FirstTimeDiscount::where('user_id', $user->id)
+                ->valid()
+                ->first();
+
+            // kirim context ke pricing service
+            $canUseFirstTimeDiscount = !$hasSuccessReservasi && $firstTimeDiscount !== null;
+
             $hargaFinal = $pricing->getFinalPrice(
                 $user,
                 $kelas->id,
-                $voucherUserId
+                $voucherUserId,
+                $canUseFirstTimeDiscount
             );
+
 
             $diskon = $kelas->harga - $hargaFinal;
 
