@@ -10,6 +10,18 @@ use Carbon\Carbon;
 
 class PricingService
 {
+
+    /**
+     * FIRST TIME DISCOUNT (FIXED BUSINESS RULE)
+     * persen (%)
+     */
+    private const FIRST_TIME_DISCOUNT_MAP = [
+        'Pilates Group'   => 40.00,
+        'Pilates Private' => 13.64,
+        'Yoga Group'      => 16.67,
+        // 'Yoga Private' => 0 (tidak ada diskon)
+    ];
+
     /**
      * Hitung harga final (first-time + voucher)
      * Voucher DIANGGAP SUDAH VALID (hasil validasi controller)
@@ -17,29 +29,27 @@ class PricingService
     public function getFinalPrice(
         User $user,
         int $kelasId,
-        ?int $voucherUserId = null
+        ?int $voucherUserId = null,
+        bool $useFirstTimeDiscount = false
     ): int {
         $kelas = Kelas::findOrFail($kelasId);
         $harga = (int) $kelas->harga;
 
+
         /**
          * ============================
-         * FIRST-TIME DISKON
+         * FIRST-TIME DISCOUNT (AUTO)
          * ============================
          */
-        $belumPernahTransaksi = !Transaksi::where('user_id', $user->id)->exists();
-        $masihFirstTime = Carbon::now()->lte(
-            Carbon::parse($user->created_at)->addDays(7)
-        );
+        if ($useFirstTimeDiscount) {
+            $tipeKelas = $kelas->tipe_kelas;
 
-        if (
-            $belumPernahTransaksi &&
-            $masihFirstTime &&
-            $kelas->first_time_aktif &&
-            $kelas->first_time_diskon > 0
-        ) {
-            $diskon = ($harga * $kelas->first_time_diskon) / 100;
-            $harga = max(0, (int) ($harga - $diskon));
+            $diskonPersen = self::FIRST_TIME_DISCOUNT_MAP[$tipeKelas] ?? 0;
+
+            if ($diskonPersen > 0) {
+                $diskon = ($harga * $diskonPersen) / 100;
+                $harga  = max(0, (int) round($harga - $diskon));
+            }
         }
 
         /**

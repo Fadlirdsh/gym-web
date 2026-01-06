@@ -41,6 +41,8 @@ Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refr
 |--------------------------------------------------------------------------
 */
 Route::middleware('jwt.auth')->get('/me', fn () => auth()->user());
+Route::middleware('jwt.auth')->get('/user', fn () => auth()->user());
+
 
 /*
 |--------------------------------------------------------------------------
