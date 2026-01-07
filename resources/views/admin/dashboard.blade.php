@@ -123,24 +123,58 @@
         {{-- ========================== STATS ========================== --}}
         <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
 
-            @php
-                $stats = [
-                    ['label' => 'Total Pelanggan',    'value' => $totalUsers,        'icon' => '👥'],
-                    ['label' => 'Total Trainer',      'value' => $totalTrainers,    'icon' => '💪'],
-                    ['label' => 'Total Kelas',        'value' => $totalClasses,     'icon' => '📘'],
-                    ['label' => 'Jadwal Minggu Ini',  'value' => $totalSchedules,   'icon' => '📅'],
-                    ['label' => 'Diskon Aktif',       'value' => $activeDiscounts,  'icon' => '🏷️'],
-                    ['label' => 'Total Reservasi',    'value' => $totalReservations,'icon' => '📝'],
-                ];
-            @endphp
+          @php
+    $stats = [
+        [
+            'label' => 'Total Pelanggan',
+            'value' => $totalUsers,
+            'icon'  => 'fa-users',
+            'color' => 'text-sky-600 bg-sky-100 dark:text-sky-400 dark:bg-sky-500/20'
+        ],
+        [
+            'label' => 'Total Trainer',
+            'value' => $totalTrainers,
+            'icon'  => 'fa-dumbbell',
+            'color' => 'text-rose-600 bg-rose-100 dark:text-rose-400 dark:bg-rose-500/20'
+        ],
+        [
+            'label' => 'Total Kelas',
+            'value' => $totalClasses,
+            'icon'  => 'fa-book-open',
+            'color' => 'text-indigo-600 bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-500/20'
+        ],
+        [
+            'label' => 'Jadwal Minggu Ini',
+            'value' => $totalSchedules,
+            'icon'  => 'fa-calendar-week',
+            'color' => 'text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-500/20'
+        ],
+        [
+            'label' => 'Diskon Aktif',
+            'value' => $activeDiscounts,
+            'icon'  => 'fa-tags',
+            'color' => 'text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-500/20'
+        ],
+        [
+            'label' => 'Total Reservasi',
+            'value' => $totalReservations,
+            'icon'  => 'fa-clipboard-list',
+            'color' => 'text-violet-600 bg-violet-100 dark:text-violet-400 dark:bg-violet-500/20'
+        ],
+    ];
+@endphp
+
+
 
             @foreach ($stats as $stat)
             <div class="card-corporate p-4 rounded-2xl">
                 <div class="flex items-center gap-4">
 
-                    <div class="stat-icon p-3 rounded-xl text-xl">
-                        {{ $stat['icon'] }}
-                    </div>
+                  <div class="p-3 rounded-xl text-xl flex items-center justify-center {{ $stat['color'] }}">
+                        <i class="fa-solid {{ $stat['icon'] }}"></i>
+                   </div>
+
+
 
                     <div>
                         <p class="text-xs text-sub">{{ $stat['label'] }}</p>

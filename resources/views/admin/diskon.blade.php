@@ -77,6 +77,7 @@
     cursor:pointer;
     display:none;
 }
+
 #btnClearSearch:hover { color:#1e3a8a; }
 
 button { border-radius:12px; font-weight:600; padding:0.5rem 1.5rem; transition:all 0.2s; }
@@ -142,7 +143,7 @@ table tr:hover { background: rgba(59,130,246,0.05); border-radius:12px; }
                     <label for="searchInput">Cari Diskon / Kelas</label>
                     <button id="btnClearSearch">&times;</button>
                 </div>
-                <button id="btnOpenCreate" class="btn-primary flex items-center gap-2">➕ Tambah Diskon</button>
+                <button id="btnOpenCreate" class="btn-primary flex items-center gap-2">Tambah Diskon</button>
             </div>
         </div>
 
