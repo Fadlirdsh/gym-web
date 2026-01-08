@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\KelasController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
+use App\Http\Controllers\Api\TrainerShiftController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\Api\TokenPackageController;
@@ -29,20 +30,21 @@ use App\Http\Controllers\Api\AttendanceController;
 | AUTH
 |--------------------------------------------------------------------------
 */
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 Route::post('/register', [AuthController::class, 'register']);
-
 Route::middleware('jwt.auth')->post('/logout', [AuthController::class, 'logout']);
 Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refresh']);
+Route::middleware('auth:api')->get('/me', [AuthController::class, 'me']);
 
 /*
 |--------------------------------------------------------------------------
 | USER PROFILE
 |--------------------------------------------------------------------------
 */
-Route::middleware('jwt.auth')->get('/me', fn () => auth()->user());
-Route::middleware('jwt.auth')->get('/user', fn () => auth()->user());
+Route::middleware('jwt.auth')->get('/me', fn() => auth()->user());
+Route::middleware('jwt.auth')->get('/user', fn() => auth()->user());
 
 /*
 |--------------------------------------------------------------------------
@@ -167,4 +169,25 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 */
 Route::middleware(['jwt.auth', 'role:admin,trainer'])->group(function () {
     Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| SHIFT
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:api')->group(function () {
+    Route::get('/trainer/shifts', [TrainerShiftController::class, 'index']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Profile Trainer
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth:api'])->group(function () {
+    Route::get('/trainer/profile', [TrainerProfileController::class, 'show']);
+    Route::post('/trainer/profile', [TrainerProfileController::class, 'store']);
 });
