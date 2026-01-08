@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\AttendanceController;
 
 /*
 |--------------------------------------------------------------------------
+
 | AUTH
 |--------------------------------------------------------------------------
 */
@@ -43,9 +44,19 @@ Route::middleware('jwt.refresh')->post('/refresh', [AuthController::class, 'refr
 Route::middleware('jwt.auth')->get('/me', fn () => auth()->user());
 Route::middleware('jwt.auth')->get('/user', fn () => auth()->user());
 
+/*
+|--------------------------------------------------------------------------
+
+| MEMBER (JWT – PELANGGAN) ✅ TAMBAHAN FIX
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
+    Route::get('/member/status', [MemberController::class, 'status']);
+});
 
 /*
 |--------------------------------------------------------------------------
+
 | KELAS (PUBLIC)
 |--------------------------------------------------------------------------
 */
@@ -54,6 +65,7 @@ Route::get('/kelas/{id}', [KelasController::class, 'show']);
 
 /*
 |--------------------------------------------------------------------------
+
 | TRAINER (PUBLIC)
 |--------------------------------------------------------------------------
 */
@@ -61,6 +73,7 @@ Route::get('/users/trainer', [UserController::class, 'getTrainers']);
 
 /*
 |--------------------------------------------------------------------------
+
 | SCHEDULE
 |--------------------------------------------------------------------------
 */
@@ -74,6 +87,7 @@ Route::middleware(['jwt.auth', 'role:trainer'])
 
 /*
 |--------------------------------------------------------------------------
+
 | RESERVASI (JWT – PELANGGAN)
 |--------------------------------------------------------------------------
 */
@@ -82,23 +96,20 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])
 
 /*
 |--------------------------------------------------------------------------
+
 | CHECKOUT (FINAL – SATU PINTU)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 
-    // 🔹 Aktivasi member GRATIS (NO MIDTRANS)
     Route::post('/checkout/member', [CheckoutController::class, 'checkoutMember']);
-
-    // 🔹 Beli token (SATU-SATUNYA pintu uang token)
     Route::post('/checkout/token', [CheckoutController::class, 'checkoutToken']);
-
-    // 🔹 Checkout reservasi (kelas tanpa token / pay per class)
     Route::post('/checkout/reservasi', [CheckoutController::class, 'checkoutReservasi']);
 });
 
 /*
 |--------------------------------------------------------------------------
+
 | TOKEN PACKAGES (PUBLIC)
 |--------------------------------------------------------------------------
 */
@@ -106,6 +117,7 @@ Route::get('/token-packages', [TokenPackageController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
+
 | TRANSAKSI (JWT)
 |--------------------------------------------------------------------------
 */
@@ -117,6 +129,7 @@ Route::middleware('jwt.auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+
 | VOUCHER
 |--------------------------------------------------------------------------
 */
@@ -129,6 +142,7 @@ Route::middleware('jwt.auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+
 | MIDTRANS CALLBACK (NO AUTH – FINAL)
 |--------------------------------------------------------------------------
 */
@@ -136,6 +150,7 @@ Route::post('/midtrans/callback', [MidtransCallbackController::class, 'handle'])
 
 /*
 |--------------------------------------------------------------------------
+
 | ABSENSI – PELANGGAN
 |--------------------------------------------------------------------------
 */
@@ -146,6 +161,7 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+
 | ABSENSI – ADMIN / TRAINER
 |--------------------------------------------------------------------------
 */
