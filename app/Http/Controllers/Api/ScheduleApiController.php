@@ -5,32 +5,40 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class ScheduleApiController extends Controller
 {
     /**
-     * Get all schedules
+     * =========================
+     * ADMIN / UMUM
+     * =========================
      */
+
+    // Get all schedules (ADMIN)
     public function index()
     {
-        $data = Schedule::with(['kelas', 'trainer'])
-            ->orderBy('day')
-            ->orderBy('start_time') // gunakan start_time, bukan "time"
+        $data = Schedule::with([
+                'kelas',
+                'trainerShift.trainer'
+            ])
+            ->orderBy('trainer_shift_id')
+            ->orderBy('start_time')
             ->get();
 
         return response()->json([
             'status' => true,
-            'message' => 'Data schedule berhasil diambil',
             'data' => $data
         ]);
     }
 
-    /**
-     * Get schedule by ID
-     */
+    // Get schedule by ID
     public function show($id)
     {
-        $schedule = Schedule::with(['kelas', 'trainer'])->find($id);
+        $schedule = Schedule::with([
+                'kelas',
+                'trainerShift.trainer'
+            ])->find($id);
 
         if (!$schedule) {
             return response()->json([
@@ -45,9 +53,7 @@ class ScheduleApiController extends Controller
         ]);
     }
 
-    /**
-     * Get schedules for a specific trainer
-     */
+    // Get schedules by trainer (ADMIN)
     public function byTrainer(Request $request)
     {
         $trainerId = $request->trainer_id;
@@ -59,17 +65,57 @@ class ScheduleApiController extends Controller
             ], 400);
         }
 
-        $data = Schedule::with(['kelas', 'trainer'])
-            ->where('trainer_id', $trainerId)
-            ->where('is_active', 1)
-            ->orderBy('day')
+        $data = Schedule::whereHas('trainerShift', function ($q) use ($trainerId) {
+                $q->where('trainer_id', $trainerId);
+            })
+            ->with(['kelas', 'trainerShift.trainer'])
+            ->where('is_active', true)
             ->orderBy('start_time')
             ->get();
 
         return response()->json([
             'status' => true,
-            'message' => 'Data schedule trainer berhasil diambil',
             'data' => $data
         ]);
+    }
+
+    /**
+     * =========================
+     * USER BOOKING (INI YANG DIPAKAI FRONTEND)
+     * =========================
+     */
+
+    // Get available schedules by kelas + tanggal
+    public function available(Request $request)
+    {
+        $request->validate([
+            'kelas_id' => 'required|exists:kelas,id',
+            'tanggal'  => 'required|date',
+        ]);
+
+        $tanggal = Carbon::parse($request->tanggal);
+        $dayIso  = $tanggal->dayOfWeekIso; // 1–7 (Senin–Minggu)
+
+        $schedules = Schedule::with(['trainerShift'])
+            ->where('kelas_id', $request->kelas_id)
+            ->where('is_active', true)
+            ->whereHas('trainerShift', function ($q) use ($dayIso) {
+                $q->where('day', $dayIso)
+                  ->where('is_active', true);
+            })
+            ->orderBy('start_time')
+            ->get()
+            ->map(function ($schedule) use ($request) {
+                return [
+                    'id'         => $schedule->id,
+                    'start_time' => $schedule->start_time,
+                    'end_time'   => $schedule->end_time,
+                    'sisa_slot'  => $schedule->sisaSlot($request->tanggal),
+                ];
+            })
+            ->filter(fn ($s) => $s['sisa_slot'] > 0)
+            ->values();
+
+        return response()->json($schedules);
     }
 }

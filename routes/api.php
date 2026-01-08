@@ -66,6 +66,8 @@ Route::get('/users/trainer', [UserController::class, 'getTrainers']);
 */
 Route::get('/schedule', [ScheduleApiController::class, 'index']);
 Route::get('/schedule/{id}', [ScheduleApiController::class, 'show']);
+Route::get('/schedules/by-trainer', [ScheduleApiController::class, 'byTrainer']);
+Route::get('/schedules/available', [ScheduleApiController::class, 'available']);
 
 Route::middleware(['jwt.auth', 'role:trainer'])
     ->get('/trainer/schedule', [ScheduleApiController::class, 'byTrainer']);

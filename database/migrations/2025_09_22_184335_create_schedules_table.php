@@ -17,39 +17,28 @@ return new class extends Migration
              * =========================
              */
 
-            // Relasi ke shift kerja trainer (WAJIB)
+            // Relasi ke shift kerja trainer (SUMBER KEBENARAN TRAINER + HARI)
             $table->foreignId('trainer_shift_id')
-                  ->constrained('trainer_shifts')
-                  ->cascadeOnDelete();
+                ->constrained('trainer_shifts')
+                ->cascadeOnDelete();
 
             // Relasi ke kelas
             $table->foreignId('kelas_id')
-                  ->constrained('kelas')
-                  ->cascadeOnDelete();
-
-            // Relasi ke trainer (redundan tapi sengaja, untuk query cepat)
-            $table->foreignId('trainer_id')
-                  ->constrained('users')
-                  ->cascadeOnDelete();
+                ->constrained('kelas')
+                ->cascadeOnDelete();
 
             /**
              * =========================
-             * JADWAL KELAS
+             * SLOT JADWAL KELAS
              * =========================
              */
 
-            $table->enum('day', [
-                'Monday',
-                'Tuesday',
-                'Wednesday',
-                'Thursday',
-                'Friday',
-                'Saturday',
-                'Sunday'
-            ]);
-
+            // Slot waktu (HARUS di dalam jam shift)
             $table->time('start_time');
             $table->time('end_time');
+
+            // Kapasitas per slot
+            $table->unsignedInteger('capacity');
 
             /**
              * =========================
@@ -61,6 +50,20 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();
+
+            /**
+             * =========================
+             * PROTEKSI DATA
+             * =========================
+             */
+
+            // Cegah schedule bentrok di shift yang sama
+            $table->unique([
+                'trainer_shift_id',
+                'kelas_id',
+                'start_time',
+                'end_time'
+            ]);
         });
     }
 

@@ -7,7 +7,8 @@
 
         {{-- SUCCESS NOTIFICATION --}}
         @if (session('success'))
-            <div class="mb-6 rounded-lg bg-green-100 text-green-700 border border-green-300
+            <div
+                class="mb-6 rounded-lg bg-green-100 text-green-700 border border-green-300
                                                         dark:bg-green-600/20 dark:text-green-300 dark:border-green-500/40
                                                         px-5 py-3 text-sm shadow-sm">
                 {{ session('success') }}
@@ -83,9 +84,10 @@
                         <div class="mt-5 flex gap-2">
                             <button
                                 class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium btnOpenEdit transition focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}" data-tipe="{{ $k->tipe_kelas }}"
-                                data-harga="{{ $k->harga }}" data-deskripsi="{{ $k->deskripsi }}"
-                                data-expired="{{ $k->expired_at?->format('Y-m-d') }}" data-kapasitas="{{ $k->kapasitas }}">
+                                data-id="{{ $k->id }}" data-nama="{{ $k->nama_kelas }}"
+                                data-tipe="{{ $k->tipe_kelas }}" data-harga="{{ $k->harga }}"
+                                data-deskripsi="{{ $k->deskripsi }}"
+                                data-expired="{{ $k->expired_at?->format('Y-m-d') }}">
                                 <i class="fa-solid fa-pen-to-square mr-2"></i> Edit
                             </button>
 
@@ -146,7 +148,8 @@
 
             {{-- Modal Wrapper (TIDAK FULL LAYAR) --}}
             <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="bg-white dark:bg-gray-900
+                <div
+                    class="bg-white dark:bg-gray-900
                                                            w-full max-w-md md:max-w-lg
                                                            rounded-xl
                                                            shadow-2xl
@@ -155,13 +158,15 @@
                                                            max-h-[90vh]">
 
                     {{-- HEADER --}}
-                    <div class="flex items-center justify-between
+                    <div
+                        class="flex items-center justify-between
                                                                px-6 py-4
                                                                border-b border-gray-200 dark:border-gray-800">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                             {{ $modalTitle }}
                         </h3>
-                        <button class="text-gray-500 hover:text-gray-700
+                        <button
+                            class="text-gray-500 hover:text-gray-700
                                                                    dark:text-gray-400 dark:hover:text-white"
                             onclick="hideElementById('modal{{ $modalId }}')">
                             <i class="fa-solid fa-xmark"></i>
@@ -170,11 +175,14 @@
 
                     {{-- BODY --}}
                     <div class="flex-1 overflow-y-auto px-6 py-5">
-                        <form id="form{{ $modalId }}" action="{{ $modalId === 'Create' ? route('kelas.store') : '' }}"
-                            method="POST" enctype="multipart/form-data" class="space-y-4">
+                        <form id="form{{ $modalId }}"
+                            action="{{ $modalId === 'Create' ? route('kelas.store') : '' }}" method="POST"
+                            enctype="multipart/form-data" class="space-y-4">
 
                             @csrf
-                            @if ($modalId === 'Edit') @method('PUT') @endif
+                            @if ($modalId === 'Edit')
+                                @method('PUT')
+                            @endif
                             <input type="hidden" name="id" id="{{ strtolower($modalId) }}Id">
 
                             {{-- Nama Kelas --}}
@@ -201,12 +209,6 @@
                                     <label class="label-modern">Harga</label>
                                     <input id="{{ strtolower($modalId) }}Harga" name="harga" class="input-modern">
                                 </div>
-
-                                <div>
-                                    <label class="label-modern">Kapasitas</label>
-                                    <input id="{{ strtolower($modalId) }}Kapasitas" name="kapasitas" type="number" min="1"
-                                        class="input-modern" required>
-                                </div>
                             </div>
 
                             {{-- Deskripsi --}}
@@ -216,12 +218,12 @@
                                     class="input-modern resize-none"></textarea>
                             </div>
 
-                       
+
                             {{-- Expired --}}
                             <div>
                                 <label class="label-modern">Kadaluarsa</label>
-                                <input type="date" name="expired_at" id="{{ strtolower($modalId) }}Expired" class="input-modern"
-                                    min="{{ now()->toDateString() }}">
+                                <input type="date" name="expired_at" id="{{ strtolower($modalId) }}Expired"
+                                    class="input-modern" min="{{ now()->toDateString() }}">
                             </div>
 
 
@@ -234,7 +236,8 @@
                     </div>
 
                     {{-- FOOTER --}}
-                    <div class="px-6 py-4
+                    <div
+                        class="px-6 py-4
                                                                border-t border-gray-200 dark:border-gray-800
                                                                bg-gray-50 dark:bg-gray-900
                                                                flex justify-end gap-3">
@@ -251,118 +254,19 @@
         </div>
     @endforeach
 
-
-
-    {{-- =========================
-    EXTRA CSS (Style B - Material)
-    ========================= --}}
-    <style>
-        /* Animations */
-        @keyframes showModal {
-            from {
-                opacity: 0;
-                transform: scale(.96);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .animate-showModal {
-            animation: showModal 0.22s ease-out forwards;
-        }
-
-
-        /* Inputs */
-        .input-modern {
-            width: 100%;
-            display: block;
-            padding: 0.6rem 0.9rem;
-            border-radius: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            background: #ffffff;
-            color: #111827;
-            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
-            transition: box-shadow .12s, border-color .12s, transform .12s;
-            font-size: 0.95rem;
-        }
-
-        .dark .input-modern {
-            background: #111827;
-            color: #e5e7eb;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            box-shadow: none;
-        }
-
-        .input-modern:focus {
-            outline: none;
-            border-color: rgba(99, 102, 241, 1);
-            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.08);
-        }
-
-        /* Buttons */
-        .btn-primary {
-            background: #4f46e5;
-            color: white;
-            padding: .56rem 1.25rem;
-            border-radius: 10px;
-            font-weight: 600;
-            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.12);
-            transition: transform .12s, box-shadow .12s, background .12s;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            background: #4338ca;
-            box-shadow: 0 10px 30px rgba(67, 56, 202, 0.12);
-        }
-
-
-        .btn-cancel {
-            background: #f3f4f6;
-            color: #111827;
-            padding: .56rem 1.25rem;
-            border-radius: 10px;
-            font-weight: 600;
-            border: 1px solid rgba(0, 0, 0, 0.04);
-        }
-
-        .dark .btn-cancel {
-            background: #1f2937;
-            color: #e5e7eb;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-
-        /* Card subtle */
-        .shadow-2xl {
-            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
-        }
-
-        .rounded-xl {
-            border-radius: 12px;
-        }
-
-        /* Smooth theme transition */
-        body,
-        .container {
-            transition: background-color .18s, color .18s;
-        }
-
-        /* Utility tweaks */
-        input[type=file].input-modern {
-            padding: .45rem .75rem;
-        }
-    </style>
-
     {{-- JS assets (ke file yang sama seperti sebelumnya) --}}
-    @vite('resources/js/kelas.js')
 
     {{-- Small compatibility helpers (used by some inline onclicks) --}}
     <script>
-        function showElementById(id) { const el = document.getElementById(id); if (el) el.classList.remove('hidden'); }
-        function hideElementById(id) { const el = document.getElementById(id); if (el) el.classList.add('hidden'); }
+        function showElementById(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('hidden');
+        }
+
+        function hideElementById(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        }
 
         /* Close modals with ESC (extra safety) */
         document.addEventListener('keydown', (e) => {
@@ -374,5 +278,7 @@
             }
         });
     </script>
+    @vite('resources/js/kelas.js')
+    @vite('resources/css/admin/kelas.css')
 
 @endsection

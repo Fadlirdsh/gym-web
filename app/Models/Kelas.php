@@ -26,13 +26,9 @@ class Kelas extends Model
         'expired_at' => 'datetime',
     ];
 
-    protected $appends = ['harga_diskon', 'diskon_persen', 'sisa_kursi'];
+    protected $appends = ['harga_diskon', 'diskon_persen',];
 
-    // --- Accessor: Sisa Kursi ---
-    public function getSisaKursiAttribute()
-    {
-        return $this->kapasitas - ($this->reservasi_count ?? 0);
-    }
+
 
     public function diskons()
     {
@@ -78,8 +74,16 @@ class Kelas extends Model
 
     public function reservasi()
     {
-        return $this->hasMany(\App\Models\Reservasi::class, 'kelas_id');
+        return $this->hasManyThrough(
+            Reservasi::class,
+            Schedule::class,
+            'kelas_id',     // FK di schedules
+            'schedule_id',  // FK di reservasi
+            'id',
+            'id'
+        );
     }
+
 
     public function schedules()
     {

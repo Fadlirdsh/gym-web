@@ -12,46 +12,46 @@ class Schedule extends Model
     protected $fillable = [
         'trainer_shift_id',
         'kelas_id',
-        'trainer_id',
-        'day',
         'start_time',
         'end_time',
+        'capacity',
         'class_focus',
         'is_active',
     ];
 
-    /**
-     * =========================
-     * RELATIONS
-     * =========================
-     */
+    /*
+    |------------------------------------------------------------------
+    | RELATIONSHIPS
+    |------------------------------------------------------------------
+    */
 
-    // Relasi ke shift kerja trainer
+    // Shift kerja trainer (SUMBER hari & trainer)
     public function trainerShift()
     {
         return $this->belongsTo(TrainerShift::class, 'trainer_shift_id');
     }
 
-    // Relasi ke kelas
+    
+    // Kelas yang dijadwalkan
     public function kelas()
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 
-    // Relasi ke trainer (users)
-    public function trainer()
+    // Semua reservasi yang menggunakan slot ini
+    public function reservasi()
     {
-        return $this->belongsTo(User::class, 'trainer_id');
+        return $this->hasMany(Reservasi::class, 'schedule_id');
     }
 
-    /**
-     * =========================
-     * ACCESSORS
-     * =========================
-     */
+    /*
+    |------------------------------------------------------------------
+    | ACCESSORS & HELPERS
+    |------------------------------------------------------------------
+    */
 
-    // Hitung durasi kelas (menit)
-    public function getDurationAttribute()
+    // Durasi kelas (menit)
+    public function getDurationAttribute(): ?int
     {
         if (!$this->start_time || !$this->end_time) {
             return null;
@@ -63,22 +63,20 @@ class Schedule extends Model
         return ($end - $start) / 60;
     }
 
-    /**
-     * Identifier kelas (OPTIONAL)
-     * ⚠️ Jangan dipakai untuk logic penting
-     */
-    public function getClassKeyAttribute()
+    // Hitung sisa slot pada tanggal tertentu
+    public function sisaSlot(string $tanggal): int
     {
-        if (!$this->day || !$this->start_time || !$this->kelas) {
-            return null;
-        }
+        $terpakai = $this->reservasi()
+            ->where('tanggal', $tanggal)
+            ->where('status', '!=', 'canceled')
+            ->count();
 
-        return sprintf(
-            '%s-%s-%s-%s',
-            $this->day,
-            date('H:i', strtotime($this->start_time)),
-            str_replace(' ', '', $this->kelas->nama_kelas),
-            str_replace(' ', '', $this->kelas->tipe_kelas)
-        );
+        return max(0, $this->capacity - $terpakai);
+    }
+
+    // Apakah slot masih tersedia pada tanggal tertentu
+    public function isAvailable(string $tanggal): bool
+    {
+        return $this->sisaSlot($tanggal) > 0;
     }
 }

@@ -18,39 +18,37 @@ class ScheduleController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Schedule::with(['kelas', 'trainer', 'trainerShift']);
+        $query = Schedule::with(['kelas', 'trainerShift.trainer']);
 
+        // filter trainer (via shift)
         if ($request->filled('trainer_id')) {
-            $query->where('trainer_id', $request->trainer_id);
+            $query->whereHas('trainerShift', function ($q) use ($request) {
+                $q->where('trainer_id', $request->trainer_id);
+            });
         }
 
         if ($request->filled('kelas_id')) {
             $query->where('kelas_id', $request->kelas_id);
         }
 
+        // filter hari (via shift)
         if ($request->filled('day')) {
-            $query->where('day', $request->day);
+            $query->whereHas('trainerShift', function ($q) use ($request) {
+                $q->where('day', $request->day);
+            });
         }
 
         if ($request->filled('start_time')) {
             $query->where('start_time', $request->start_time);
         }
 
-        // PAGINATION SCHEDULE (SUDAH BENAR)
         $schedules = $query
-            ->orderByRaw("
-                FIELD(day,
-                    'Monday','Tuesday','Wednesday',
-                    'Thursday','Friday','Saturday','Sunday'
-                )
-            ")
             ->orderBy('start_time')
             ->paginate(15);
 
         $kelas    = Kelas::orderBy('nama_kelas')->get();
         $trainers = User::where('role', 'trainer')->orderBy('name')->get();
 
-        // ❗ FIX UTAMA: SHIFTS WAJIB PAGINATE
         $shifts = TrainerShift::with('trainer')
             ->orderByRaw("
                 FIELD(day,
@@ -71,7 +69,7 @@ class ScheduleController extends Controller
 
     /**
      * =========================
-     * STORE SCHEDULE (KELAS)
+     * STORE SCHEDULE
      * =========================
      */
     public function store(Request $request)
@@ -79,31 +77,16 @@ class ScheduleController extends Controller
         $validated = $request->validate([
             'trainer_shift_id' => 'required|exists:trainer_shifts,id',
             'kelas_id'         => 'required|exists:kelas,id',
-            'trainer_id'       => 'required|exists:users,id',
-            'day'              => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
             'start_time'       => 'required',
             'end_time'         => 'required|after:start_time',
             'class_focus'      => 'nullable|string',
             'is_active'        => 'required|boolean',
+            'capacity'         => 'required|integer|min:1',
         ]);
 
         $shift = TrainerShift::findOrFail($validated['trainer_shift_id']);
 
-        // VALIDASI KERAS
-        if ($validated['trainer_id'] != $shift->trainer_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Trainer tidak sesuai dengan shift'
-            ], 422);
-        }
-
-        if ($validated['day'] !== $shift->day) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hari kelas harus sama dengan hari shift'
-            ], 422);
-        }
-
+        // jam harus di dalam shift
         if (
             $validated['start_time'] < $shift->shift_start ||
             $validated['end_time']   > $shift->shift_end
@@ -114,8 +97,11 @@ class ScheduleController extends Controller
             ], 422);
         }
 
-        $overlap = Schedule::where('trainer_id', $validated['trainer_id'])
-            ->where('day', $validated['day'])
+        // cek bentrok (hari diambil dari shift)
+        $overlap = Schedule::whereHas('trainerShift', function ($q) use ($shift) {
+                $q->where('trainer_id', $shift->trainer_id)
+                  ->where('day', $shift->day);
+            })
             ->where(function ($q) use ($validated) {
                 $q->where('start_time', '<', $validated['end_time'])
                   ->where('end_time', '>', $validated['start_time']);
@@ -134,7 +120,7 @@ class ScheduleController extends Controller
         return response()->json([
             'success'  => true,
             'message'  => 'Jadwal kelas berhasil ditambahkan',
-            'schedule' => $schedule->load(['kelas', 'trainer', 'trainerShift'])
+            'schedule' => $schedule->load(['kelas', 'trainerShift.trainer'])
         ]);
     }
 
@@ -150,23 +136,14 @@ class ScheduleController extends Controller
         $validated = $request->validate([
             'trainer_shift_id' => 'required|exists:trainer_shifts,id',
             'kelas_id'         => 'required|exists:kelas,id',
-            'trainer_id'       => 'required|exists:users,id',
-            'day'              => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
             'start_time'       => 'required',
             'end_time'         => 'required|after:start_time',
             'class_focus'      => 'nullable|string',
             'is_active'        => 'required|boolean',
+            'capacity'         => 'required|integer|min:1',
         ]);
 
         $shift = TrainerShift::findOrFail($validated['trainer_shift_id']);
-
-        if ($validated['trainer_id'] != $shift->trainer_id) {
-            return back()->withErrors('Trainer tidak sesuai dengan shift');
-        }
-
-        if ($validated['day'] !== $shift->day) {
-            return back()->withErrors('Hari kelas harus sama dengan hari shift');
-        }
 
         if (
             $validated['start_time'] < $shift->shift_start ||
@@ -175,8 +152,10 @@ class ScheduleController extends Controller
             return back()->withErrors('Jam kelas harus di dalam jam kerja trainer');
         }
 
-        $overlap = Schedule::where('trainer_id', $validated['trainer_id'])
-            ->where('day', $validated['day'])
+        $overlap = Schedule::whereHas('trainerShift', function ($q) use ($shift) {
+                $q->where('trainer_id', $shift->trainer_id)
+                  ->where('day', $shift->day);
+            })
             ->where('id', '!=', $schedule->id)
             ->where(function ($q) use ($validated) {
                 $q->where('start_time', '<', $validated['end_time'])
@@ -216,7 +195,7 @@ class ScheduleController extends Controller
     public function edit($id)
     {
         return response()->json(
-            Schedule::with(['kelas', 'trainer', 'trainerShift'])->findOrFail($id)
+            Schedule::with(['kelas', 'trainerShift.trainer'])->findOrFail($id)
         );
     }
 
