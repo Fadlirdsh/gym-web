@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\Reservasi;
 use App\Models\Transaksi;
-use App\Models\Kelas;
 use App\Models\UserVoucher;
 use App\Models\Member;
 use App\Models\TokenPackage;
@@ -38,19 +37,65 @@ class CheckoutController extends Controller
     public function checkoutReservasi(Request $request, PricingService $pricing)
     {
         $request->validate([
-            'kelas_id'         => 'required|exists:kelas,id',
-            'date'             => 'required|date',
-            'time'             => 'required|string',
-            'catatan'          => 'nullable|string',
-            'voucher_user_id'  => 'nullable|exists:user_vouchers,id',
+            'schedule_id'     => 'required|exists:schedules,id',
+            'tanggal'         => 'required|date',
+            'catatan'         => 'nullable|string',
+            'voucher_user_id' => 'nullable|exists:user_vouchers,id',
         ]);
 
-        $user  = auth()->user();
-        $kelas = Kelas::findOrFail($request->kelas_id);
+        $user = auth()->user();
+
+        // Ambil schedule + relasi penting
+        $schedule = \App\Models\Schedule::with(['kelas', 'trainerShift'])
+            ->where('id', $request->schedule_id)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        // =========================
+        // 🔒 VALIDASI: EXPIRED KELAS
+        // =========================
+        $kelas = $schedule->kelas;
+
+        if ($kelas->expired_at) {
+            $bookingDate = Carbon::parse($request->tanggal)->startOfDay();
+            $expiredAt   = Carbon::parse($kelas->expired_at)->startOfDay();
+
+            if ($bookingDate->gt($expiredAt)) {
+                return response()->json([
+                    'message' => 'Tanggal booking melebihi masa aktif kelas'
+                ], 422);
+            }
+        }
+
+        //tolak kelas yang selesai setelah jam tutup
+        if ($schedule->end_time > '22:00') {
+            return response()->json([
+                'message' => 'Jadwal kelas melewati jam operasional'
+            ], 422);
+        }
+
+
+        // 🔒 VALIDASI: tanggal cocok dengan hari shift
+        $tanggal = Carbon::parse($request->tanggal);
+        if ($tanggal->dayOfWeekIso !== $schedule->trainerShift->day) {
+            return response()->json([
+                'message' => 'Tanggal tidak sesuai dengan jadwal kelas'
+            ], 400);
+        }
+
+        // 🔒 VALIDASI: slot masih tersedia
+        if (! $schedule->isAvailable($request->tanggal)) {
+            return response()->json([
+                'message' => 'Slot kelas sudah penuh'
+            ], 400);
+        }
 
         DB::beginTransaction();
 
         try {
+            // =========================
+            // VOUCHER
+            // =========================
             $voucherUserId = null;
 
             if ($request->voucher_user_id) {
@@ -69,19 +114,24 @@ class CheckoutController extends Controller
                 $voucherUserId = $voucherUser->id;
             }
 
-            // 🔍 CEK: apakah user sudah pernah reservasi SUCCESS
+            // =========================
+            // FIRST TIME DISCOUNT
+            // =========================
             $hasSuccessReservasi = Transaksi::where('user_id', $user->id)
                 ->where('jenis', 'reservasi')
                 ->where('status', 'success')
                 ->exists();
 
-            // 🔍 CEK: diskon first time user masih valid?
             $firstTimeDiscount = FirstTimeDiscount::where('user_id', $user->id)
                 ->valid()
                 ->first();
 
-            // kirim context ke pricing service
             $canUseFirstTimeDiscount = !$hasSuccessReservasi && $firstTimeDiscount !== null;
+
+            // =========================
+            // HITUNG HARGA
+            // =========================
+            $kelas = $schedule->kelas;
 
             $hargaFinal = $pricing->getFinalPrice(
                 $user,
@@ -90,19 +140,23 @@ class CheckoutController extends Controller
                 $canUseFirstTimeDiscount
             );
 
+            $diskon = max(0, $kelas->harga - $hargaFinal);
 
-            $diskon = $kelas->harga - $hargaFinal;
-
+            // =========================
+            // BUAT RESERVASI (PENTING: SEBELUM PAYMENT)
+            // =========================
             $reservasi = Reservasi::create([
                 'pelanggan_id' => $user->id,
-                'trainer_id'   => $kelas->trainer_id ?? 1,
-                'kelas_id'     => $kelas->id,
-                'jadwal'       => Carbon::parse($request->date . ' ' . $request->time),
+                'schedule_id'  => $schedule->id,
+                'tanggal'      => $request->tanggal,
                 'status'       => 'pending_payment',
                 'status_hadir' => 'belum_hadir',
                 'catatan'      => $request->catatan,
             ]);
 
+            // =========================
+            // TRANSAKSI
+            // =========================
             $kodeTrx = 'TRX-' . strtoupper(Str::random(10));
 
             Transaksi::create([
@@ -111,12 +165,15 @@ class CheckoutController extends Controller
                 'jenis'          => 'reservasi',
                 'source_id'      => $reservasi->id,
                 'harga_asli'     => $kelas->harga,
-                'diskon'         => max(0, $diskon),
+                'diskon'         => $diskon,
                 'total_bayar'    => $hargaFinal,
                 'metode'         => 'midtrans',
                 'status'         => 'pending',
             ]);
 
+            // =========================
+            // MIDTRANS
+            // =========================
             $snapToken = Snap::getSnapToken([
                 'transaction_details' => [
                     'order_id'     => $kodeTrx,
@@ -128,10 +185,12 @@ class CheckoutController extends Controller
                 ],
                 'item_details' => [
                     [
-                        'id'       => $kelas->id,
+                        'id'       => 'SCHEDULE-' . $schedule->id,
                         'price'    => $hargaFinal,
                         'quantity' => 1,
-                        'name'     => $kelas->nama_kelas,
+                        'name'     => $kelas->nama_kelas . ' (' .
+                            $schedule->start_time . '-' .
+                            $schedule->end_time . ')',
                     ]
                 ],
             ]);

@@ -42,13 +42,12 @@
                         @foreach ($shifts as $shift)
                             <tr class="cursor-pointer"
                                 onclick="selectShift(
-                                {{ $shift->id }},
-                                '{{ $shift->trainer->name }}',
-                                '{{ $shift->day }}',
-                                '{{ $shift->shift_start }}',
-                                '{{ $shift->shift_end }}',
-                                {{ $shift->trainer_id }}
-                            )">
+    {{ $shift->id }},
+    '{{ $shift->trainer->name }}',
+    '{{ $shift->day }}',
+    '{{ $shift->shift_start }}',
+    '{{ $shift->shift_end }}'
+)">
 
                                 <td>{{ $shift->trainer->name }}</td>
                                 <td>{{ $shift->day }}</td>
@@ -117,7 +116,7 @@
                         @foreach ($schedules as $s)
                             <tr>
                                 <td>{{ $s->kelas->nama_kelas }}</td>
-                                <td>{{ $s->trainer->name }}</td>
+                                <td>{{ optional($s->trainerShift?->trainer)->name ?? '-' }}</td>
                                 <td>{{ $s->day }}</td>
                                 <td>{{ $s->start_time }} - {{ $s->end_time }}</td>
                                 <td>{{ $s->class_focus ?? '-' }}</td>
@@ -222,6 +221,9 @@
 
                     <label>Jam Selesai</label>
                     <input type="time" id="end_time" class="input-field">
+
+                    <label>Kapasitas</label>
+                    <input type="number" id="capacity" class="input-field" min="1" placeholder="Contoh: 20">
 
                     <label>Fokus Kelas</label>
                     <input type="text" id="class_focus" class="input-field">

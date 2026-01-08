@@ -13,48 +13,45 @@ class Reservasi extends Model
 
     protected $fillable = [
         'pelanggan_id',
-        'trainer_id',
-        'kelas_id',
-        'jadwal',
+        'schedule_id',
+        'tanggal',
         'status',        // pending_payment | paid | canceled
         'status_hadir',  // belum_hadir | hadir
         'catatan',
     ];
 
     protected $casts = [
-        'jadwal' => 'datetime',
+        'tanggal' => 'date',
     ];
 
     /*
-    |--------------------------------------------------------------------------
+    |------------------------------------------------------------------
     | RELATIONSHIPS
-    |--------------------------------------------------------------------------
+    |------------------------------------------------------------------
     */
 
+    // User (pelanggan) yang melakukan booking
     public function pelanggan()
     {
         return $this->belongsTo(User::class, 'pelanggan_id');
     }
 
-    public function trainer()
+    // Slot jadwal yang dibooking
+    public function schedule()
     {
-        return $this->belongsTo(User::class, 'trainer_id');
+        return $this->belongsTo(Schedule::class, 'schedule_id');
     }
 
-    public function kelas()
-    {
-        return $this->belongsTo(Kelas::class, 'kelas_id');
-    }
-
+    // QR Code untuk absensi (jika ada)
     public function qrCode()
     {
         return $this->hasOne(QrCode::class);
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | STATUS HELPERS (OPSIONAL TAPI DISARANKAN)
-    |--------------------------------------------------------------------------
+    |------------------------------------------------------------------
+    | STATUS HELPERS
+    |------------------------------------------------------------------
     */
 
     public function isPendingPayment(): bool

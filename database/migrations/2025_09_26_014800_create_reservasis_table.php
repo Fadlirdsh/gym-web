@@ -11,47 +11,70 @@ return new class extends Migration
         Schema::create('reservasi', function (Blueprint $table) {
             $table->id();
 
-            // relasi pelanggan (user dengan role = pelanggan)
+            /**
+             * =========================
+             * RELASI INTI
+             * =========================
+             */
+
+            // Pelanggan yang booking
             $table->foreignId('pelanggan_id')
                 ->constrained('users')
-                ->onDelete('cascade');
+                ->cascadeOnDelete();
 
-            // relasi trainer (user dengan role = trainer)
-            $table->foreignId('trainer_id')
-                ->constrained('users')
-                ->onDelete('cascade');
+            // Slot jadwal yang dibooking
+            $table->foreignId('schedule_id')
+                ->constrained('schedules')
+                ->cascadeOnDelete();
 
-            // relasi kelas
-            $table->foreignId('kelas_id')
-                ->constrained('kelas')
-                ->onDelete('cascade');
+            /**
+             * =========================
+             * WAKTU EKSEKUSI
+             * =========================
+             */
 
-            // jadwal reservasi
-            $table->dateTime('jadwal');
+            // Tanggal booking (jam diambil dari schedule)
+            $table->date('tanggal');
 
-            // status reservasi
+            /**
+             * =========================
+             * STATUS
+             * =========================
+             */
+
             $table->enum('status', [
-                'pending_payment', // user baru klik reserve
-                'paid',            // transaksi sukses
-                'canceled'         // gagal / dibatalkan
+                'pending_payment',
+                'paid',
+                'canceled'
             ])->default('pending_payment');
 
+            $table->enum('status_hadir', [
+                'belum_hadir',
+                'hadir'
+            ])->default('belum_hadir');
 
-            $table->enum('status_hadir', ['belum_hadir', 'hadir'])->default('belum_hadir');
+            /**
+             * =========================
+             * OPSIONAL
+             * =========================
+             */
 
-
-            // // metode pembayaran (opsional)
-            // $table->enum('metode_pembayaran', ['cash', 'transfer', 'ewallet'])
-            //       ->nullable();
-
-            // // status pembayaran (opsional)
-            // $table->enum('status_pembayaran', ['belum_bayar', 'lunas'])
-            //       ->default('belum_bayar');
-
-            // catatan tambahan opsional
             $table->text('catatan')->nullable();
 
             $table->timestamps();
+
+            /**
+             * =========================
+             * PROTEKSI DATA
+             * =========================
+             */
+
+            // Cegah 1 user booking slot yang sama di tanggal yang sama
+            $table->unique([
+                'pelanggan_id',
+                'schedule_id',
+                'tanggal'
+            ]);
         });
     }
 

@@ -14,39 +14,38 @@ class KelasController extends Controller
      */
     public function index()
     {
-        $kelas = Kelas::aktif()
-            ->with([
-                'schedules' => fn($q) => $q->where('is_active', true),
-                'trainer'
-            ])
-            ->withCount('reservasi')
-            ->get();
+        $kelas = Kelas::with([
+            'schedules.trainerShift.trainer'
+        ])
+        ->where(function ($q) {
+            $q->whereNull('expired_at')
+              ->orWhere('expired_at', '>=', now());
+        })
+        ->get();
 
-        $data = $kelas->map(function ($item) {
-            $jadwal = $item->schedules->first();
+        $data = $kelas->map(function ($k) {
+            $schedule = $k->schedules->first();
 
             return [
-                'id'            => $item->id,
-                'nama_kelas'    => $item->nama_kelas,
-                'tipe_kelas'    => $item->tipe_kelas,
-                'harga'         => $item->harga,
-                'deskripsi'     => $item->deskripsi,
-                'expired_at'    => $item->expired_at,
-                'waktu_mulai'   => $item->waktu_mulai,
-                'diskon_persen' => $item->diskon_persen,
-                'harga_diskon'  => $item->harga_diskon,
-                'sisa_kursi'    => $item->sisa_kursi,
-                'tipe_paket'    => $item->tipe_paket,
-                'hari'          => $jadwal->day ?? null,
-                'jam_mulai'     => $jadwal->time ?? null,
-                'instruktur'    => $item->trainer->name ?? 'Instruktur',
-                'gambar'        => $item->gambar ? url($item->gambar) : null,
+                'id'         => $k->id,
+                'nama_kelas' => $k->nama_kelas,
+                'tipe_kelas' => $k->tipe_kelas,
+                'harga'      => $k->harga,
+                'deskripsi'  => $k->deskripsi,
+                'gambar'     => $k->gambar ? url($k->gambar) : null,
+                'expired_at' => $k->expired_at,
+
+                'hari'       => $schedule?->trainerShift?->day,
+                'jam_mulai'  => $schedule?->start_time,
+                'instruktur' => $schedule?->trainerShift?->trainer?->name,
+                'sisa_kursi' => $schedule
+                    ? $schedule->sisaSlot(now()->toDateString())
+                    : null,
             ];
         });
 
         return response()->json($data);
     }
-
 
     /**
      * GET /api/kelas/{id}
@@ -100,8 +99,16 @@ class KelasController extends Controller
 
         // Upload gambar jika ada
         $gambarPath = null;
+
         if ($request->hasFile('gambar')) {
-            $gambarPath = $request->file('gambar')->store('uploads/kelas', 'public');
+            $file = $request->file('gambar');
+
+            $filename = time() . '_' . $file->getClientOriginalName();
+
+            $file->move(public_path('uploads/kelas'), $filename);
+
+            // SIMPAN RELATIVE PATH KE DB
+            $gambarPath = 'uploads/kelas/' . $filename;
         }
 
         $kelas = Kelas::create([

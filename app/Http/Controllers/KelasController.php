@@ -9,17 +9,14 @@ class KelasController extends Controller
 {
     public function index()
     {
-        $kelas = Kelas::where('expired_at', '>=', now())
+        $kelas = Kelas::where(function ($q) {
+                $q->whereNull('expired_at')
+                  ->orWhere('expired_at', '>=', now());
+            })
             ->with('diskons')
-            ->withCount('reservasi')
             ->get();
 
         return view('admin.Kelas', compact('kelas'));
-    }
-
-    public function create()
-    {
-        return view('users.kelas-create');
     }
 
     public function store(Request $request)
@@ -28,7 +25,6 @@ class KelasController extends Controller
             'nama_kelas' => 'required|string|max:100',
             'tipe_kelas' => 'required|string|max:50',
             'harga'      => 'required|numeric',
-            'kapasitas'  => 'required|integer|min:1',
             'deskripsi'  => 'nullable|string',
             'expired_at' => 'nullable|date',
             'gambar'     => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -38,7 +34,6 @@ class KelasController extends Controller
             'nama_kelas',
             'tipe_kelas',
             'harga',
-            'kapasitas',
             'deskripsi',
             'expired_at'
         );
@@ -65,7 +60,6 @@ class KelasController extends Controller
             'harga'      => 'required|numeric',
             'deskripsi'  => 'nullable|string',
             'expired_at' => 'nullable|date',
-            'kapasitas'  => 'required|integer|min:1',
             'gambar'     => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -78,8 +72,6 @@ class KelasController extends Controller
             $namaFile = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('uploads/kelas'), $namaFile);
             $validatedData['gambar'] = 'uploads/kelas/' . $namaFile;
-        } else {
-            $validatedData['gambar'] = $kelas->gambar;
         }
 
         $kelas->update($validatedData);
@@ -104,12 +96,15 @@ class KelasController extends Controller
 
     /**
      * API — list kelas (mobile)
+     * NOTE: TANPA sisa_kursi
      */
     public function apiIndex()
     {
-        $kelas = Kelas::where('expired_at', '>=', now())
+        $kelas = Kelas::where(function ($q) {
+                $q->whereNull('expired_at')
+                  ->orWhere('expired_at', '>=', now());
+            })
             ->with('diskons')
-            ->withCount('reservasi')
             ->get();
 
         $data = $kelas->map(fn ($item) => [
@@ -122,7 +117,6 @@ class KelasController extends Controller
             'gambar'        => $item->gambar ? asset($item->gambar) : null,
             'diskon_persen' => $item->diskon_persen,
             'harga_diskon'  => $item->harga_diskon,
-            'sisa_kursi'    => $item->sisa_kursi,
         ]);
 
         return response()->json($data);
