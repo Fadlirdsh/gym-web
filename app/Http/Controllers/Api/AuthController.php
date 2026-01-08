@@ -131,4 +131,16 @@ class AuthController extends Controller
             return response()->json(['error' => 'Gagal logout atau token tidak valid'], 400);
         }
     }
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'id'    => $user->id,
+            'name'  => $user->name,
+            'email' => $user->email,
+            'role'  => $user->role,
+        ]);
+    }
 }

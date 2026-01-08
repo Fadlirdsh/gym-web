@@ -63,6 +63,8 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 
+
+
     /**
      * 🔥 Relasi voucher milik user (pivot: user_vouchers)
      */
@@ -98,6 +100,6 @@ class User extends Authenticatable implements JWTSubject
 
     public function trainerProfile()
     {
-        return $this->hasOne(\App\Models\TrainerProfile::class);
+        return $this->hasOne(TrainerProfile::class, 'user_id');
     }
 }

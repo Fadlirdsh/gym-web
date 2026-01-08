@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\TrainerProfile;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
 
 class TrainerProfileController extends Controller
 {
@@ -25,9 +26,16 @@ class TrainerProfileController extends Controller
      */
     public function store(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $data = $request->validate([
+        // ✅ VALIDASI SEKALI SAJA (BERSIH & AMAN)
+        $validated = $request->validate([
+            // ===== USER =====
+            'name'  => 'sometimes|required|string|max:255',
+            'phone' => 'sometimes|nullable|string|max:20',
+
+            // ===== TRAINER PROFILE =====
             'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'headline' => 'nullable|string|max:255',
             'bio' => 'nullable|string',
@@ -38,20 +46,36 @@ class TrainerProfileController extends Controller
             'certifications.*' => 'string|max:100',
         ]);
 
-        // handle upload foto
-        if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')
-                ->store('trainer_profiles', 'public');
-        }
+        DB::transaction(function () use ($validated, $request, $user) {
 
-        $profile = TrainerProfile::updateOrCreate(
-            ['user_id' => $user->id],
-            $data
-        );
+            /* =====================
+               UPDATE USER (IDENTITY)
+            ===================== */
+            $dataUser = Arr::only($validated, ['name', 'phone']);
+
+            if (!empty($dataUser)) {
+                $user->update($dataUser);
+            }
+
+            /* =====================
+               UPDATE TRAINER PROFILE
+            ===================== */
+            $dataProfile = Arr::except($validated, ['name', 'phone']);
+
+            if ($request->hasFile('photo')) {
+                $dataProfile['photo'] = $request
+                    ->file('photo')
+                    ->store('trainer_profiles', 'public');
+            }
+
+            TrainerProfile::updateOrCreate(
+                ['user_id' => $user->id],
+                $dataProfile
+            );
+        });
 
         return response()->json([
-            'message' => 'Profil trainer berhasil disimpan',
-            'data' => $profile
+            'message' => 'Profil trainer berhasil disimpan'
         ]);
     }
 }
