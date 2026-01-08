@@ -1,0 +1,99 @@
+
+        /* Animations */
+        @keyframes showModal {
+            from {
+                opacity: 0;
+                transform: scale(.96);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .animate-showModal {
+            animation: showModal 0.22s ease-out forwards;
+        }
+
+
+        /* Inputs */
+        .input-modern {
+            width: 100%;
+            display: block;
+            padding: 0.6rem 0.9rem;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #ffffff;
+            color: #111827;
+            box-shadow: 0 1px 2px rgba(16, 24, 40, 0.03);
+            transition: box-shadow .12s, border-color .12s, transform .12s;
+            font-size: 0.95rem;
+        }
+
+        .dark .input-modern {
+            background: #111827;
+            color: #e5e7eb;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: none;
+        }
+
+        .input-modern:focus {
+            outline: none;
+            border-color: rgba(99, 102, 241, 1);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.08);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+            padding: .56rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.12);
+            transition: transform .12s, box-shadow .12s, background .12s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: #4338ca;
+            box-shadow: 0 10px 30px rgba(67, 56, 202, 0.12);
+        }
+
+
+        .btn-cancel {
+            background: #f3f4f6;
+            color: #111827;
+            padding: .56rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .dark .btn-cancel {
+            background: #1f2937;
+            color: #e5e7eb;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        /* Card subtle */
+        .shadow-2xl {
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+        }
+
+        .rounded-xl {
+            border-radius: 12px;
+        }
+
+        /* Smooth theme transition */
+        body,
+        .container {
+            transition: background-color .18s, color .18s;
+        }
+
+        /* Utility tweaks */
+        input[type=file].input-modern {
+            padding: .45rem .75rem;
+        }
+    
