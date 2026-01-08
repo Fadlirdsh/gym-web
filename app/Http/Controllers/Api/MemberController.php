@@ -14,13 +14,15 @@ use Carbon\Carbon;
 class MemberController extends Controller
 {
     /**
-     * Auto-expire member berdasarkan tanggal
+     * =========================================
+     * AUTO EXPIRE MEMBER (FIX DATETIME BUG)
+     * =========================================
      */
     private function autoExpireMember()
     {
         Member::where('status', 'aktif')
             ->whereNotNull('tanggal_berakhir')
-            ->where('tanggal_berakhir', '<', now())
+            ->whereDate('tanggal_berakhir', '<', now()->toDateString())
             ->update(['status' => 'nonaktif']);
     }
 
@@ -30,17 +32,20 @@ class MemberController extends Controller
      * ==========================
      */
     public function status()
-    {
-        $this->autoExpireMember();
-        $user = JWTAuth::parseToken()->authenticate();
+{
+    $this->autoExpireMember();
 
-        $member = Member::where('user_id', $user->id)->first();
+    $user = JWTAuth::parseToken()->authenticate();
 
-        return response()->json([
-            'member' => $member,
-            'aktif'  => $member && $member->status === 'aktif',
-        ]);
-    }
+    $member = Member::where('user_id', $user->id)->first();
+
+    return response()->json([
+        'is_member' => (bool) $member,
+        'status' => $member?->status, // aktif | pending | nonaktif | null
+        'expired_at' => $member?->tanggal_berakhir,
+    ]);
+}
+
 
     /**
      * ==========================
@@ -60,13 +65,14 @@ class MemberController extends Controller
         $user  = JWTAuth::parseToken()->authenticate();
         $kelas = Kelas::findOrFail($request->kelas_id);
 
+        // ✅ PAKAI SCOPE aktif()
         $member = Member::where('user_id', $user->id)
-            ->where('status', 'aktif')
+            ->aktif()
             ->first();
 
         /**
          * ===============================
-         * CASE 1: MEMBER + TOKEN ADA
+         * CASE 1: MEMBER AKTIF + TOKEN ADA
          * ===============================
          */
         if ($member) {
@@ -83,7 +89,7 @@ class MemberController extends Controller
                     'pelanggan_id' => $user->id,
                     'trainer_id'   => $kelas->trainer_id ?? 1,
                     'kelas_id'     => $kelas->id,
-                    'jadwal'       => Carbon::parse($request->date.' '.$request->time),
+                    'jadwal'       => Carbon::parse($request->date . ' ' . $request->time),
                     'status'       => 'paid',
                     'status_hadir' => 'belum_hadir',
                 ]);
