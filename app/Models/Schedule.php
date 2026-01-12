@@ -30,7 +30,6 @@ class Schedule extends Model
     {
         return $this->belongsTo(TrainerShift::class, 'trainer_shift_id');
     }
-
     
     // Kelas yang dijadwalkan
     public function kelas()
