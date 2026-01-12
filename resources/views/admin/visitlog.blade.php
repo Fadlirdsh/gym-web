@@ -6,8 +6,8 @@
 
     <style>
         /* =========================================================
-               VISIT LOG - Light & Dark - Glassmorphism Style
-            ========================================================= */
+                   VISIT LOG - Light & Dark - Glassmorphism Style
+                ========================================================= */
 
         /* Card */
         .card {
@@ -260,12 +260,12 @@
                             <tr>
                                 {{-- Tanggal --}}
                                 <td data-label="Tanggal">
-                                    {{ $log->checkin_at->format('d F Y') }}
+                                    {{ $log->reservasi->tanggal->format('d M Y') }}
                                 </td>
 
                                 {{-- Jam --}}
                                 <td data-label="Jam Masuk">
-                                    {{ $log->checkin_at->format('H:i') }}
+                                    {{ $log->created_at->format('H:i') }}
                                 </td>
 
                                 {{-- Pelanggan --}}
@@ -275,12 +275,12 @@
 
                                 {{-- Kelas --}}
                                 <td data-label="Kelas">
-                                    {{ $log->reservasi->kelas->nama_kelas ?? '-' }}
+                                    {{ $log->reservasi->schedule->kelas->nama_kelas ?? '-' }}
                                 </td>
 
                                 {{-- Trainer --}}
                                 <td data-label="Trainer">
-                                    {{ $log->reservasi->trainer->name ?? '-' }}
+                                    {{ $log->reservasi->schedule->trainerShift->trainer->name ?? '-' }}
                                 </td>
 
                                 {{-- Status (SELALU HADIR) --}}

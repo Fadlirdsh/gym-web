@@ -77,11 +77,22 @@ class CheckoutController extends Controller
 
         // 🔒 VALIDASI: tanggal cocok dengan hari shift
         $tanggal = Carbon::parse($request->tanggal);
-        if ($tanggal->dayOfWeekIso !== $schedule->trainerShift->day) {
+        $map = [
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday',
+            7 => 'Sunday',
+        ];
+
+        if ($map[$tanggal->dayOfWeekIso] !== $schedule->trainerShift->day) {
             return response()->json([
                 'message' => 'Tanggal tidak sesuai dengan jadwal kelas'
             ], 400);
         }
+
 
         // 🔒 VALIDASI: slot masih tersedia
         if (! $schedule->isAvailable($request->tanggal)) {
@@ -374,5 +385,6 @@ class CheckoutController extends Controller
                 'message' => 'Checkout token gagal',
             ], 500);
         }
+        Log::info('CHECKOUT REQUEST', $request->all());
     }
 }

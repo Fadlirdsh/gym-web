@@ -35,6 +35,11 @@ class Reservasi extends Model
     {
         return $this->belongsTo(User::class, 'pelanggan_id');
     }
+    
+    public function kelas()
+    {
+        return $this->belongsTo(\App\Models\Kelas::class, 'kelas_id');
+    }
 
     // Slot jadwal yang dibooking
     public function schedule()

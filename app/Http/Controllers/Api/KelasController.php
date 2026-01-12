@@ -17,11 +17,11 @@ class KelasController extends Controller
         $kelas = Kelas::with([
             'schedules.trainerShift.trainer'
         ])
-        ->where(function ($q) {
-            $q->whereNull('expired_at')
-              ->orWhere('expired_at', '>=', now());
-        })
-        ->get();
+            ->where(function ($q) {
+                $q->whereNull('expired_at')
+                    ->orWhere('expired_at', '>=', now());
+            })
+            ->get();
 
         $data = $kelas->map(function ($k) {
             $schedule = $k->schedules->first();
@@ -162,5 +162,36 @@ class KelasController extends Controller
         $kelas->delete();
 
         return response()->json(['message' => 'Kelas berhasil dihapus']);
+    }
+
+    /**
+     * =====================================================
+     * GET /api/kelas/{id}/available-days
+     * Hari valid booking berdasarkan schedule + trainerShift
+     * =====================================================
+     */
+    public function availableDays($id)
+    {
+        $kelas = Kelas::with([
+            'schedules.trainerShift'
+        ])->findOrFail($id);
+
+        $availableDays = $kelas->schedules
+            ->filter(
+                fn($s) =>
+                $s->is_active &&
+                    $s->trainerShift &&
+                    $s->trainerShift->is_active
+            )
+            ->pluck('trainerShift.day') // ISO 1–7
+            ->unique()
+            ->sort()
+            ->values();
+
+        return response()->json([
+            'kelas_id'       => $kelas->id,
+            'expired_at'     => $kelas->expired_at,
+            'available_days' => $availableDays,
+        ]);
     }
 }

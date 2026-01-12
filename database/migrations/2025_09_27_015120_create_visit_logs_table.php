@@ -18,11 +18,13 @@ return new class extends Migration {
                 ->constrained('users')
                 ->cascadeOnDelete();
 
-            // WAKTU HADIR SEBENARNYA
-            $table->timestamp('checkin_at');
+            // JENIS KEJADIAN (EVENT)
+            // contoh: hadir, invalid, expired
+            $table->string('status');
 
             $table->text('catatan')->nullable();
 
+            // created_at = waktu check-in
             $table->timestamps();
         });
     }

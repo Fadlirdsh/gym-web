@@ -14,7 +14,9 @@ use App\Models\MemberToken;
 use App\Models\TokenPackage;
 use App\Models\UserVoucher;
 use App\Models\Voucher;
-
+use App\Models\QrCode;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 use Midtrans\Config;
 use Midtrans\Notification;
 
@@ -93,10 +95,29 @@ class MidtransCallbackController extends Controller
                      * 🔵 RESERVASI
                      */
                     case 'reservasi':
-                        Reservasi::where('id', $transaksi->source_id)
-                            ->update(['status' => 'paid']);
 
-                        // 🔒 KUNCI FIRST-TIME DISCOUNT (JIKA ADA)
+                        $reservasi = Reservasi::lockForUpdate()
+                            ->find($transaksi->source_id);
+
+                        if (!$reservasi) {
+                            break;
+                        }
+
+                        // 1️⃣ Update status reservasi
+                        $reservasi->update([
+                            'status' => 'paid'
+                        ]);
+
+                        // 2️⃣ BUAT QR SETELAH STATUS PAID
+                        \App\Models\QrCode::firstOrCreate(
+                            ['reservasi_id' => $reservasi->id],
+                            [
+                                'token'      => \Illuminate\Support\Str::uuid()->toString(),
+                                'expired_at' => \Carbon\Carbon::parse($reservasi->tanggal)->endOfDay(),
+                            ]
+                        );
+
+                        // 🔒 KUNCI FIRST-TIME DISCOUNT (JANGAN DIUBAH)
                         $firstTimeDiscount = FirstTimeDiscount::where('user_id', $transaksi->user_id)
                             ->whereNull('used_at')
                             ->where('expired_at', '>=', now())

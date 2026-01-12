@@ -23,9 +23,7 @@ class AttendanceController extends Controller
             'token' => 'required|string'
         ]);
 
-        /* =====================================================
-           1. VALIDASI QR
-        ===================================================== */
+        // 1. VALIDASI QR
         $qr = QrCode::where('token', $request->token)->first();
 
         if (!$qr) {
@@ -49,10 +47,8 @@ class AttendanceController extends Controller
             ], 400);
         }
 
-        /* =====================================================
-           2. AMBIL RESERVASI
-        ===================================================== */
-        $reservasi = Reservasi::find($qr->reservasi_id);
+        // 2. AMBIL RESERVASI
+        $reservasi = Reservasi::with('schedule.kelas')->find($qr->reservasi_id);
 
         if (!$reservasi) {
             return response()->json([
@@ -61,10 +57,9 @@ class AttendanceController extends Controller
             ], 404);
         }
 
-        /* =====================================================
-           3. CEGAH DOBEL CHECK-IN (WAJIB SEBELUM UPDATE APA PUN)
-        ===================================================== */
-        if (VisitLog::where('reservasi_id', $reservasi->id)
+        // 3. CEGAH DOBEL CHECK-IN
+        if (
+            VisitLog::where('reservasi_id', $reservasi->id)
             ->where('status', 'hadir')
             ->exists()
         ) {
@@ -74,17 +69,13 @@ class AttendanceController extends Controller
             ], 409);
         }
 
-        /* =====================================================
-           4. TRANSACTION (AMAN & KONSISTEN)
-        ===================================================== */
+        // 4. TRANSACTION
         DB::transaction(function () use ($qr, $reservasi) {
 
-            // Tandai QR sudah dipakai
             $qr->update([
                 'used_at' => Carbon::now()
             ]);
 
-            // CREATE VISIT LOG (EVENT UTAMA)
             VisitLog::create([
                 'reservasi_id' => $reservasi->id,
                 'user_id'      => auth()->check() ? auth()->id() : null,
@@ -92,23 +83,22 @@ class AttendanceController extends Controller
                 'catatan'      => 'Scan QR oleh admin',
             ]);
 
-            // Sync ke reservasi (SECONDARY STATE)
             $reservasi->update([
                 'status_hadir' => 'hadir'
             ]);
         });
 
-        /* =====================================================
-           5. RESPONSE
-        ===================================================== */
+        // 5. RESPONSE (TANPA PROPERTI FIKTIF)
         return response()->json([
             'success' => true,
             'message' => 'Absensi berhasil',
             'data' => [
                 'reservasi_id' => $reservasi->id,
                 'pelanggan_id' => $reservasi->pelanggan_id,
-                'kelas_id'     => $reservasi->kelas_id,
-                'jadwal'       => $reservasi->jadwal,
+                'kelas'        => $reservasi->schedule->kelas->nama_kelas,
+                'tanggal'      => $reservasi->tanggal,
+                'jam_mulai'    => $reservasi->schedule->start_time,
+                'jam_selesai'  => $reservasi->schedule->end_time,
             ]
         ]);
     }
@@ -128,13 +118,10 @@ class AttendanceController extends Controller
             ], 401);
         }
 
-        $now = now();
-
-        // Ambil reservasi TERDEKAT hari ini
-        $reservasi = Reservasi::with('kelas')
+        $reservasi = Reservasi::with('schedule.kelas')
             ->where('pelanggan_id', $user->id)
-            ->whereDate('jadwal', today())
-            ->orderBy('jadwal', 'asc')
+            ->whereDate('tanggal', today())
+            ->orderBy('tanggal', 'asc')
             ->first();
 
         if (!$reservasi) {
@@ -151,32 +138,50 @@ class AttendanceController extends Controller
             ]);
         }
 
-        if ($reservasi->status_hadir === 'hadir') {
+        if (!$reservasi->schedule || !$reservasi->schedule->kelas) {
+            return response()->json([
+                'can_checkin' => false,
+                'reason' => 'invalid_schedule'
+            ], 500);
+        }
+
+        if (
+            VisitLog::where('reservasi_id', $reservasi->id)
+            ->where('status', 'hadir')
+            ->exists()
+        ) {
             return response()->json([
                 'can_checkin' => false,
                 'reason' => 'already_checked_in'
             ]);
         }
 
-        if ($reservasi->jadwal->lt($now->copy()->subHour())) {
-            return response()->json([
-                'can_checkin' => false,
-                'reason' => 'session_expired'
-            ]);
-        }
+        $start = Carbon::parse($reservasi->tanggal)
+            ->setTimeFromTimeString($reservasi->schedule->start_time);
 
-        if ($reservasi->jadwal->gt($now->copy()->addHours(2))) {
+
+        $now = now();
+
+        if ($now->lt($start->copy()->subHours(2))) {
             return response()->json([
                 'can_checkin' => false,
                 'reason' => 'too_early'
             ]);
         }
 
+        if ($now->gt($start->copy()->addHour())) {
+            return response()->json([
+                'can_checkin' => false,
+                'reason' => 'session_expired'
+            ]);
+        }
+
         return response()->json([
             'can_checkin'  => true,
             'reservasi_id' => $reservasi->id,
-            'kelas'        => $reservasi->kelas->nama_kelas,
-            'jam_mulai'    => $reservasi->jadwal->format('H:i'),
+            'kelas'        => $reservasi->schedule->kelas->nama_kelas,
+            'jam_mulai'    => substr($reservasi->schedule->start_time, 0, 5),
+            'jam_selesai'  => substr($reservasi->schedule->end_time, 0, 5),
         ]);
     }
 }

@@ -16,12 +16,8 @@ class VisitLog extends Model
     protected $fillable = [
         'reservasi_id',
         'user_id',
+        'status',
         'catatan',
-        'checkin_at',
-    ];
-
-    protected $casts = [
-        'checkin_at' => 'datetime',
     ];
 
     /* ==============================
@@ -41,17 +37,6 @@ class VisitLog extends Model
     /**
      * Kelas DIAMBIL dari reservasi
      */
-    public function kelas()
-    {
-        return $this->hasOneThrough(
-            Kelas::class,
-            Reservasi::class,
-            'id',        // FK di reservasi
-            'id',        // PK di kelas
-            'reservasi_id',
-            'kelas_id'
-        );
-    }
 
     /* ==============================
      | SCOPES
@@ -62,20 +47,15 @@ class VisitLog extends Model
      */
     public function scopeHadirOnDate($query, $date)
     {
-        return $query->whereHas('reservasi', function ($q) {
-            $q->where('status', 'paid')
-                ->where('status_hadir', 'hadir');
-        })->whereDate('checkin_at', $date);
+        return $query
+            ->where('status', \App\Enums\VisitLogStatus::HADIR->value)
+            ->whereDate('created_at', $date);
     }
 
-    /**
-     * Hadir dalam rentang tanggal
-     */
     public function scopeHadirBetween($query, $startDate, $endDate)
     {
-        return $query->whereHas('reservasi', function ($q) {
-            $q->where('status', 'paid')
-                ->where('status_hadir', 'hadir');
-        })->whereBetween('checkin_at', [$startDate, $endDate]);
+        return $query
+            ->where('status', \App\Enums\VisitLogStatus::HADIR->value)
+            ->whereBetween('created_at', [$startDate, $endDate]);
     }
 }

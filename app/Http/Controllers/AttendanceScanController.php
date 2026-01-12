@@ -6,7 +6,10 @@ use Illuminate\Http\Request;
 use App\Models\QrCode;
 use App\Models\Reservasi;
 use App\Models\VisitLog;
-use Carbon\Carbon;
+use App\Helpers\QrHelper;
+
+use App\Enums\VisitLogStatus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AttendanceScanController extends Controller
@@ -21,12 +24,40 @@ class AttendanceScanController extends Controller
             'token' => 'required|string'
         ]);
 
-        $qr = QrCode::where('token', $request->token)->first();
+        $input = trim($request->token);
 
+        // ===============================
+        // 1️⃣ COBA SEBAGAI TOKEN (UUID)
+        // ===============================
+        $qr = QrCode::where('token', $input)
+            ->whereNull('used_at')
+            ->where('expired_at', '>', now())
+            ->first();
+
+        // ===============================
+        // 2️⃣ JIKA TIDAK KETEMU → COBA SEBAGAI ALIAS
+        // ===============================
+        if (!$qr) {
+
+            $activeQrs = QrCode::whereNull('used_at')
+                ->where('expired_at', '>', now())
+                ->get();
+
+            foreach ($activeQrs as $candidate) {
+                if (QrHelper::alias($candidate->token) === strtoupper($input)) {
+                    $qr = $candidate;
+                    break;
+                }
+            }
+        }
+
+        // ===============================
+        // 3️⃣ MASIH NULL → INVALID
+        // ===============================
         if (!$qr) {
             return response()->json([
                 'success' => false,
-                'message' => 'QR tidak valid'
+                'message' => 'QR / Kode manual tidak valid'
             ], 404);
         }
 
@@ -52,13 +83,29 @@ class AttendanceScanController extends Controller
             ], 404);
         }
 
-        $qr->update(['used_at' => now()]);
-        $reservasi->update(['status_hadir' => 'hadir']);
+        if ($reservasi->status !== 'paid') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reservasi belum dibayar'
+            ], 403);
+        }
+
+        DB::transaction(function () use ($qr, $reservasi) {
+
+            $qr->lockForUpdate();
+
+            if ($qr->used_at) {
+                throw new \Exception('QR sudah digunakan');
+            }
+
+            $qr->update(['used_at' => now()]);
+            $reservasi->update(['status_hadir' => 'hadir']);
+        });
 
         VisitLog::create([
             'reservasi_id' => $reservasi->id,
             'user_id'      => optional(auth()->user())->id,
-            'checkin_at'   => now(),
+            'status'       => VisitLogStatus::HADIR->value,
             'catatan'      => 'Scan QR oleh admin',
         ]);
 
