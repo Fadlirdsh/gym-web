@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-
+use App\Helpers\QrHelper;
 use App\Models\QrCode;
 use App\Models\Reservasi;
 
@@ -63,6 +63,7 @@ class QrCodeController extends Controller
             'qr_url'     => url('/attendance/scan?token=' . $qr->token),
             'token'      => $qr->token,
             'expired_at' => $qr->expired_at->toIso8601String(),
+            'alias'   => QrHelper::alias($qr->token),
         ]);
     }
 }

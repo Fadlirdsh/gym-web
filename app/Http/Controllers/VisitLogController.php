@@ -4,23 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\VisitLog;
 use Illuminate\Http\Request;
+use App\Enums\VisitLogStatus;
 
 class VisitLogController extends Controller
 {
     /**
      * READ ONLY — Visit Log
-     * Sumber kehadiran = reservasi.status_hadir
+     * Sumber kehadiran = visit_logs.status (EVENT LOG)
      */
     public function index(Request $request)
     {
         $query = VisitLog::with([
             'user',
-            'kelas',
-            'reservasi'
-        ])->whereHas('reservasi', function ($q) {
-            $q->where('status', 'paid')
-              ->where('status_hadir', 'hadir');
-        });
+            'reservasi.schedule.kelas',
+            'reservasi.schedule.trainerShift.trainer',
+        ])->where('status', VisitLogStatus::HADIR->value);
 
         /* ==============================
          | QUICK FILTER
@@ -28,15 +26,15 @@ class VisitLogController extends Controller
         if ($request->filter) {
             switch ($request->filter) {
                 case 'today':
-                    $query->whereDate('checkin_at', today());
+                    $query->whereDate('created_at', today());
                     break;
 
                 case 'yesterday':
-                    $query->whereDate('checkin_at', today()->subDay());
+                    $query->whereDate('created_at', today()->subDay());
                     break;
 
                 case 'week':
-                    $query->whereBetween('checkin_at', [
+                    $query->whereBetween('created_at', [
                         now()->startOfWeek(),
                         now()->endOfWeek()
                     ]);
@@ -45,28 +43,25 @@ class VisitLogController extends Controller
         }
         /* ==============================
          | RANGE FILTER
-         ============================== */
-        elseif ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('checkin_at', [
+         ============================== */ elseif ($request->filled('from') && $request->filled('to')) {
+            $query->whereBetween('created_at', [
                 $request->from . ' 00:00:00',
                 $request->to . ' 23:59:59',
             ]);
         }
         /* ==============================
          | SINGLE DATE
-         ============================== */
-        elseif ($request->filled('date')) {
-            $query->whereDate('checkin_at', $request->date);
+         ============================== */ elseif ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
         }
         /* ==============================
          | DEFAULT: TODAY
-         ============================== */
-        else {
-            $query->whereDate('checkin_at', today());
+         ============================== */ else {
+            $query->whereDate('created_at', today());
         }
 
         $visitLogs = $query
-            ->latest('checkin_at')
+            ->latest('created_at')
             ->paginate(10)
             ->appends($request->query());
 

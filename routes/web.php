@@ -15,7 +15,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TokenPackageController;
 use App\Http\Controllers\TrainerShiftController;
 use App\Http\Controllers\AttendanceScanController;
-use App\Http\Controllers\Admin\MemberTokenController;
+use App\Http\Controllers\MemberTokenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,14 +120,6 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // 🎟 Token Package
     // ===============================
     Route::resource('token-package', TokenPackageController::class);
-
-    Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
-        Route::post(
-            '/member-token/topup',
-            [MemberTokenController::class, 'topup']
-        )->name('admin.member-token.topup');
-    });
-
 
     // ===============================
     // 🔴 ABSENSI SCAN (FINAL & SATU-SATUNYA)

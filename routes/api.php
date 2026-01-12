@@ -64,6 +64,7 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 */
 Route::get('/kelas', [KelasController::class, 'index']);
 Route::get('/kelas/{id}', [KelasController::class, 'show']);
+Route::get('/kelas/{id}/available-days', [KelasController::class, 'availableDays']);
 
 /*
 |--------------------------------------------------------------------------
