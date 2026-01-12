@@ -63,8 +63,6 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 
-
-
     /**
      * 🔥 Relasi voucher milik user (pivot: user_vouchers)
      */

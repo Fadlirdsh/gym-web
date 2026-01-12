@@ -19,9 +19,9 @@ class ScheduleApiController extends Controller
     public function index()
     {
         $data = Schedule::with([
-                'kelas',
-                'trainerShift.trainer'
-            ])
+            'kelas',
+            'trainerShift.trainer'
+        ])
             ->orderBy('trainer_shift_id')
             ->orderBy('start_time')
             ->get();
@@ -36,9 +36,9 @@ class ScheduleApiController extends Controller
     public function show($id)
     {
         $schedule = Schedule::with([
-                'kelas',
-                'trainerShift.trainer'
-            ])->find($id);
+            'kelas',
+            'trainerShift.trainer'
+        ])->find($id);
 
         if (!$schedule) {
             return response()->json([
@@ -66,8 +66,8 @@ class ScheduleApiController extends Controller
         }
 
         $data = Schedule::whereHas('trainerShift', function ($q) use ($trainerId) {
-                $q->where('trainer_id', $trainerId);
-            })
+            $q->where('trainer_id', $trainerId);
+        })
             ->with(['kelas', 'trainerShift.trainer'])
             ->where('is_active', true)
             ->orderBy('start_time')
@@ -101,19 +101,33 @@ class ScheduleApiController extends Controller
             ->where('is_active', true)
             ->whereHas('trainerShift', function ($q) use ($dayIso) {
                 $q->where('day', $dayIso)
-                  ->where('is_active', true);
+                    ->where('is_active', true);
             })
             ->orderBy('start_time')
             ->get()
             ->map(function ($schedule) use ($request) {
+
+                $trainer = $schedule->trainerShift?->trainer;
+                $profile = $trainer?->trainerProfile;
+
                 return [
                     'id'         => $schedule->id,
                     'start_time' => $schedule->start_time,
                     'end_time'   => $schedule->end_time,
                     'sisa_slot'  => $schedule->sisaSlot($request->tanggal),
+
+                    'trainer' => [
+                        'nama' => $trainer?->name,
+                        'keahlian' => $profile && $profile->skills
+                            ? implode(', ', $profile->skills)
+                            : '-',
+                        'pengalaman' => $profile?->experience_years
+                            ? $profile->experience_years . ' tahun'
+                            : '-',
+                    ],
                 ];
             })
-            ->filter(fn ($s) => $s['sisa_slot'] > 0)
+            ->filter(fn($s) => $s['sisa_slot'] > 0)
             ->values();
 
         return response()->json($schedules);
