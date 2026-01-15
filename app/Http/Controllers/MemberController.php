@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Member;
+use App\Models\TokenPackage;
 
 class MemberController extends Controller
 {
@@ -25,10 +26,11 @@ class MemberController extends Controller
         // Semua member (pending, aktif, nonaktif)
         $members = Member::with('user')->latest()->get();
 
-        return view('admin.manage_member', compact(
-            'pelanggan',
-            'members'
-        ));
+        return view('admin.manage_member', [
+            'pelanggan'     => $pelanggan,
+            'members'       => $members,
+            'tokenPackages' => TokenPackage::all(), // ⬅️ INI YANG HILANG
+        ]);
     }
 
     /**

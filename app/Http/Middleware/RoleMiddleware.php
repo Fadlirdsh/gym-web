@@ -7,12 +7,15 @@ use Illuminate\Http\Request;
 
 class RoleMiddleware
 {
-    public function handle(Request $request, Closure $next, $role)
+    public function handle(Request $request, Closure $next, ...$roles)
     {
-        $user = $request->user();
+        // 🔒 PAKSA PAKAI GUARD API (JWT)
+        $user = auth('api')->user();
 
-        if (!$user || $user->role !== $role) {
-            return response()->json(['message' => 'Unauthorized — role tidak cocok'], 403);
+        if (!$user || !in_array($user->role, $roles)) {
+            return response()->json([
+                'message' => 'Unauthorized — role tidak cocok'
+            ], 403);
         }
 
         return $next($request);

@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\TrainerProfileController;
 use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Api\MidtransCallbackController;
 use App\Http\Controllers\Api\QrCodeController;
+use App\Http\Controllers\Api\MemberTokenController;
 use App\Http\Controllers\Api\AttendanceController;
 
 /*
@@ -180,6 +181,15 @@ Route::middleware(['jwt.auth', 'role:admin,trainer'])->group(function () {
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/trainer/shifts', [TrainerShiftController::class, 'index']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Member Token (PUBLIC)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
+    Route::get('/member/token', [MemberTokenController::class, 'tokenSisa']);
 });
 
 /*
