@@ -16,6 +16,7 @@ use App\Http\Controllers\TokenPackageController;
 use App\Http\Controllers\TrainerShiftController;
 use App\Http\Controllers\AttendanceScanController;
 use App\Http\Controllers\MemberTokenController;
+use App\Http\Controllers\AdminCashController;
 
 /*
 |--------------------------------------------------------------------------
@@ -120,6 +121,21 @@ Route::prefix('admin')->middleware(['web', 'auth:web', 'role.admin'])->group(fun
     // 🎟 Token Package
     // ===============================
     Route::resource('token-package', TokenPackageController::class);
+
+    // ===============================
+    // 🎟 Member dan toup via Admin
+    // ===============================
+    Route::prefix('admin')
+        ->middleware(['web', 'auth:web', 'role.admin'])
+        ->group(function () {
+
+            // 🎟 Member dan Topup via Admin (Cash)
+            Route::post('/cash/member', [AdminCashController::class, 'activateMember'])
+                ->name('admin.cash.member');
+
+            Route::post('/cash/token', [AdminCashController::class, 'topupToken'])
+                ->name('admin.cash.token');
+        });
 
     // ===============================
     // 🔴 ABSENSI SCAN (FINAL & SATU-SATUNYA)

@@ -31,31 +31,66 @@ class CheckoutController extends Controller
 
     /**
      * =====================================================
-     * CHECKOUT RESERVASI (❌ TIDAK DIUBAH)
+     * CHECKOUT RESERVASI
      * =====================================================
      */
     public function checkoutReservasi(Request $request, PricingService $pricing)
     {
+        Log::info('CHECKOUT PAYLOAD', $request->all());
+        // =========================
+        // VALIDASI REQUEST DASAR
+        // =========================
         $request->validate([
             'schedule_id'     => 'required|exists:schedules,id',
             'tanggal'         => 'required|date',
             'catatan'         => 'nullable|string',
             'voucher_user_id' => 'nullable|exists:user_vouchers,id',
+            'metode'          => 'required|in:midtrans,token',
         ]);
 
-        $user = auth()->user();
+        // 🔒 Token tidak boleh pakai voucher
+        if ($request->metode === 'token' && $request->voucher_user_id) {
+            return response()->json([
+                'message' => 'Voucher tidak dapat digunakan saat pembayaran token'
+            ], 422);
+        }
 
-        // Ambil schedule + relasi penting
+
+        $user = auth('api')->user();
+
+        // =========================
+        // AMBIL SCHEDULE
+        // =========================
         $schedule = \App\Models\Schedule::with(['kelas', 'trainerShift'])
             ->where('id', $request->schedule_id)
             ->where('is_active', true)
             ->firstOrFail();
 
-        // =========================
-        // 🔒 VALIDASI: EXPIRED KELAS
-        // =========================
         $kelas = $schedule->kelas;
 
+        // =========================
+        // 🔴 VALIDASI DOUBLE BOOKING (DI SINI TEMPATNYA)
+        // =========================
+        $statusesToBlock = $request->metode === 'token'
+            ? ['paid']                       // ⬅️ TOKEN
+            : ['paid', 'pending_payment'];   // ⬅️ MIDTRANS
+
+        $alreadyBooked = Reservasi::where('pelanggan_id', $user->id)
+            ->where('schedule_id', $schedule->id)
+            ->whereDate('tanggal', $request->tanggal)
+            ->whereIn('status', $statusesToBlock)
+            ->exists();
+
+        if ($alreadyBooked) {
+            return response()->json([
+                'message' => 'Kamu sudah booking kelas ini di tanggal tersebut'
+            ], 422);
+        }
+
+
+        // =========================
+        // VALIDASI KELAS EXPIRED
+        // =========================
         if ($kelas->expired_at) {
             $bookingDate = Carbon::parse($request->tanggal)->startOfDay();
             $expiredAt   = Carbon::parse($kelas->expired_at)->startOfDay();
@@ -67,15 +102,18 @@ class CheckoutController extends Controller
             }
         }
 
-        //tolak kelas yang selesai setelah jam tutup
+        // =========================
+        // VALIDASI JAM OPERASIONAL
+        // =========================
         if ($schedule->end_time > '22:00') {
             return response()->json([
                 'message' => 'Jadwal kelas melewati jam operasional'
             ], 422);
         }
 
-
-        // 🔒 VALIDASI: tanggal cocok dengan hari shift
+        // =========================
+        // VALIDASI HARI SHIFT
+        // =========================
         $tanggal = Carbon::parse($request->tanggal);
         $map = [
             1 => 'Monday',
@@ -93,20 +131,29 @@ class CheckoutController extends Controller
             ], 400);
         }
 
-
-        // 🔒 VALIDASI: slot masih tersedia
+        // =========================
+        // VALIDASI SLOT
+        // =========================
         if (! $schedule->isAvailable($request->tanggal)) {
             return response()->json([
                 'message' => 'Slot kelas sudah penuh'
             ], 400);
         }
 
+        // =========================
+        // JALUR TOKEN
+        // =========================
+        if ($request->metode === 'token') {
+            return $this->checkoutReservasiToken($request, $schedule);
+        }
+
+        // =========================
+        // JALUR MIDTRANS
+        // =========================
         DB::beginTransaction();
 
         try {
-            // =========================
-            // VOUCHER
-            // =========================
+            // Voucher
             $voucherUserId = null;
 
             if ($request->voucher_user_id) {
@@ -125,9 +172,7 @@ class CheckoutController extends Controller
                 $voucherUserId = $voucherUser->id;
             }
 
-            // =========================
-            // FIRST TIME DISCOUNT
-            // =========================
+            // First time discount
             $hasSuccessReservasi = Transaksi::where('user_id', $user->id)
                 ->where('jenis', 'reservasi')
                 ->where('status', 'success')
@@ -139,11 +184,7 @@ class CheckoutController extends Controller
 
             $canUseFirstTimeDiscount = !$hasSuccessReservasi && $firstTimeDiscount !== null;
 
-            // =========================
-            // HITUNG HARGA
-            // =========================
-            $kelas = $schedule->kelas;
-
+            // Hitung harga
             $hargaFinal = $pricing->getFinalPrice(
                 $user,
                 $kelas->id,
@@ -151,11 +192,15 @@ class CheckoutController extends Controller
                 $canUseFirstTimeDiscount
             );
 
+            if ($hargaFinal <= 0) {
+                return response()->json([
+                    'message' => 'Total bayar tidak valid'
+                ], 422);
+            }
+
             $diskon = max(0, $kelas->harga - $hargaFinal);
 
-            // =========================
-            // BUAT RESERVASI (PENTING: SEBELUM PAYMENT)
-            // =========================
+            // Buat reservasi
             $reservasi = Reservasi::create([
                 'pelanggan_id' => $user->id,
                 'schedule_id'  => $schedule->id,
@@ -165,9 +210,7 @@ class CheckoutController extends Controller
                 'catatan'      => $request->catatan,
             ]);
 
-            // =========================
-            // TRANSAKSI
-            // =========================
+            // Transaksi
             $kodeTrx = 'TRX-' . strtoupper(Str::random(10));
 
             Transaksi::create([
@@ -182,9 +225,7 @@ class CheckoutController extends Controller
                 'status'         => 'pending',
             ]);
 
-            // =========================
-            // MIDTRANS
-            // =========================
+            // Midtrans
             $snapToken = Snap::getSnapToken([
                 'transaction_details' => [
                     'order_id'     => $kodeTrx,
@@ -193,16 +234,6 @@ class CheckoutController extends Controller
                 'customer_details' => [
                     'first_name' => $user->name,
                     'email'      => $user->email,
-                ],
-                'item_details' => [
-                    [
-                        'id'       => 'SCHEDULE-' . $schedule->id,
-                        'price'    => $hargaFinal,
-                        'quantity' => 1,
-                        'name'     => $kelas->nama_kelas . ' (' .
-                            $schedule->start_time . '-' .
-                            $schedule->end_time . ')',
-                    ]
                 ],
             ]);
 
@@ -215,30 +246,99 @@ class CheckoutController extends Controller
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
-
-            Log::error('Checkout reservasi error', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'message' => 'Checkout gagal',
-            ], 500);
+            Log::error('Checkout reservasi error', ['error' => $e->getMessage()]);
+            return response()->json(['message' => 'Checkout gagal'], 500);
         }
     }
 
     /**
      * =====================================================
-     * CHECKOUT MEMBER (MEMBER = STATUS SAJA)
+     * CHECKOUT RESERVASI TOKEN
      * =====================================================
      */
-    public function checkoutMember(Request $request)
+    protected function checkoutReservasiToken(Request $request, $schedule)
     {
-        $user = auth()->user();
+        $user = auth('api')->user();
+        $kelas = $schedule->kelas;
 
         DB::beginTransaction();
 
         try {
-            // 1. Pastikan cuma satu member
+            $member = $user->member;
+            if (!$member || $member->status !== 'aktif') {
+                return response()->json([
+                    'message' => 'Member tidak aktif'
+                ], 403);
+            }
+
+            Log::info('TOKEN DEBUG', [
+                'member_id'   => $member->id,
+                'kelas_nama'  => $kelas->nama_kelas,
+            ]);
+
+            $token = \App\Models\MemberToken::where('member_id', $member->id)
+                ->where('tipe_kelas', $kelas->tipe_kelas)
+                ->lockForUpdate()
+                ->first();
+
+            Log::info('TOKEN RESULT', [
+                'token' => $token,
+            ]);
+
+            if (!$token || $token->token_sisa < 1) {
+                return response()->json([
+                    'message' => 'Token tidak cukup'
+                ], 422);
+            }
+
+            $reservasi = Reservasi::create([
+                'pelanggan_id' => $user->id,
+                'schedule_id'  => $schedule->id,
+                'tanggal'      => $request->tanggal,
+                'status'       => 'paid',
+                'status_hadir' => 'belum_hadir',
+                'catatan'      => $request->catatan,
+            ]);
+
+            $token->increment('token_terpakai');
+            $token->decrement('token_sisa');
+
+            Transaksi::create([
+                'kode_transaksi' => 'TRX-' . strtoupper(Str::random(10)),
+                'user_id'        => $user->id,
+                'jenis'          => 'reservasi',
+                'source_id'      => $reservasi->id,
+                'harga_asli'     => $kelas->harga,
+                'diskon'         => 0,
+                'total_bayar'    => 0,
+                'metode'         => 'token',
+                'status'         => 'success',
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Reservasi berhasil menggunakan token',
+                'reservasi_id' => $reservasi->id,
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * =====================================================
+     * CHECKOUT MEMBER
+     * =====================================================
+     */
+    public function checkoutMember(Request $request)
+    {
+        $user = auth('api')->user();
+
+        DB::beginTransaction();
+
+        try {
             $member = Member::firstOrCreate(
                 ['user_id' => $user->id],
                 ['status' => 'pending']
@@ -250,10 +350,7 @@ class CheckoutController extends Controller
                 ], 400);
             }
 
-            // 🔴 HARGA MEMBER (FIX)
             $hargaMember = 250000;
-
-            // 2. Buat transaksi
             $kodeTrx = 'TRX-' . strtoupper(Str::random(10));
 
             Transaksi::create([
@@ -268,7 +365,6 @@ class CheckoutController extends Controller
                 'status'         => 'pending',
             ]);
 
-            // 3. Midtrans Snap
             $snapToken = Snap::getSnapToken([
                 'transaction_details' => [
                     'order_id'     => $kodeTrx,
@@ -277,14 +373,6 @@ class CheckoutController extends Controller
                 'customer_details' => [
                     'first_name' => $user->name,
                     'email'      => $user->email,
-                ],
-                'item_details' => [
-                    [
-                        'id'       => 'MEMBER',
-                        'price'    => $hargaMember,
-                        'quantity' => 1,
-                        'name'     => 'Aktivasi Membership',
-                    ]
                 ],
             ]);
 
@@ -296,41 +384,29 @@ class CheckoutController extends Controller
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
-            return response()->json([
-                'message' => 'Checkout member gagal'
-            ], 500);
+            return response()->json(['message' => 'Checkout member gagal'], 500);
         }
     }
 
     /**
      * =====================================================
-     * CHECKOUT TOKEN (PAKAI token_packages)
+     * CHECKOUT TOKEN (BELI TOKEN)
      * =====================================================
      */
     public function checkoutToken(Request $request)
     {
-        $user = auth()->user();
+        $user = auth('api')->user();
 
         $request->validate([
             'token_package_id' => 'required|exists:token_packages,id',
         ]);
 
-        $member = Member::firstOrCreate(
-            ['user_id' => $user->id],
-            [
-                'status' => 'aktif',
-                'tanggal_mulai' => now(),
-                'tanggal_berakhir' => now()->addMonth(),
-            ]
-        );
+        $member = $user->member;
 
-        // kalau member ada tapi nonaktif → aktifkan
-        if ($member->status !== 'aktif') {
-            $member->update([
-                'status' => 'aktif',
-                'tanggal_mulai' => now(),
-                'tanggal_berakhir' => now()->addMonth(),
-            ]);
+        if (!$member || $member->status !== 'aktif') {
+            return response()->json([
+                'message' => 'Hanya member aktif yang dapat membeli token'
+            ], 403);
         }
 
         $package = TokenPackage::findOrFail($request->token_package_id);
@@ -361,14 +437,6 @@ class CheckoutController extends Controller
                     'first_name' => $user->name,
                     'email'      => $user->email,
                 ],
-                'item_details' => [
-                    [
-                        'id'       => 'TOKEN-' . $package->id,
-                        'price'    => $package->harga,
-                        'quantity' => 1,
-                        'name'     => "{$package->jumlah_token} Token ({$package->tipe_kelas})",
-                    ]
-                ],
             ]);
 
             DB::commit();
@@ -381,10 +449,16 @@ class CheckoutController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
 
+            Log::error('CHECKOUT TOKEN ERROR', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+            ]);
+
             return response()->json([
                 'message' => 'Checkout token gagal',
+                'error'   => $e->getMessage(), // ⬅️ DEV MODE
             ], 500);
         }
-        Log::info('CHECKOUT REQUEST', $request->all());
     }
 }

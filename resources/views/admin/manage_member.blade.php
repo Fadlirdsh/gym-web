@@ -102,7 +102,7 @@
                 <strong id="activateName"></strong> selama 1 bulan?
             </p>
 
-            <form action="{{ route('member.activate') }}" method="POST">
+            <form action="{{ route('admin.cash.member') }}" method="POST">
                 @csrf
                 <input type="hidden" name="user_id" id="activateUserId">
 
@@ -125,12 +125,18 @@
                 Top Up Token untuk <span id="memberName"></span>
             </h3>
 
-            <form action="{{ route('admin.member-token.topup') }}" method="POST">
+            <form action="{{ route('admin.cash.token') }}" method="POST">
                 @csrf
                 <input type="hidden" name="member_id" id="memberId">
 
-                <input type="number" name="jumlah" min="1" class="input-fix w-full mb-4"
-                    placeholder="Jumlah Token">
+                <select name="token_package_id" class="input-fix w-full mb-4" required>
+                    <option value="">-- Pilih Paket Token --</option>
+                    @foreach ($tokenPackages as $package)
+                        <option value="{{ $package->id }}">
+                            {{ $package->nama_paket }} — {{ $package->jumlah_token }} token
+                        </option>
+                    @endforeach
+                </select>
 
                 <div class="flex justify-end gap-2">
                     <button type="button" onclick="closeTopupModal()" class="border px-4 py-2 rounded">
