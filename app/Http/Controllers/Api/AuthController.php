@@ -40,28 +40,31 @@ class AuthController extends Controller
             return response()->json(['error' => 'Anda tidak memiliki akses'], 403);
         }
 
-        return response()->json([
-            'access_token' => $token,
-            'token_type'   => 'bearer',
-            'expires_in'   => $ttl * 60,
-            'user'         => $user,
-        ]);
+        return response()->json(
+            $this->issueToken($user, $remember)
+        );
     }
 
     public function googleLogin(Request $request)
     {
-        $token = $request->input('token');
+        $request->validate([
+            'token'    => 'required|string',
+            'remember' => 'boolean'
+        ]);
 
-        $client = new GoogleClient(['client_id' => env('GOOGLE_CLIENT_ID')]);
-        $payload = $client->verifyIdToken($token);
+        $client = new GoogleClient([
+            'client_id' => env('GOOGLE_CLIENT_ID')
+        ]);
+
+        $payload = $client->verifyIdToken($request->token);
 
         if (!$payload) {
             return response()->json(['error' => 'Token Google tidak valid'], 401);
         }
 
         $googleId = $payload['sub'];
-        $email = $payload['email'];
-        $name = $payload['name'] ?? 'User Google';
+        $email    = $payload['email'];
+        $name     = $payload['name'] ?? 'User Google';
 
         $user = User::where('google_id', $googleId)
             ->orWhere('email', $email)
@@ -70,21 +73,22 @@ class AuthController extends Controller
         if (!$user) {
             $user = User::create([
                 'google_id' => $googleId,
-                'email' => $email,
-                'name' => $name,
-                'password' => bcrypt(Str::random(16)),
-                'role' => 'pelanggan',
+                'email'     => $email,
+                'name'      => $name,
+                'password'  => bcrypt(Str::random(32)),
+                'role'      => 'pelanggan',
             ]);
+        } else {
+            // sinkronisasi google_id kalau login via email sebelumnya
+            if (!$user->google_id) {
+                $user->google_id = $googleId;
+                $user->save();
+            }
         }
 
-        $token = Auth::guard('api')->login($user);
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60,
-            'user' => $user,
-        ]);
+        return response()->json(
+            $this->issueToken($user, $request->boolean('remember'))
+        );
     }
 
     public function register(Request $request)
@@ -142,5 +146,24 @@ class AuthController extends Controller
             'email' => $user->email,
             'role'  => $user->role,
         ]);
+    }
+
+    private function issueToken(User $user, bool $remember = false)
+    {
+        // TTL dalam menit
+        $ttl = $remember
+            ? 1440    // 24 jam (AMAN untuk mobile tahap awal)
+            : 120;    // 2 jam
+
+        JWTAuth::factory()->setTTL($ttl);
+
+        $token = Auth::guard('api')->login($user);
+
+        return [
+            'access_token' => $token,
+            'token_type'   => 'bearer',
+            'expires_in'   => $ttl * 60,
+            'user'         => $user,
+        ];
     }
 }
