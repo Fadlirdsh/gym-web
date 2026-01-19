@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Transaksi;
 use App\Models\Kelas;
+use App\Models\Diskon; //
 use App\Models\UserVoucher;
 use Carbon\Carbon;
+
 
 class PricingService
 {
@@ -35,6 +37,22 @@ class PricingService
         $kelas = Kelas::findOrFail($kelasId);
         $harga = (int) $kelas->harga;
 
+
+
+        /**
+         * ============================
+         * DISKON ADMIN (KELAS)
+         * ============================
+         */
+        $diskonAdmin = Diskon::where('kelas_id', $kelas->id)
+            ->whereDate('tanggal_mulai', '<=', today())
+            ->whereDate('tanggal_berakhir', '>=', today())
+            ->first();
+
+        if ($diskonAdmin) {
+            $potongan = ($harga * $diskonAdmin->persentase) / 100;
+            $harga = max(0, (int) round($harga - $potongan));
+        }
 
         /**
          * ============================

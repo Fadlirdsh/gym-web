@@ -15,7 +15,7 @@ use App\Http\Controllers\Api\DiskonController;
 use App\Http\Controllers\Api\ScheduleApiController;
 use App\Http\Controllers\Api\TrainerShiftController;
 use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\Api\TransaksiController;
 use App\Http\Controllers\Api\TokenPackageController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\TrainerProfileController;
@@ -111,6 +111,8 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::post('/checkout/member', [CheckoutController::class, 'checkoutMember']);
     Route::post('/checkout/token', [CheckoutController::class, 'checkoutToken']);
     Route::post('/checkout/reservasi', [CheckoutController::class, 'checkoutReservasi']);
+    Route::get('/diskon', [DiskonController::class, 'index']);
+    Route::get('/diskon/{diskon}', [DiskonController::class, 'show']);
 });
 
 /*
@@ -120,18 +122,6 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::get('/token-packages', [TokenPackageController::class, 'index']);
-
-/*
-|--------------------------------------------------------------------------
-
-| TRANSAKSI (JWT)
-|--------------------------------------------------------------------------
-*/
-Route::middleware('jwt.auth')->group(function () {
-    Route::get('/transaksi', [TransaksiController::class, 'index']);
-    Route::get('/transaksi/{id}', [TransaksiController::class, 'show']);
-    Route::get('/transaksi/kode/{kode}', [TransaksiController::class, 'showByKode']);
-});
 
 /*
 |--------------------------------------------------------------------------
@@ -215,6 +205,15 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
     Route::get('/me/history/reservasi/{id}', [HistoryController::class, 'reservasiDetail']);
 });
 
+/*
+|--------------------------------------------------------------------------
+| TRANSAKSI
+|--------------------------------------------------------------------------
+*/
+Route::middleware('jwt.auth')->group(function () {
+    Route::get('/transaksi', [TransaksiController::class, 'index']);
+    Route::get('/transaksi/{kode}', [TransaksiController::class, 'show']);
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -175,7 +175,7 @@ class CheckoutController extends Controller
             // First time discount
             $hasSuccessReservasi = Transaksi::where('user_id', $user->id)
                 ->where('jenis', 'reservasi')
-                ->where('status', 'success')
+                ->where('status', Transaksi::STATUS_PAID)
                 ->exists();
 
             $firstTimeDiscount = FirstTimeDiscount::where('user_id', $user->id)
@@ -249,6 +249,8 @@ class CheckoutController extends Controller
             Log::error('Checkout reservasi error', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Checkout gagal'], 500);
         }
+
+
     }
 
     /**
@@ -295,7 +297,7 @@ class CheckoutController extends Controller
                 'pelanggan_id' => $user->id,
                 'schedule_id'  => $schedule->id,
                 'tanggal'      => $request->tanggal,
-                'status'       => 'paid',
+                'status' => Transaksi::STATUS_PAID,
                 'status_hadir' => 'belum_hadir',
                 'catatan'      => $request->catatan,
             ]);
@@ -312,7 +314,7 @@ class CheckoutController extends Controller
                 'diskon'         => 0,
                 'total_bayar'    => 0,
                 'metode'         => 'token',
-                'status'         => 'success',
+                'status'         => 'paid',
             ]);
 
             DB::commit();
