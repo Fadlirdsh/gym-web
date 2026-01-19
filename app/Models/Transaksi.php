@@ -77,4 +77,18 @@ class Transaksi extends Model
     {
         return 'Rp ' . number_format($this->total_bayar, 0, ',', '.');
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HISTORI SCOPE
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopeHistory($query, $userId)
+    {
+        return $query
+            ->where('user_id', $userId)
+            ->where('status', 'success')
+            ->orderBy('created_at', 'desc');
+    }
 }

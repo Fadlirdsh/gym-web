@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\MidtransCallbackController;
 use App\Http\Controllers\Api\QrCodeController;
 use App\Http\Controllers\Api\MemberTokenController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\HistoryController;
+use App\Http\Controllers\Api\UserProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -201,4 +203,25 @@ Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
 Route::middleware(['auth:api'])->group(function () {
     Route::get('/trainer/profile', [TrainerProfileController::class, 'show']);
     Route::post('/trainer/profile', [TrainerProfileController::class, 'store']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| HISTORY
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
+    Route::get('/me/history/reservasi', [HistoryController::class, 'reservasi']);
+    Route::get('/me/history/reservasi/{id}', [HistoryController::class, 'reservasiDetail']);
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| User Profile
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['jwt.auth', 'role:pelanggan'])->group(function () {
+    Route::get('/user/profile', [UserProfileController::class, 'show']);
+    Route::put('/user/profile', [UserProfileController::class, 'update']);
 });
