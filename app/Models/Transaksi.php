@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transaksi extends Model
 {
+
+    const STATUS_PENDING  = 'pending';
+    const STATUS_PAID     = 'paid';
+    const STATUS_FAILED   = 'failed';
+    const STATUS_EXPIRED  = 'expired';
+    const STATUS_CANCELED = 'canceled';
+    const STATUS_REFUNDED = 'refunded';
     use HasFactory;
 
     protected $table = 'transaksis';
@@ -57,6 +64,11 @@ class Transaksi extends Model
         return $this->belongsTo(Member::class, 'source_id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(TransaksiItem::class, 'transaksi_id', 'id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | ACCESSORS (FORMAT RUPIAH)
@@ -88,7 +100,7 @@ class Transaksi extends Model
     {
         return $query
             ->where('user_id', $userId)
-            ->where('status', 'success')
-            ->orderBy('created_at', 'desc');
+            ->where('status', self::STATUS_PAID)
+            ->orderByDesc('paid_at');
     }
 }
