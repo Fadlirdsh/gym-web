@@ -41,6 +41,13 @@ class Reservasi extends Model
         return $this->belongsTo(\App\Models\Kelas::class, 'kelas_id');
     }
 
+    public function transaksi()
+    {
+        return $this->hasOne(\App\Models\Transaksi::class, 'source_id')
+            ->where('jenis', 'reservasi');
+    }
+
+
     // Slot jadwal yang dibooking
     public function schedule()
     {
