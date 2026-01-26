@@ -88,8 +88,10 @@ Route::get('/schedule/{id}', [ScheduleApiController::class, 'show']);
 Route::get('/schedules/by-trainer', [ScheduleApiController::class, 'byTrainer']);
 Route::get('/schedules/available', [ScheduleApiController::class, 'available']);
 
-Route::middleware(['jwt.auth', 'role:trainer'])
-    ->get('/trainer/schedule', [ScheduleApiController::class, 'byTrainer']);
+Route::middleware(['jwt.auth', 'role:trainer'])->group(function () {
+    Route::get('/trainer/schedule', [ScheduleApiController::class, 'byTrainer']);
+    Route::get('/trainer/schedules/me', [ScheduleApiController::class, 'mySchedules']);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -170,9 +172,9 @@ Route::middleware(['jwt.auth', 'role:admin,trainer'])->group(function () {
 | SHIFT
 |--------------------------------------------------------------------------
 */
-
-Route::middleware('auth:api')->group(function () {
+Route::middleware(['jwt.auth', 'role:trainer'])->group(function () {
     Route::get('/trainer/shifts', [TrainerShiftController::class, 'index']);
+    Route::get('/trainer/shifts/{id}', [TrainerShiftController::class, 'show']);
 });
 
 /*

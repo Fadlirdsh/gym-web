@@ -9,30 +9,37 @@ use Illuminate\Support\Facades\Storage;
 class UserProfileController extends Controller
 {
     /**
+     * ============================
      * GET /api/user/profile
+     * ============================
+     * Ambil profile user + data member
      */
     public function show(Request $request)
     {
+        $user = $request->user()->load('member');
+
         return response()->json([
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 
     /**
+     * ============================
      * UPDATE PROFILE
+     * ============================
      */
     public function update(Request $request)
     {
         $user = $request->user();
 
-        // VALIDASI TETAP
+        // VALIDASI
         $request->validate([
             'name'  => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
             'foto'  => 'nullable|image|max:2048',
         ]);
 
-        // DATA UPDATE DIAMBIL LANGSUNG
+        // DATA UPDATE
         $data = [
             'name'  => trim($request->name),
             'phone' => $request->filled('phone')
@@ -40,6 +47,7 @@ class UserProfileController extends Controller
                 : null,
         ];
 
+        // HANDLE FOTO
         if ($request->hasFile('foto')) {
             if ($user->foto) {
                 Storage::disk('public')->delete($user->foto);
@@ -50,11 +58,15 @@ class UserProfileController extends Controller
                 ->store('users', 'public');
         }
 
+        // UPDATE USER
         $user->update($data);
+
+        // REFRESH + LOAD RELASI (INI YANG SEBELUMNYA SALAH)
+        $user = $user->fresh()->load('member');
 
         return response()->json([
             'message' => 'Profile updated',
-            'user'    => $user->fresh(),
+            'user'    => $user,
         ]);
     }
 }

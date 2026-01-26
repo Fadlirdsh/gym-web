@@ -29,6 +29,8 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
+    protected $appends = ['membership_status'];
+
     // =====================
     // JWT
     // =====================
@@ -54,6 +56,22 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasOne(Member::class);
     }
+
+    /**
+     * ======================
+     * HELPER
+     * ======================
+     */
+
+    public function getMembershipStatusAttribute()
+    {
+        if (!$this->member) {
+            return 'none';
+        }
+
+        return $this->member->status;
+    }
+
 
     /**
      * Relasi kelas (opsional)
