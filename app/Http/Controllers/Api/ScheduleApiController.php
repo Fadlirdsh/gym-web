@@ -79,6 +79,25 @@ class ScheduleApiController extends Controller
         ]);
     }
 
+    public function mySchedules(Request $request)
+    {
+         $trainerId = auth()->id(); 
+
+        $data = Schedule::with(['kelas', 'trainerShift'])
+            ->whereHas('trainerShift', function ($q) use ($trainerId) {
+                $q->where('trainer_id', $trainerId)
+                    ->where('is_active', true);
+            })
+            ->where('is_active', true)
+            ->orderBy('start_time')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
     /**
      * =========================
      * USER BOOKING (INI YANG DIPAKAI FRONTEND)
