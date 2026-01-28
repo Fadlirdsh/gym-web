@@ -23,6 +23,21 @@ class TrainerProfile extends Model
         'certifications' => 'array',
     ];
 
+    /**
+     * Append photo_url to JSON response
+     */
+    protected $appends = ['photo_url'];
+
+    /**
+     * Accessor for full photo URL
+     */
+    public function getPhotoUrlAttribute()
+    {
+        return $this->photo
+            ? asset('storage/' . $this->photo)
+            : null;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
