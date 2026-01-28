@@ -71,11 +71,15 @@ Route::get('/kelas/{id}/available-days', [KelasController::class, 'availableDays
 
 /*
 |--------------------------------------------------------------------------
-
 | TRAINER (PUBLIC)
 |--------------------------------------------------------------------------
 */
+// Ambil semua trainer + profile
 Route::get('/users/trainer', [UserController::class, 'getTrainers']);
+
+// Ambil detail trainer berdasarkan ID + profile
+Route::get('/users/trainer/{id}', [UserController::class, 'getTrainerDetail']);
+
 
 /*
 |--------------------------------------------------------------------------
