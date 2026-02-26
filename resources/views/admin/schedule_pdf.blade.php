@@ -89,21 +89,23 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($schedules as $key => $schedule)
-                <tr>
-                    <td>{{ $key + 1 }}</td>
-                    <td>{{ ucfirst($schedule->day) }}</td>
-                    <td>{{ \Carbon\Carbon::parse($schedule->start_time)->format('h:i A') }} -
-                        {{ \Carbon\Carbon::parse($schedule->end_time)->format('h:i A') }}</td>
-                    <td>{{ $schedule->kelas->nama_kelas }}</td>
-                    <td>{{ $schedule->trainer->name }}</td>
-                    <td>{{ $schedule->class_focus ?? '-' }}</td>
-                    <td>
-                        <span class="badge {{ $schedule->is_active ? 'badge-aktif' : 'badge-nonaktif' }}">
-                            {{ $schedule->is_active ? 'Aktif' : 'Nonaktif' }}
-                        </span>
-                    </td>
-                </tr>
+            @foreach ($shifts as $shift)
+                @foreach ($shift->schedules as $schedule)
+                    <tr>
+                        <td>{{ $loop->parent->iteration }}.{{ $loop->iteration }}</td>
+                        <td>{{ ucfirst($schedule->day) }}</td>
+                        <td>{{ \Carbon\Carbon::parse($schedule->start_time)->format('h:i A') }} -
+                            {{ \Carbon\Carbon::parse($schedule->end_time)->format('h:i A') }}</td>
+                        <td>{{ $schedule->kelas?->nama_kelas ?? '-' }}td>
+                        <td>{{ $shift->trainer?->name ?? '-' }}</td>
+                        <td>{{ $schedule->class_focus ?? '-' }}</td>
+                        <td>
+                            <span class="badge {{ $schedule->is_active ? 'badge-aktif' : 'badge-nonaktif' }}">
+                                {{ $schedule->is_active ? 'Aktif' : 'Nonaktif' }}
+                            </span>
+                        </td>
+                    </tr>
+                @endforeach
             @endforeach
         </tbody>
     </table>

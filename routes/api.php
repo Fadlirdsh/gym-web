@@ -46,7 +46,6 @@ Route::middleware('auth:api')->get('/me', [AuthController::class, 'me']);
 | USER PROFILE
 |--------------------------------------------------------------------------
 */
-Route::middleware('jwt.auth')->get('/me', fn() => auth()->user());
 Route::middleware('jwt.auth')->get('/user', fn() => auth()->user());
 
 /*
