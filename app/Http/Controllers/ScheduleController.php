@@ -99,12 +99,12 @@ class ScheduleController extends Controller
 
         // cek bentrok (hari diambil dari shift)
         $overlap = Schedule::whereHas('trainerShift', function ($q) use ($shift) {
-                $q->where('trainer_id', $shift->trainer_id)
-                  ->where('day', $shift->day);
-            })
+            $q->where('trainer_id', $shift->trainer_id)
+                ->where('day', $shift->day);
+        })
             ->where(function ($q) use ($validated) {
                 $q->where('start_time', '<', $validated['end_time'])
-                  ->where('end_time', '>', $validated['start_time']);
+                    ->where('end_time', '>', $validated['start_time']);
             })
             ->exists();
 
@@ -153,13 +153,13 @@ class ScheduleController extends Controller
         }
 
         $overlap = Schedule::whereHas('trainerShift', function ($q) use ($shift) {
-                $q->where('trainer_id', $shift->trainer_id)
-                  ->where('day', $shift->day);
-            })
+            $q->where('trainer_id', $shift->trainer_id)
+                ->where('day', $shift->day);
+        })
             ->where('id', '!=', $schedule->id)
             ->where(function ($q) use ($validated) {
                 $q->where('start_time', '<', $validated['end_time'])
-                  ->where('end_time', '>', $validated['start_time']);
+                    ->where('end_time', '>', $validated['start_time']);
             })
             ->exists();
 
@@ -226,8 +226,8 @@ class ScheduleController extends Controller
             ->orderBy('shift_start')
             ->get();
 
-        $pdf = Pdf::loadView('admin.shift_report_pdf', compact('shifts'));
-
+        $pdf = Pdf::loadView('admin.schedule_pdf', compact('shifts'));
+        
         return $pdf->download('laporan_jam_kerja_trainer.pdf');
     }
 }

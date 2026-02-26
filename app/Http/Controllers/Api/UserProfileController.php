@@ -19,7 +19,15 @@ class UserProfileController extends Controller
         $user = $request->user()->load('member');
 
         return response()->json([
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'membership_status' => $user->membership_status,
+                'profile_photo_url' => $user->profile_photo_url,
+            ]
         ]);
     }
 
@@ -34,9 +42,9 @@ class UserProfileController extends Controller
 
         // VALIDASI
         $request->validate([
-            'name'  => 'required|string|max:255',
+            'name'  => 'sometimes|string|max:255',
             'phone' => 'nullable|string|max:20',
-            'foto'  => 'nullable|image|max:2048',
+            'photo' => 'nullable|image|max:2048',
         ]);
 
         // DATA UPDATE
@@ -48,14 +56,14 @@ class UserProfileController extends Controller
         ];
 
         // HANDLE FOTO
-        if ($request->hasFile('foto')) {
-            if ($user->foto) {
-                Storage::disk('public')->delete($user->foto);
+        if ($request->hasFile('photo')) {
+            if ($user->profile_photo) {
+                Storage::disk('public')->delete($user->profile_photo);
             }
 
-            $data['foto'] = $request
-                ->file('foto')
-                ->store('users', 'public');
+            $data['profile_photo'] = $request
+                ->file('photo')
+                ->store('users/profile', 'public');
         }
 
         // UPDATE USER
@@ -66,7 +74,15 @@ class UserProfileController extends Controller
 
         return response()->json([
             'message' => 'Profile updated',
-            'user'    => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'membership_status' => $user->membership_status,
+                'profile_photo_url' => $user->profile_photo_url,
+            ]
+
         ]);
     }
 }

@@ -19,6 +19,7 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'role',
         'phone',
+        'profile_photo',
     ];
 
     /**
@@ -29,7 +30,10 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
-    protected $appends = ['membership_status'];
+    protected $appends = [
+        'membership_status',
+        'profile_photo_url',
+    ];
 
     // =====================
     // JWT
@@ -117,5 +121,16 @@ class User extends Authenticatable implements JWTSubject
     public function trainerProfile()
     {
         return $this->hasOne(TrainerProfile::class, 'user_id');
+    }
+
+
+
+    public function getProfilePhotoUrlAttribute()
+    {
+        if (!$this->profile_photo) {
+            return null;
+        }
+
+        return rtrim(config('app.url'), '/') . '/storage/' . $this->profile_photo;
     }
 }

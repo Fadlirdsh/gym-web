@@ -20,9 +20,17 @@ class DashboardController extends Controller
         $totalSchedules = Schedule::where('is_active', 1)->count();
 
         // Memperbaiki orderBy dari 'time' ke 'start_time'
-        $upcomingSchedules = Schedule::where('is_active', 1)
-            ->orderBy('day', 'asc')
-            ->orderBy('start_time', 'asc')
+        $upcomingSchedules = Schedule::join(
+            'trainer_shifts',
+            'schedules.trainer_shift_id',
+            '=',
+            'trainer_shifts.id'
+        )
+            ->where('schedules.is_active', 1)
+            ->where('trainer_shifts.is_active', 1)
+            ->orderBy('trainer_shifts.day', 'asc')
+            ->orderBy('schedules.start_time', 'asc')
+            ->select('schedules.*')
             ->take(5)
             ->get();
 
