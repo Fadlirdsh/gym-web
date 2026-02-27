@@ -206,28 +206,13 @@ class ScheduleController extends Controller
      */
     public function exportPDF(Request $request)
     {
-        $query = TrainerShift::with(['trainer', 'schedules.kelas']);
+        $shift = TrainerShift::with([
+            'trainer',
+            'schedules.kelas'
+        ])->findOrFail($request->shift_id);
 
-        if ($request->filled('trainer_id')) {
-            $query->where('trainer_id', $request->trainer_id);
-        }
+        $pdf = Pdf::loadView('admin.schedule_pdf', compact('shift'));
 
-        if ($request->filled('day')) {
-            $query->where('day', $request->day);
-        }
-
-        $shifts = $query
-            ->orderByRaw("
-                FIELD(day,
-                    'Monday','Tuesday','Wednesday',
-                    'Thursday','Friday','Saturday','Sunday'
-                )
-            ")
-            ->orderBy('shift_start')
-            ->get();
-
-        $pdf = Pdf::loadView('admin.schedule_pdf', compact('shifts'));
-        
-        return $pdf->download('laporan_jam_kerja_trainer.pdf');
+        return $pdf->download('laporan_shift_' . $shift->id . '.pdf');
     }
 }

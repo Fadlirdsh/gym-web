@@ -150,9 +150,11 @@ document.addEventListener("DOMContentLoaded", () => {
    SHIFT ACTIONS
 ===================================================== */
 function selectShift(id, trainerName, day, start, end) {
+
     ACTIVE_SHIFT = { id, trainerName, day, start, end };
 
     $("scheduleSection")?.classList.remove("hidden");
+
     $("selectedShiftInfo").innerText =
         `${trainerName} • ${day} • ${start} - ${end}`;
 
@@ -162,6 +164,32 @@ function selectShift(id, trainerName, day, start, end) {
     if (dayInput) {
         dayInput.value = day;
         dayInput.disabled = true;
+    }
+
+    /* ===============================
+       FILTER SCHEDULE BY SHIFT
+    =============================== */
+
+    document.querySelectorAll("#scheduleSection tbody tr")
+        .forEach(row => {
+
+            if (row.dataset.shift != id) {
+                row.style.display = "none";
+            } else {
+                row.style.display = "";
+            }
+
+        });
+
+    /* ===============================
+       SET EXPORT LINK
+    =============================== */
+
+    const exportBtn = document.getElementById("exportShiftPdf");
+
+    if (exportBtn) {
+        exportBtn.href = `/admin/schedules/export-pdf?shift_id=${id}`;
+        exportBtn.classList.remove("hidden");
     }
 }
 
@@ -221,7 +249,10 @@ function openScheduleModal() {
     $("trainer_shift_id").value = ACTIVE_SHIFT.id;
 
     const dayInput = $("day");
-    if (dayInput) dayInput.value = ACTIVE_SHIFT.day;
+    if (dayInput) {
+        dayInput.value = ACTIVE_SHIFT.day;
+        dayInput.readOnly = true;
+    }
 
     showModal("modalSchedule");
 }
