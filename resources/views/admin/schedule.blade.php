@@ -10,8 +10,8 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <h1 class="text-3xl font-bold">Manajemen Jadwal Trainer</h1>
             <div class="flex gap-3 flex-wrap">
-                <a href="{{ route('schedules.exportPDF', request()->all()) }}" class="btn btn-red">
-                    Export PDF
+                <a id="exportShiftPdf" href="#" class="btn btn-red hidden">
+                    Export PDF Shift Ini
                 </a>
 
                 <button type="button" onclick="openShiftModal()" class="btn btn-primary">
@@ -62,8 +62,7 @@
 
                                 {{-- ✅ AKSI SHIFT (STOP PROPAGATION) --}}
                                 <td class="flex justify-center gap-2">
-                                    <button type="button"
-                                        onclick="event.stopPropagation(); editShift({{ $shift->id }})"
+                                    <button type="button" onclick="event.stopPropagation(); editShift({{ $shift->id }})"
                                         class="btn btn-primary !py-1 !px-3">
                                         Edit
                                     </button>
@@ -114,10 +113,10 @@
                     </thead>
                     <tbody>
                         @foreach ($schedules as $s)
-                            <tr>
+                            <tr data-shift="{{ $s->trainer_shift_id }}">
                                 <td>{{ $s->kelas->nama_kelas }}</td>
                                 <td>{{ optional($s->trainerShift?->trainer)->name ?? '-' }}</td>
-                                <td>{{ $s->day }}</td>
+                                <td>{{ $s->trainerShift->day }}</td>
                                 <td>{{ $s->start_time }} - {{ $s->end_time }}</td>
                                 <td>{{ $s->class_focus ?? '-' }}</td>
                                 <td>
